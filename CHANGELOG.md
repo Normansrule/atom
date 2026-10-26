@@ -4,7 +4,7 @@ Atom follows [semantic versioning](https://semver.org). The newest release is at
 
 ## [1.0.0] - 2026-10-25
 
-The first public release, on the web and for macOS.
+The first public release: on the web, and as a free, open-source desktop app for macOS, Windows, and Linux.
 
 ### The table
 - A living periodic table: each of the 118 squares ray-marches its element's differentiating electron on your graphics card, straight from the wavefunction.
@@ -18,6 +18,11 @@ The first public release, on the web and for macOS.
 ### Learning by doing
 - A workbench: fuse nuclei (with Q values, the Coulomb barrier, and Gamow tunneling), bond two protons around one electron, and build a battery from real electrode materials.
 - Twelve missions on a route map, from lighting a star to fighting cancer with atoms, with a Show me button on every step. Progress stays on your device.
+
+### Everywhere
+- A website that runs in any modern browser, with nothing to install.
+- Desktop apps: macOS 12 or later (Apple silicon and Intel), Windows 10 and 11 (installer or portable zip), and Linux (AppImage, or a .deb for Debian and Ubuntu).
+- Every download listed with its SHA-256 checksum.
 
 ### For everyone
 - Every label measured at 7:1 contrast or better in both themes, keyboard operation throughout, reduced motion respected, and no sound until you ask for it.

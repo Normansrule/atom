@@ -6,9 +6,9 @@
 
 Atom is a periodic table where every square is alive. Each one shows the electron that gives its element its place in the table, ray-marched in real time on your graphics processing unit (GPU) straight from the wavefunction. Behind the table is the place the elements came from: a nebula colored by the Big Bang, the stars, and the collisions that made them, which replays the birth of whatever element you pick. Click an element and you get its whole story, from where it was forged to the open problem it is part of today. Scroll, and you fall into it: through its electron cloud, its light, the empty space inside it, its nucleus, one of its protons, and finally the quarks, where you can grab one and try to pull it out.
 
-It runs as a website, as a Mac app, or as a single HTML file you can open offline. No accounts, no tracking, and the sound stays off unless you turn it on.
+It runs as a website, as a desktop app for Mac, Windows, and Linux, or as a single HTML file you can open offline. It is free and open source. No accounts, no tracking, and the sound stays off unless you turn it on.
 
-**[Open the website](https://normansrule.github.io/atom/)** · **[Download for Mac](https://github.com/normansrule/atom/releases/latest)** · **[Open the app in your browser](https://normansrule.github.io/atom/app/)**
+**[Open the website](https://normansrule.github.io/atom/)** · **[Download for Mac](https://github.com/normansrule/atom/releases/latest/download/Atom-mac.zip)** · **[Windows](https://github.com/normansrule/atom/releases/latest/download/Atom-Windows-Setup.exe)** · **[Linux](https://github.com/normansrule/atom/releases/latest/download/Atom-Linux.AppImage)** · **[Open the app in your browser](https://normansrule.github.io/atom/app/)**
 
 ## What's in it
 
@@ -58,7 +58,7 @@ It runs as a website, as a Mac app, or as a single HTML file you can open offlin
 
 **Missions.** Twelve short journeys tie it together, laid out as one route on a map, from the first stars to the clinic: light a star, forge gold, make a new element, make a molecule, pull a quark out, split the atom, fuel a fusion reactor, build a better battery, build a chip, build a qubit, keep perfect time, and fight cancer with atoms. Each step names one thing to do, and a **Show me** button does it for you. The map lights each stop you finish and draws how far you are through the ones you have started. Your progress stays on your own device.
 
-**The Mac app** opens on the same table, in the same nebula, with the same lenses, workbench, and missions, and goes deeper: every orbital of every element, the nuclear shell model, the four natural decay chains, a guided tour, a math panel, and the chamber you can zoom through with your trackpad. Missions follow you into the chamber and wait in the gap above the transition metals of its own small table. Scrolling out past the whole atom takes you back up to the table.
+**The desktop app** opens on the same table, in the same nebula, with the same lenses, workbench, and missions, and goes deeper: every orbital of every element, the nuclear shell model, the four natural decay chains, a guided tour, a math panel, and the chamber you can zoom through with your trackpad. Missions follow you into the chamber and wait in the gap above the transition metals of its own small table. Scrolling out past the whole atom takes you back up to the table.
 
 ## Use it
 
@@ -66,14 +66,18 @@ It runs as a website, as a Mac app, or as a single HTML file you can open offlin
 - **On a Mac:** download `Atom-mac.zip` from the [latest release](https://github.com/normansrule/atom/releases/latest), unzip it, and drag Atom to Applications. It runs on Apple silicon and Intel Macs with macOS 12 (Monterey) or later.
   - If a release says it is notarized by Apple, it simply opens.
   - If it isn't, macOS stops it the first time with a message that it can't check the app for malicious software. Choose **Done**, open **System Settings**, go to **Privacy & Security**, scroll down to the message about Atom, and choose **Open Anyway**, then enter your password. You only do this once. (On macOS 14 or earlier, right-clicking Atom and choosing **Open** works too.)
-  - Each release lists the SHA-256 checksum of the zip, so you can confirm your download is the one published: `shasum -a 256 ~/Downloads/Atom-mac.zip`.
+  - Each release lists the SHA-256 checksum of every file in `SHA256SUMS.txt`, so you can confirm your download is the one published: `shasum -a 256 ~/Downloads/Atom-mac.zip`.
+- **On Windows 10 or 11:** download `Atom-Windows-Setup.exe` from the [latest release](https://github.com/normansrule/atom/releases/latest) and run it. By default it installs for your account only, with no administrator rights needed. Windows doesn't know the app yet, so SmartScreen may say it protected your PC: choose **More info**, then **Run anyway**. To skip installing, download `Atom-Windows-portable.zip`, unzip it, and run `Atom.exe`.
+- **On Linux (64-bit):**
+  - **Debian, Ubuntu, Mint, and their relatives:** download `Atom-Linux.deb` and install it with `sudo apt install ./Atom-Linux.deb`. Atom then appears in your applications menu.
+  - **Any other distribution:** download `Atom-Linux.AppImage`, make it runnable with `chmod +x Atom-Linux.AppImage`, and open it. If your system can't mount it, run `./Atom-Linux.AppImage --appimage-extract-and-run` instead.
 - **Anywhere else:** `app/atom.html` is the whole app in one file. Open it in any recent browser, online or off.
 
 On the table, the arrow keys move between elements, Enter opens the card, and Escape closes it. In the app, T switches between the dark chamber and the light table, G opens the guide, and M opens the math.
 
 ## Privacy
 
-Atom collects nothing. It has no accounts, no analytics, no cookies, and makes no network requests: every page, picture, and number comes from the site or the app itself, and the Mac app has no network access at all. Your theme and your mission progress are saved only in your own browser or app, and clearing your browser's site data erases them.
+Atom collects nothing. It has no accounts, no analytics, no cookies, and makes no network requests: every page, picture, and number comes from the site or the app itself. The desktop apps load only their own bundled page and send every web link to your browser. Your theme and your mission progress are saved only in your own browser or app, and clearing your browser's site data erases them.
 
 ## Found a mistake?
 
@@ -95,7 +99,21 @@ mac/build-mac-app.sh
 # builds dist/Atom.app (Apple silicon and Intel), dist/Atom-mac.zip, and its SHA-256 checksum
 ```
 
-With an Apple Developer ID, the same script signs the app with the hardened runtime and has Apple notarize it; the comments at the top of `mac/build-mac-app.sh` show how. On GitHub, pushing a tag such as `v1.0.1` builds, signs (when the signing secrets are set), and publishes the release automatically, and every push is checked by the workflows in `.github/workflows`: the HTML is validated, every page is loaded under the same path GitHub Pages uses, the physics self-test runs, accessibility is checked with axe-core, and the Mac app is compiled and launched on a real Mac.
+With an Apple Developer ID, the same script signs the app with the hardened runtime and has Apple notarize it; the comments at the top of `mac/build-mac-app.sh` show how.
+
+The Windows and Linux apps are a small [Electron](https://www.electronjs.org) window around the same file, in `desktop/`. They need [Node.js](https://nodejs.org) 22 or later:
+
+```sh
+cd desktop
+npm ci
+node build.mjs win      # on Windows: desktop/dist/Atom-Windows-Setup.exe and Atom-Windows-portable.zip
+node build.mjs linux    # on Linux:   desktop/dist/Atom-Linux.AppImage and Atom-Linux.deb
+npm start               # or just run it
+```
+
+The page gets no Node.js, no preload bridge, and no permissions, runs in Chromium's sandbox, and cannot navigate anywhere but itself; the Electron fuses that would let someone run the app as plain Node.js or attach a debugger to it are switched off.
+
+On GitHub, pushing a tag such as `v1.0.1` builds all three apps, starts the Windows and Linux builds to run their self-tests, and publishes one release with every download and a `SHA256SUMS.txt`. Every push is checked by the workflows in `.github/workflows`: the HTML is validated, every page is loaded under the same path GitHub Pages uses, the physics self-test runs, accessibility is checked with axe-core, the Mac app is compiled and launched on a real Mac, and the Windows and Linux apps are built and started.
 
 `app/atom.html` is the single source of truth. The website's physics, element data, renderer, and table (`docs/assets/atom-*.js`) are cut out of it by `scripts/sync-from-lab.sh`, never retyped, so the site and the app can't drift apart.
 
@@ -116,6 +134,10 @@ atom/
 │   │   ├── atom-ptable.js       generated: the living table, the card, the nebula, the workbench, and the missions
 │   │   └── fonts/               Archivo, the one typeface, and its license (OFL.txt)
 │   └── media/                   screenshots and the recordings in this README (animated WebP)
+├── desktop/                     the Windows and Linux app: an Electron window around atom.html
+│   ├── main.js                  the window, the menus, and the locked-down web settings
+│   ├── build.mjs, prepare.mjs   package it with electron-builder
+│   └── smoke-desktop.mjs        start the packaged app and run its self-test
 ├── mac/
 │   ├── main.swift               a window around atom.html, with a normal Mac menu bar
 │   ├── build-mac-app.sh

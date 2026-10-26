@@ -1,0 +1,103 @@
+{
+  "name": "atom-periodic-table",
+  "productName": "Atom",
+  "version": "1.0.0",
+  "description": "Every element, computed from the equations and set in the cosmos that made it. Fall into any one, down to the quarks.",
+  "author": {
+    "name": "Thomas J. Norman",
+    "email": "normansrule@users.noreply.github.com",
+    "url": "https://github.com/normansrule/atom"
+  },
+  "homepage": "https://normansrule.github.io/atom/",
+  "license": "MIT",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "prepare-app": "node prepare.mjs",
+    "start": "node prepare.mjs && electron .",
+    "dist:win": "node build.mjs win",
+    "dist:linux": "node build.mjs linux",
+    "smoke": "node smoke-desktop.mjs"
+  },
+  "devDependencies": {
+    "electron": "44.9.3",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "io.github.normansrule.atom",
+    "productName": "Atom",
+    "copyright": "Copyright © 2026 Thomas J. Norman. MIT License.",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "app/**",
+      "icon.png",
+      "LICENSE.txt"
+    ],
+    "asar": true,
+    "electronFuses": {
+      "runAsNode": false,
+      "enableCookieEncryption": true,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true
+    },
+    "win": {
+      "executableName": "Atom",
+      "artifactName": "Atom-Windows-portable.${ext}",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Atom",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Atom-Windows-Setup.${ext}"
+    },
+    "linux": {
+      "executableName": "atom-periodic-table",
+      "artifactName": "Atom-Linux.${ext}",
+      "category": "Education",
+      "synopsis": "A living periodic table you can fall into, down to the quarks",
+      "description": "Every element's electron cloud computed live from the equations, set in the cosmos that made it, with a zoom from any element down to its quarks.",
+      "maintainer": "Thomas J. Norman <normansrule@users.noreply.github.com>",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "toolsets": {
+      "appimage": "1.0.3"
+    }
+  }
+}

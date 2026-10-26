@@ -8,4 +8,10 @@ dist/
 .idea/
 # local check tools (npm install --no-save ...)
 node_modules/
-package-lock.json
+/package-lock.json
+# desktop build: made by desktop/prepare.mjs and electron-builder
+desktop/dist/
+desktop/app/
+desktop/build/
+desktop/icon.png
+desktop/LICENSE.txt

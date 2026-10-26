@@ -55,3 +55,47 @@ jobs:
             dist/Atom-mac.zip
             dist/Atom-mac.zip.sha256
           retention-days: 14
+
+  desktop:
+    name: Desktop app on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: Install the build tools
+        working-directory: desktop
+        run: npm ci
+      - name: Build
+        working-directory: desktop
+        shell: bash
+        run: node build.mjs ${{ runner.os == 'Windows' && 'win' || 'linux' }}
+      - name: Start the app and run its self-test (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          npm install --no-save --no-audit --no-fund playwright-core@1
+          node desktop/smoke-desktop.mjs
+      - name: Start the app and run its self-test (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          npm install --no-save --no-audit --no-fund playwright-core@1
+          xvfb-run -a node desktop/smoke-desktop.mjs
+          chmod +x desktop/dist/Atom-Linux.AppImage
+          APPIMAGE_EXTRACT_AND_RUN=1 ATOM_EXE=desktop/dist/Atom-Linux.AppImage xvfb-run -a node desktop/smoke-desktop.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-${{ runner.os }}
+          path: |
+            desktop/dist/smoke-*.png
+            desktop/dist/Atom-*
+          retention-days: 14

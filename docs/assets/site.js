@@ -961,8 +961,22 @@ function missionGo(a){
       var fb=HOST.querySelector('[data-i="fire"]'); if(fb&&!fb.closest("[hidden]")) fb.click(); } } }
 }
 
+/* the download that fits this computer goes first and gets the accent */
+function pickDownload(){
+  var ua=navigator.userAgent||"", pf=(navigator.userAgentData&&navigator.userAgentData.platform)||navigator.platform||"", os="";
+  if(/iPhone|iPad|Android/i.test(ua)||(/Mac/i.test(pf)&&navigator.maxTouchPoints>1)) os="web";   /* phones and tablets: the browser version */
+  else if(/Win/i.test(pf)||/Windows/i.test(ua)) os="win";
+  else if(/Mac/i.test(pf)&&!(navigator.maxTouchPoints>1)) os="mac";          /* an iPad also says Mac */
+  else if(/Linux|X11/i.test(pf+" "+ua)&&!/Android/i.test(ua)) os="linux";
+  if(!os) return;
+  var me=D.querySelector('.dl [data-os="'+os+'"]'); if(!me) return;
+  [].forEach.call(D.querySelectorAll(".dl [data-os]"),function(b){ b.classList.toggle("btn-primary",b===me); });
+  me.parentNode.insertBefore(me,me.parentNode.firstChild);
+}
+
 /* ------------------------------------------------------------------ boot */
 function boot(){
+  pickDownload();
   W=window.innerWidth; H=window.innerHeight;
   var q=/[?&]el=([A-Za-z]{1,3})/.exec(location.search), z0=26;
   if(q){ for(var i=0;i<118;i++) if(ELEMENTS[i][1].toLowerCase()===q[1].toLowerCase()) z0=i+1; }
