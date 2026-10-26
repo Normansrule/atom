@@ -1,0 +1,11 @@
+# build output
+dist/
+*.iconset/
+# macOS
+.DS_Store
+# editors
+.vscode/
+.idea/
+# local check tools (npm install --no-save ...)
+node_modules/
+package-lock.json

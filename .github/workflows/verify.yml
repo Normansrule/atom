@@ -1,0 +1,57 @@
+# Verify: on every push and pull request, check the website and the in-browser
+# app the way GitHub Pages serves them, and compile the Mac app on a real Mac.
+name: Verify
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  site:
+    name: Website and in-browser app
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the checkers
+        run: npm install --no-save --no-audit --no-fund playwright@1 axe-core@4 html-validate@9
+      - name: Install a browser
+        run: npx playwright install --with-deps chromium
+      - name: Validate the HTML
+        run: npx html-validate docs/index.html docs/404.html
+      - name: Load every page, run the physics self-test, check accessibility
+        run: node scripts/smoke.mjs
+      - name: The site and the app come from the same source
+        run: cmp app/atom.html docs/app/index.html
+
+  mac:
+    name: Mac app builds
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build (signed ad hoc)
+        run: sh mac/build-mac-app.sh
+      - name: The app launches and stays up
+        run: |
+          open dist/Atom.app
+          sleep 15
+          pgrep -x Atom
+          pkill -x Atom || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Atom-mac
+          path: |
+            dist/Atom-mac.zip
+            dist/Atom-mac.zip.sha256
+          retention-days: 14

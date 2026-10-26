@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atom: every element, down to the quarks</title>
+<meta name="description" content="A living periodic table: every element's electron cloud ray-marched on your graphics card. Pick one and fall into it, through its light and its nucleus to a proton you can pull a quark out of. Free, open source, works offline.">
+<meta name="theme-color" content="#0b0c0d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eceeec" media="(prefers-color-scheme: light)">
+<meta property="og:title" content="Atom: every element, down to the quarks">
+<meta property="og:description" content="Every shape computed from the equations, from the electron cloud to the gluon field.">
+<meta property="og:image" content="https://normansrule.github.io/atom/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Atom periodic table: 118 glowing electron clouds floating in a nebula">
+<meta property="og:url" content="https://normansrule.github.io/atom/">
+<meta property="og:site_name" content="Atom">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://normansrule.github.io/atom/assets/og.jpg">
+<link rel="canonical" href="https://normansrule.github.io/atom/">
+<!-- Everything Atom loads comes from this site. The hash is the inline theme
+     script below: change that script and the hash must change with it
+     (scripts/smoke.mjs fails on the console error if they disagree). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-g37sXJHiSQfTwgVYRhIeYrKkxyvKxtzneVtLvTS4uDs='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<link rel="icon" href="assets/favicon-64.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css">
+<script>
+  /* theme before first paint, so a light-table visitor never sees the chamber flash */
+  (function(){ var t=null; try{ t=localStorage.getItem("atom.site.theme"); }catch(e){}
+    if(!t) t=(window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark";
+    document.documentElement.setAttribute("data-theme", t);
+    if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("calm");
+  })();
+</script>
+</head>
+<body>
+<noscript><p class="noscript">Atom draws every element live with JavaScript and WebGL. Turn JavaScript on to see the table, or download the Mac app.</p></noscript>
+<a class="skip" href="#main">Skip to the content</a>
+
+<!-- the scene: one fixed stage behind the whole page, drawn by WebGL -->
+<div class="scene" aria-hidden="true">
+  <canvas id="world"></canvas>
+  <canvas id="glA"></canvas>
+  <canvas id="glB"></canvas>
+  <canvas id="glField"></canvas>
+  <canvas id="overlay"></canvas>
+</div>
+
+<header class="bar">
+  <a class="wordmark" href="#top" aria-label="Atom, back to the top">Atom</a>
+  <nav aria-label="Sections">
+    <a href="#top">Elements</a>
+    <a href="#cloud">The cloud</a>
+    <a href="#light">Light</a>
+    <a href="#nucleus">Nucleus</a>
+    <a href="#pull">Pull a quark</a>
+    <a href="#edge">The edge</a>
+    <a href="#bench">Build</a>
+  </nav>
+  <div class="bar-actions">
+    <button type="button" class="toggle" id="soundBtn" aria-pressed="false">Sound off</button>
+    <button type="button" class="toggle" id="themeBtn" aria-pressed="false">Light table</button>
+    <a class="btn btn-primary btn-small" href="#get">Get Atom</a>
+  </div>
+</header>
+
+<!-- the depth gauge: the zoom framework, as navigation -->
+<nav class="gauge" aria-label="Depth">
+  <ol>
+    <li><a href="#top" data-depth="top"><b>118</b><span>Elements</span></a></li>
+    <li><a href="#cloud" data-depth="cloud"><b>10⁻¹⁰ m</b><span>Atom</span></a></li>
+    <li><a href="#light" data-depth="light"><b>10⁻¹⁰ m</b><span>Light</span></a></li>
+    <li><a href="#empty" data-depth="empty"><b>10⁻¹² m</b><span>Empty</span></a></li>
+    <li><a href="#nucleus" data-depth="nucleus"><b>10⁻¹⁴ m</b><span>Nucleus</span></a></li>
+    <li><a href="#proton" data-depth="proton"><b>10⁻¹⁵ m</b><span>Proton</span></a></li>
+    <li><a href="#pull" data-depth="pull"><b>10⁻¹⁵ m</b><span>Quarks</span></a></li>
+    <li><a href="#edge" data-depth="edge"><b>&lt;10⁻¹⁸ m</b><span>Edge</span></a></li>
+  </ol>
+</nav>
+
+<main id="main">
+
+<!-- =============================================================== the table -->
+<section class="pin ptsec" id="top" data-scene="table" aria-labelledby="t-hero">
+  <div class="sticky ptstick">
+    <div class="ptstage" id="ptStage">
+      <div id="ptSlot">
+        <div class="pt-intro">
+          <h1 id="t-hero">Atom</h1>
+          <p class="statement">Every element, computed from the equations. Each square is a live picture of the electron that gives the element its place in the table.</p>
+          <div class="lens" role="group" aria-label="Read the table by">
+            <button type="button" data-lens="shapes" aria-pressed="true">Shapes</button>
+            <button type="button" data-lens="origin" aria-pressed="false">Origins</button>
+            <button type="button" data-lens="frontier" aria-pressed="false">Frontier</button>
+          </div>
+        </div>
+        <div class="ptread" id="ptRead"></div>
+      </div>
+    </div>
+    <div class="lens-legend" id="lensLegend" aria-live="polite"></div>
+    <div class="pt-foot" id="ptFoot">
+      <p class="pt-hint"><b>Pick an element</b>, then scroll to fall into it: the cloud, its light, its nucleus, a proton, and the quarks.</p>
+      <p class="pt-swipe">Swipe the table sideways for all 18 columns.</p>
+      <div class="actions">
+        <a class="btn" href="https://github.com/normansrule/atom/releases/latest" data-repo-link>Download for Mac</a>
+        <a class="btn" href="app/">Open the app</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<aside class="sheet" id="sheet" aria-labelledby="pdName" hidden>
+  <div class="sheet-bar">
+    <button type="button" class="btn btn-primary" id="fallIn">Fall into iron</button>
+    <button type="button" class="sheet-x" id="sheetClose" aria-label="Close the element card">Close</button>
+  </div>
+  <div class="sheet-body" id="sheetBody" tabindex="-1"></div>
+</aside>
+
+<!-- =============================================================== the cloud -->
+<section class="pin" id="cloud" data-scene="cloud" aria-labelledby="t-cloud">
+  <div class="sticky">
+    <div class="hit" data-hit="cloud" aria-hidden="true"></div>
+    <div class="plate">
+      <h2 id="t-cloud"><span data-el="poss">Iron&rsquo;s</span> electrons</h2>
+      <div class="steps">
+        <p class="step" data-step="0" id="cs0"></p>
+        <p class="step" data-step="1" id="cs1"></p>
+        <p class="step" data-step="2" id="cs2">The color is the wave&rsquo;s <b>phase</b>. In a single state it only turns in place, faster where the electron is more tightly bound, and the shape never moves. Opposite colors are opposite signs, and that decides whether two atoms&rsquo; clouds add up into a bond or cancel.</p>
+        <p class="step" data-step="3" id="cs3"></p>
+      </div>
+      <canvas class="radial" id="radial" aria-hidden="true"></canvas>
+      <div class="picker" id="orbPicker" role="group" aria-label="Its occupied orbitals"></div>
+      <p class="fine" id="orbReadout">Drag the stage to turn it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== light -->
+<section class="pin" id="light" data-scene="light" aria-labelledby="t-light">
+  <div class="sticky">
+    <div class="plate wide">
+      <h2 id="t-light"><span data-el="poss">Iron&rsquo;s</span> light is a fingerprint</h2>
+      <p id="lightIntro"></p>
+      <p class="equation" id="lightEq"></p>
+      <div class="spectrograph" id="spectrograph">
+        <canvas id="ladder" aria-hidden="true"></canvas>
+        <canvas id="spectrum" aria-hidden="true"></canvas>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="exciteBtn">Excite the atom</button>
+        <button type="button" class="btn" id="clearLines">Clear the lines</button>
+      </div>
+      <p class="readout" id="lineReadout" aria-live="polite"></p>
+      <p class="fine" id="lightFine"></p>
+      <p class="fine" id="ringNote"></p>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== the emptiness -->
+<section class="pin long" id="empty" data-scene="empty" aria-labelledby="t-empty">
+  <div class="sticky">
+    <div class="plate">
+      <h2 id="t-empty">Almost nothing is there</h2>
+      <p class="numeral" id="depthNumeral" aria-hidden="true">10⁻¹⁰ m</p>
+      <p id="emptyText"></p>
+      <p class="stat"><span id="emptyStat">99.999 999 999 99 %</span> of <span data-el="article">an iron</span> atom&rsquo;s volume is empty space.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== nucleus -->
+<section class="chapter" id="nucleus" data-scene="nucleus" aria-labelledby="t-nucleus">
+  <div class="plate">
+    <h2 id="t-nucleus">A force you never feel</h2>
+    <p id="nucText"></p>
+    <p class="equation small" id="nucEq"></p>
+    <figure class="budget"><canvas class="curve" id="bindingCurve" aria-label="Binding energy per nucleon against mass number. It rises steeply, peaks near iron at about 8.8 MeV, and falls slowly toward uranium." role="img"></canvas>
+    <figcaption>Binding energy per nucleon, in MeV, against the number of nucleons. Dots are measured masses; the line is the liquid-drop formula above. The white dot is <span data-el="name">iron</span>.</figcaption></figure>
+    <p>Per nucleon that binding peaks near iron and nickel. Fusing light nuclei climbs the curve from one side and splitting heavy ones climbs it from the other, which is the whole story of starlight and of reactors.</p>
+    <p class="note"><b>New in 2026:</b> clocks that tick on a transition inside a nucleus. Thorium-229 was first excited by a laser in 2024, and in October 2026 two groups reported working nuclear clocks.</p>
+  </div>
+</section>
+
+<!-- =============================================================== proton -->
+<section class="chapter" id="proton" data-scene="proton" aria-labelledby="t-proton">
+  <div class="plate">
+    <h2 id="t-proton">A proton is mostly energy</h2>
+    <p>Keep falling, into one of <span data-el="protons">iron&rsquo;s 26 protons</span>. Its three quarks, two up and one down, add up to about <b>9 MeV</b>. The proton weighs <b>938.27 MeV</b>. The other 99% is the energy of the gluon field and of quarks moving inside a box a femtometer wide.</p>
+    <figure class="budget">
+      <div class="bars" role="img" aria-label="Proton mass: 33 percent quark energy, 37 percent gluon field energy, 23 percent trace anomaly, 9 percent quark masses">
+        <span style="--w:33" class="b1">33</span><span style="--w:37" class="b2">37</span><span style="--w:23" class="b3">23</span><span style="--w:9" class="b4">9</span>
+      </div>
+      <figcaption>Where the proton&rsquo;s mass comes from, in per cent: quark motion, gluon field energy, a quantum effect called the trace anomaly, and the quark masses themselves (Yang et al., 2018).</figcaption>
+    </figure>
+    <p class="note">Its charge radius is 0.84075 fm. The famous proton radius puzzle has largely closed: in 2026 ordinary hydrogen gave 0.8406 fm, matching the muonic measurement.</p>
+  </div>
+</section>
+
+<!-- =============================================================== pull a quark -->
+<section class="pull" id="pull" data-scene="pull" aria-labelledby="t-pull">
+  <div class="pull-copy">
+    <h2 id="t-pull">Now pull a quark out</h2>
+    <p class="lede">Grab a quark and drag. The gluon field between quarks doesn&rsquo;t spread out the way a magnet&rsquo;s does. It stays a tube, so every femtometer costs the same energy and the pull never weakens.</p>
+    <dl class="live">
+      <div><dt>Stretched leg</dt><dd id="pLeg">0.40 fm</dd></div>
+      <div><dt>Energy in the string</dt><dd id="pE">0.00 GeV</dd></div>
+      <div><dt>Pull on the quark</dt><dd id="pF">14.7 tonnes</dd></div>
+      <div><dt>Left before it breaks</dt><dd id="pLeft">0.85 fm</dd></div>
+    </dl>
+    <p class="reaction" id="pReact" aria-live="polite"></p>
+    <p id="pNote">Keep pulling. Near 1.25 fm the string holds about 1.1 GeV, more than it costs to make a quark and an antiquark out of the vacuum, so it snaps instead of stretching.</p>
+    <div class="actions">
+      <button type="button" class="btn btn-primary" id="pullOut">Pull 0.1 fm further</button>
+      <button type="button" class="btn" id="pullBack">Let go</button>
+    </div>
+    <details class="math">
+      <summary>The math</summary>
+      <p class="equation">V<sub>3Q</sub> = −A ħc Σ 1/r<sub>ij</sub> + σ L<sub>min</sub></p>
+      <p><b>σ = 0.90 GeV/fm</b>, the string tension. One GeV per femtometer is 1.602 × 10⁵ newtons, about 16.3 tonnes-force, so this string pulls with <b>14.7 tonnes</b>, whatever its length. <b>L<sub>min</sub></b> is the total length of the three legs, which meet at a junction where every angle is 120°. A = 0.137 is the short-range Coulomb-like part.</p>
+      <p>The potential is the Y-shaped form fitted to lattice quantum chromodynamics (QCD) by Takahashi et al. (2001, 2002). The 1.25 fm breaking distance comes from a quark&ndash;antiquark string in lattice QCD (Bali et al., 2005), computed with sea quarks heavier than real ones; using it for one leg of a proton is an approximation. What the vacuum makes when the string breaks follows from conservation alone. In 2025 this string breaking was watched directly in quantum simulators running simplified versions of the theory.</p>
+    </details>
+  </div>
+  <div class="hit" data-hit="pull" aria-hidden="true"></div>
+  <p class="pull-hint" aria-hidden="true" id="pullHint">Drag a quark</p>
+</section>
+
+<!-- =============================================================== the edge -->
+<section class="chapter edge" id="edge" data-scene="edge" aria-labelledby="t-edge">
+  <h2 id="t-edge">What nobody knows yet</h2>
+  <p class="lede">Below 10⁻¹⁸ m nobody has seen anything: electrons and quarks are still points. The open questions aren&rsquo;t about smaller pieces, they&rsquo;re about why the pieces behave as they do. Each is labeled with where it stands.</p>
+  <ul class="questions">
+    <li><span class="status">Open</span><h3>Why can&rsquo;t a quark ever escape?</h3><p>Computers reproduce confinement, but nobody has proved the theory requires it. Doing so, the Yang&ndash;Mills mass gap, is one of the seven Millennium Prize problems.</p></li>
+    <li><span class="status">Open</span><h3>Where does the proton&rsquo;s spin come from?</h3><p>Quark spins supply only about 30%. The Electron-Ion Collider, now being built in Brookhaven&rsquo;s old collider tunnel, should settle the rest in the mid-2030s.</p></li>
+    <li><span class="status">Claim</span><h3>Is there a particle made only of glue?</h3><p>In 2026 the BESIII experiment reported that X(2370) is mostly a glueball. One experiment&rsquo;s reading, not yet confirmed by anyone else.</p></li>
+    <li><span class="status">Unresolved</span><h3>How long does a free neutron live?</h3><p>877.8 seconds in a bottle, 887.7 in a beam. Ten seconds apart, about four standard deviations, and a new beam method now sides with the bottles.</p></li>
+    <li><span class="status">Open</span><h3>Why does the strong force respect mirrors?</h3><p>The theory allows the neutron to be lopsided, and it measures perfectly round to one part in ten billion. That is the strong CP problem; a particle called the axion is one proposed answer.</p></li>
+    <li><span class="status">Open</span><h3>Why is there matter at all?</h3><p>The Big Bang should have made equal amounts of matter and antimatter. Antihydrogen falls down like hydrogen (2023), and the missing asymmetry is still missing.</p></li>
+    <li><span class="status">New</span><h3>A clock inside a nucleus</h3><p>Thorium-229&rsquo;s nuclear transition was laser-excited in 2024, and the first nuclear clocks were reported in October 2026.</p></li>
+    <li><span class="status">Settled</span><h3>Two famous anomalies, closed</h3><p>The muon&rsquo;s magnetism now agrees with theory (2025), and hydrogen settled the proton&rsquo;s radius at 0.84 fm (2026).</p></li>
+  </ul>
+</section>
+
+<!-- =============================================================== the workbench -->
+<section class="bench" id="bench" data-scene="bench" aria-labelledby="t-bench">
+  <div class="bench-head">
+    <h2 id="t-bench">Build it yourself</h2>
+    <p class="lede">Three things the people building the future work on every day, computed live: light a fusion reaction, make a chemical bond, and design a battery. Every number comes from measured data or a textbook formula, and each bench says which.</p>
+  </div>
+  <div id="benchHost"></div>
+</section>
+
+<!-- =============================================================== get -->
+<section class="get" id="get" aria-labelledby="t-get">
+  <h2 id="t-get">Take it with you</h2>
+  <p class="lede">The app opens on the same table and goes deeper: every orbital of every element, the nuclear shell model, decay chains, and a guided tour. It is a single file of HTML, CSS and JavaScript: no network access, no tracking, nothing to install. Run it as a Mac app or open it in any modern browser.</p>
+  <div class="actions">
+    <a class="btn btn-primary" href="https://github.com/normansrule/atom/releases/latest" data-repo-link>Download for Mac</a>
+    <a class="btn" href="app/">Open in your browser</a>
+    <a class="btn" href="https://github.com/normansrule/atom" data-repo-link>Read the source</a>
+  </div>
+  <div class="shots">
+    <figure><img src="media/app-dark.jpg" alt="The Atom app opening on its periodic table, floating in a nebula: 118 squares, each glowing with its element's outermost electron cloud in phase colors, with hydrogen's readout in the gap above the transition metals and the Shapes, Origins, and Frontier lenses above the table" width="1440" height="960" loading="lazy" decoding="async"><figcaption>The app opens on the same living table.</figcaption></figure>
+    <figure><img src="media/app-light.png" alt="The Atom app in its light theme, zoomed into a neutron of iron-56 with one quark pulled out on its gluon string, and the string's length, energy and pull listed beside it" width="1440" height="960" loading="lazy" decoding="async"><figcaption>Inside iron, on the light table: pulling a quark, with the live numbers.</figcaption></figure>
+  </div>
+  <p class="fine">Runs on Apple silicon and Intel Macs with macOS 12 or later. Unless a release says it is notarized by Apple, macOS asks you to approve it once: try to open it, then choose Open Anyway in System Settings, under Privacy &amp; Security. Each release lists its SHA-256 checksum.</p>
+</section>
+</main>
+
+<div class="ms-dock" id="missions"></div>
+
+<footer class="foot">
+  <p class="foot-mark">Atom</p>
+  <details class="sources">
+    <summary>Sources</summary>
+    <ol id="sourceList">
+      <li>Abel, C., et al. (2020). Measurement of the permanent electric dipole moment of the neutron. <i>Physical Review Letters, 124</i>(8), 081803. <a href="https://doi.org/10.1103/PhysRevLett.124.081803">https://doi.org/10.1103/PhysRevLett.124.081803</a></li>
+      <li>Aliberti, R., et al. (2025). The anomalous magnetic moment of the muon in the Standard Model: An update. <i>Physics Reports, 1143</i>, 1–158. <a href="https://doi.org/10.1016/j.physrep.2025.08.002">https://doi.org/10.1016/j.physrep.2025.08.002</a></li>
+      <li>Anderson, E. K., et al. (ALPHA Collaboration). (2023). Observation of the effect of gravity on the motion of antimatter. <i>Nature, 621</i>, 716–722. <a href="https://doi.org/10.1038/s41586-023-06527-1">https://doi.org/10.1038/s41586-023-06527-1</a></li>
+      <li>Bali, G. S., Neff, H., Düssel, T., Lippert, T., &amp; Schilling, K. (2005). Observation of string breaking in QCD. <i>Physical Review D, 71</i>(11), 114513. <a href="https://doi.org/10.1103/PhysRevD.71.114513">https://doi.org/10.1103/PhysRevD.71.114513</a></li>
+      <li>Ball, R. D., et al. (NNPDF Collaboration). (2022). Evidence for intrinsic charm quarks in the proton. <i>Nature, 608</i>, 483–487. <a href="https://doi.org/10.1038/s41586-022-04998-2">https://doi.org/10.1038/s41586-022-04998-2</a></li>
+      <li>BESIII Collaboration. (2024). Determination of spin-parity quantum numbers of X(2370) as 0⁻⁺ from J/ψ → γK⁰<sub>S</sub>K⁰<sub>S</sub>η′. <i>Physical Review Letters, 132</i>(18), 181901. <a href="https://doi.org/10.1103/PhysRevLett.132.181901">https://doi.org/10.1103/PhysRevLett.132.181901</a></li>
+      <li>Bullis, R. G., et al. (2026). Precision spectroscopy of 2S–nS transitions in atomic hydrogen: A determination of the proton charge radius. <i>Physical Review Letters</i>. <a href="https://doi.org/10.1103/lgl2-6cb8">https://doi.org/10.1103/lgl2-6cb8</a></li>
+      <li>Burkert, V. D., Elouadrhiri, L., &amp; Girod, F. X. (2018). The pressure distribution inside the proton. <i>Nature, 557</i>, 396–399. <a href="https://doi.org/10.1038/s41586-018-0060-z">https://doi.org/10.1038/s41586-018-0060-z</a></li>
+      <li>Cochran, T. A., et al. (2025). Visualizing dynamics of charges and strings in (2 + 1)D lattice gauge theories. <i>Nature, 642</i>, 315–320. <a href="https://doi.org/10.1038/s41586-025-08999-9">https://doi.org/10.1038/s41586-025-08999-9</a></li>
+      <li>Duran, B., et al. (2023). Determining the gluonic gravitational form factors of the proton. <i>Nature, 615</i>, 813–816. <a href="https://doi.org/10.1038/s41586-023-05730-4">https://doi.org/10.1038/s41586-023-05730-4</a></li>
+      <li>Edlén, B. (1966). The refractive index of air. <i>Metrologia, 2</i>(2), 71–80. <a href="https://doi.org/10.1088/0026-1394/2/2/002">https://doi.org/10.1088/0026-1394/2/2/002</a></li>
+      <li>Fan, X., Myers, T. G., Sukra, B. A. D., &amp; Gabrielse, G. (2023). Measurement of the electron magnetic moment. <i>Physical Review Letters, 130</i>(7), 071801. <a href="https://doi.org/10.1103/PhysRevLett.130.071801">https://doi.org/10.1103/PhysRevLett.130.071801</a></li>
+      <li>González-Cuadra, D., et al. (2025). Observation of string breaking on a (2 + 1)D Rydberg quantum simulator. <i>Nature, 642</i>, 321–326. <a href="https://doi.org/10.1038/s41586-025-09051-6">https://doi.org/10.1038/s41586-025-09051-6</a></li>
+      <li>Jaffe, A., &amp; Witten, E. (n.d.). <i>Quantum Yang–Mills theory</i> [Millennium Prize problem description]. Clay Mathematics Institute. <a href="https://www.claymath.org/millennium/yang-mills-the-maths-gap/">https://www.claymath.org/millennium/yang-mills-the-maths-gap/</a></li>
+      <li>Ji, X., Yuan, F., &amp; Zhao, Y. (2021). What we know and what we don't know about the proton spin after 30 years. <i>Nature Reviews Physics, 3</i>, 27–38. <a href="https://doi.org/10.1038/s42254-020-00248-4">https://doi.org/10.1038/s42254-020-00248-4</a></li>
+      <li>Kramida, A., Ralchenko, Yu., Reader, J., &amp; NIST ASD Team. (2024). <i>NIST Atomic Spectra Database</i> (Version 5.12) [Data set]. National Institute of Standards and Technology. <a href="https://doi.org/10.18434/T4W30F">https://doi.org/10.18434/T4W30F</a></li>
+      <li>Maisenbacher, L., et al. (2026). Sub-part-per-trillion test of the Standard Model with atomic hydrogen. <i>Nature</i>. <a href="https://doi.org/10.1038/s41586-026-10124-3">https://doi.org/10.1038/s41586-026-10124-3</a></li>
+      <li>Mohr, P. J., Newell, D. B., Taylor, B. N., &amp; Tiesinga, E. (2025). CODATA recommended values of the fundamental physical constants: 2022. <i>Reviews of Modern Physics, 97</i>(2), 025002. <a href="https://doi.org/10.1103/RevModPhys.97.025002">https://doi.org/10.1103/RevModPhys.97.025002</a></li>
+      <li>Muon g−2 Collaboration. (2025). Measurement of the positive muon anomalous magnetic moment to 127 ppb. <i>Physical Review Letters, 135</i>(10), 101802. <a href="https://doi.org/10.1103/7clf-sm2v">https://doi.org/10.1103/7clf-sm2v</a></li>
+      <li>Parthey, C. G., et al. (2011). Improved measurement of the hydrogen 1S–2S transition frequency. <i>Physical Review Letters, 107</i>(20), 203001. <a href="https://doi.org/10.1103/PhysRevLett.107.203001">https://doi.org/10.1103/PhysRevLett.107.203001</a></li>
+      <li>Particle Data Group. (2026). Review of particle physics. <i>International Journal of Modern Physics A, 41</i>, 2630011. <a href="https://doi.org/10.1142/S0217751X26300115">https://doi.org/10.1142/S0217751X26300115</a></li>
+      <li>Prohaska, T., et al. (2022). Standard atomic weights of the elements 2021 (IUPAC Technical Report). <i>Pure and Applied Chemistry, 94</i>(5), 573–600. <a href="https://doi.org/10.1515/pac-2019-0603">https://doi.org/10.1515/pac-2019-0603</a></li>
+      <li>Rohlf, J. W. (1994). <i>Modern physics from α to Z⁰</i>. Wiley.</li>
+      <li>Rudnick, R. L., &amp; Gao, S. (2003). Composition of the continental crust. In H. D. Holland &amp; K. K. Turekian (Eds.), <i>Treatise on geochemistry</i> (Vol. 3, pp. 1–64). Elsevier. <a href="https://doi.org/10.1016/B0-08-043751-6/03016-4">https://doi.org/10.1016/B0-08-043751-6/03016-4</a></li>
+      <li>Rumble, J. R. (Ed.). (2024). <i>CRC handbook of chemistry and physics</i> (105th ed.). CRC Press.</li>
+      <li>Slater, J. C. (1930). Atomic shielding constants. <i>Physical Review, 36</i>(1), 57–64. <a href="https://doi.org/10.1103/PhysRev.36.57">https://doi.org/10.1103/PhysRev.36.57</a></li>
+      <li>Takahashi, T. T., Matsufuru, H., Nemoto, Y., &amp; Suganuma, H. (2001). Three-quark potential in SU(3) lattice QCD. <i>Physical Review Letters, 86</i>(1), 18–21. <a href="https://doi.org/10.1103/PhysRevLett.86.18">https://doi.org/10.1103/PhysRevLett.86.18</a></li>
+      <li>Takahashi, T. T., Suganuma, H., Nemoto, Y., &amp; Matsufuru, H. (2002). Detailed analysis of the three-quark potential in SU(3) lattice QCD. <i>Physical Review D, 65</i>(11), 114509. <a href="https://doi.org/10.1103/PhysRevD.65.114509">https://doi.org/10.1103/PhysRevD.65.114509</a></li>
+      <li>Tiedau, J., et al. (2024). Laser excitation of the Th-229 nucleus. <i>Physical Review Letters, 132</i>(18), 182501. <a href="https://doi.org/10.1103/PhysRevLett.132.182501">https://doi.org/10.1103/PhysRevLett.132.182501</a></li>
+      <li>UCNτ Collaboration. (2025). Measurement of the free neutron lifetime in a magneto-gravitational trap with in situ detection. <i>Physical Review C, 111</i>(4), 045501. <a href="https://doi.org/10.1103/PhysRevC.111.045501">https://doi.org/10.1103/PhysRevC.111.045501</a></li>
+      <li>Unsöld, A. (1927). Beiträge zur Quantenmechanik der Atome. <i>Annalen der Physik, 387</i>(3), 355–393. <a href="https://doi.org/10.1002/andp.19273870304">https://doi.org/10.1002/andp.19273870304</a></li>
+      <li>Wang, M., Huang, W. J., Kondev, F. G., Audi, G., &amp; Naimi, S. (2021). The AME 2020 atomic mass evaluation (II): Tables, graphs and references. <i>Chinese Physics C, 45</i>(3), 030003. <a href="https://doi.org/10.1088/1674-1137/abddaf">https://doi.org/10.1088/1674-1137/abddaf</a></li>
+      <li>Yang, Y.-B., et al. (2018). Proton mass decomposition from the QCD energy momentum tensor. <i>Physical Review Letters, 121</i>(21), 212001. <a href="https://doi.org/10.1103/PhysRevLett.121.212001">https://doi.org/10.1103/PhysRevLett.121.212001</a></li>
+      <li>Yue, A. T., et al. (2013). Improved determination of the neutron lifetime. <i>Physical Review Letters, 111</i>(22), 222501. <a href="https://doi.org/10.1103/PhysRevLett.111.222501">https://doi.org/10.1103/PhysRevLett.111.222501</a></li>
+      <li>Zhang, C., et al. (2024). Frequency ratio of the ²²⁹ᵐTh nuclear isomeric transition and the ⁸⁷Sr atomic clock. <i>Nature, 633</i>, 63–70. <a href="https://doi.org/10.1038/s41586-024-07839-6">https://doi.org/10.1038/s41586-024-07839-6</a></li>
+    </ol>
+  </details>
+  <p class="fine">Made by Thomas J. Norman. MIT License. Constants are CODATA 2022, quark masses PDG 2026, spectral lines NIST. Undiscovered physics appears here only as open questions.</p>
+</footer>
+
+<script src="assets/atom-data.js" defer></script>
+<script src="assets/atom-engines.js" defer></script>
+<script src="assets/atom-ptable.js" defer></script>
+<script src="assets/site.js" defer></script>
+</body>
+</html>

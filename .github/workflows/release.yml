@@ -1,0 +1,75 @@
+# Release: push a tag like v1.0.1 and this builds the Mac app on GitHub's Mac,
+# signs and notarizes it if the signing secrets exist, and attaches it to a
+# GitHub release whose notes come from CHANGELOG.md.
+#
+# Optional secrets (Settings > Secrets and variables > Actions). Without them
+# the app is signed ad hoc and people approve it once in System Settings.
+#   MACOS_CERT_P12        base64 of your "Developer ID Application" certificate (.p12)
+#   MACOS_CERT_PASSWORD   the password that .p12 was exported with
+#   APPLE_ID              the Apple ID email of your developer account
+#   APPLE_TEAM_ID         your 10-character Team ID
+#   APPLE_APP_PASSWORD    an app-specific password made at appleid.apple.com
+name: Release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  mac:
+    runs-on: macos-14
+    timeout-minutes: 40
+    env:
+      HAS_CERT: ${{ secrets.MACOS_CERT_P12 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: The tag matches the VERSION file
+        run: test "v$(cat VERSION)" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME but VERSION says $(cat VERSION)"; exit 1; }
+      - name: Load the signing certificate (only if the secrets exist)
+        if: env.HAS_CERT == 'true'
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          KC="$RUNNER_TEMP/atom.keychain-db"; KP="$(uuidgen)"
+          security create-keychain -p "$KP" "$KC"
+          security set-keychain-settings -lut 21600 "$KC"
+          security unlock-keychain -p "$KP" "$KC"
+          echo "$MACOS_CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -P "$MACOS_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KC"
+          rm -f "$RUNNER_TEMP/cert.p12"
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple: -k "$KP" "$KC" >/dev/null
+          ID="$(security find-identity -v -p codesigning "$KC" | sed -n 's/.*"\(Developer ID Application:[^"]*\)".*/\1/p' | head -1)"
+          test -n "$ID" || { echo "no Developer ID Application identity in the certificate"; exit 1; }
+          xcrun notarytool store-credentials atom-notary --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD" --keychain "$KC"
+          echo "DEVELOPER_ID=$ID" >> "$GITHUB_ENV"
+          echo "NOTARY_PROFILE=atom-notary" >> "$GITHUB_ENV"
+          echo "NOTARY_KEYCHAIN=$KC" >> "$GITHUB_ENV"
+      - name: Build
+        run: sh mac/build-mac-app.sh
+      - name: Release notes from CHANGELOG.md
+        run: |
+          V="$(cat VERSION)"
+          awk -v v="$V" '$0 ~ "^## \\[" v "\\]" {on=1; next} /^## \[/ {if(on) exit} on' CHANGELOG.md > notes.md
+          test -s notes.md || echo "Atom $V" > notes.md
+          {
+            echo; echo "**Download:** Atom-mac.zip (Apple silicon and Intel, macOS 12 or later)."
+            echo; echo "SHA-256: \`$(cut -d' ' -f1 dist/Atom-mac.zip.sha256)\`"
+          } >> notes.md
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/Atom-mac.zip dist/Atom-mac.zip.sha256 --clobber
+            gh release edit "$GITHUB_REF_NAME" --notes-file notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" dist/Atom-mac.zip dist/Atom-mac.zip.sha256 \
+              --title "Atom $(cat VERSION)" --notes-file notes.md
+          fi

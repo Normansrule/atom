@@ -1,0 +1,33 @@
+name: Science correction
+description: A fact in Atom is wrong, out of date, or misleading.
+title: "Correction: "
+labels: ["correction"]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Where is it?
+      description: The element, card section, mission, or page section.
+      placeholder: "Gold, Building the future"
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: What does Atom say?
+      description: Quote the text.
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: What should it say?
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: A link to a paper, a standards body, or a reputable report.
+    validations:
+      required: true
