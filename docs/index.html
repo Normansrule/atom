@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Atom: every element, down to the quarks</title>
-<meta name="description" content="A living periodic table: every element's electron cloud ray-marched on your graphics card. Pick one and fall into it, through its light and its nucleus to a proton you can pull a quark out of. Free, open source, works offline.">
+<meta name="description" content="A living periodic table you learn by doing: build atoms from their particles, test yourself, calculate with real formulas, hear each element's light, and fall into any element down to the quarks. Free, open source, works offline.">
 <meta name="theme-color" content="#0b0c0d" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#eceeec" media="(prefers-color-scheme: light)">
 <meta property="og:title" content="Atom: every element, down to the quarks">
-<meta property="og:description" content="Every shape computed from the equations, from the electron cloud to the gluon field.">
+<meta property="og:description" content="Build atoms, test yourself, hear their light, and fall into any element down to the quarks. Every shape computed from the equations.">
 <meta property="og:image" content="https://normansrule.github.io/atom/assets/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -27,6 +27,7 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/atom-labs.css">
 <script>
   /* theme before first paint, so a light-table visitor never sees the chamber flash */
   (function(){ var t=null; try{ t=localStorage.getItem("atom.site.theme"); }catch(e){}
@@ -53,14 +54,12 @@
   <a class="wordmark" href="#top" aria-label="Atom, back to the top">Atom</a>
   <nav aria-label="Sections">
     <a href="#top">Elements</a>
-    <a href="#cloud">The cloud</a>
-    <a href="#light">Light</a>
-    <a href="#nucleus">Nucleus</a>
-    <a href="#pull">Pull a quark</a>
-    <a href="#edge">The edge</a>
-    <a href="#bench">Build</a>
+    <a href="#labs">Labs</a>
+    <a href="#tour">Guided tour</a>
+    <a href="#edge">Open questions</a>
   </nav>
   <div class="bar-actions">
+    <div class="find"><input id="ptFind" type="search" placeholder="Find an element" aria-label="Find an element by name, symbol, or atomic number" autocomplete="off" spellcheck="false" enterkeyhint="go"></div>
     <button type="button" class="toggle" id="soundBtn" aria-pressed="false">Sound off</button>
     <button type="button" class="toggle" id="themeBtn" aria-pressed="false">Light table</button>
     <a class="btn btn-primary btn-small" href="#get">Get Atom</a>
@@ -95,6 +94,7 @@
             <button type="button" data-lens="shapes" aria-pressed="true">Shapes</button>
             <button type="button" data-lens="origin" aria-pressed="false">Origins</button>
             <button type="button" data-lens="frontier" aria-pressed="false">Frontier</button>
+            <button type="button" data-lens="yours" aria-pressed="false">Yours</button>
           </div>
         </div>
         <div class="ptread" id="ptRead"></div>
@@ -102,11 +102,11 @@
     </div>
     <div class="lens-legend" id="lensLegend" aria-live="polite"></div>
     <div class="pt-foot" id="ptFoot">
-      <p class="pt-hint"><b>Pick an element</b>, then scroll to fall into it: the cloud, its light, its nucleus, a proton, and the quarks.</p>
+      <p class="pt-hint"><b>Pick an element</b> to build it, quiz yourself on it, hear its light, or fall into it.</p>
       <p class="pt-swipe">Swipe the table sideways for all 18 columns.</p>
       <div class="actions">
-        <a class="btn" href="#get">Download the app</a>
-        <a class="btn" href="app/">Open the app</a>
+        <button type="button" class="btn today" id="todayBtn"><span>Today</span> <b id="todayEl">H</b> <i id="todayN">0 of 3</i></button>
+        <a class="btn btn-primary labs-go" href="#labs">Open the labs</a>
       </div>
     </div>
   </div>
@@ -119,6 +119,29 @@
   </div>
   <div class="sheet-body" id="sheetBody" tabindex="-1"></div>
 </aside>
+
+<!-- =============================================================== the labs -->
+<section class="labs" id="labs" data-scene="bench" aria-labelledby="t-labs">
+  <div class="labs-head">
+    <h2 id="t-labs">Labs</h2>
+    <p class="lede">Learn it by doing it. Build an atom from its particles, test what you know, plug numbers into the formulas physicists use, run three experiments, and listen to the light each element gives off. Your progress stays in this browser.</p>
+  </div>
+  <div id="labsHost"></div>
+</section>
+
+<!-- =============================================================== the tour -->
+<section class="tour" id="tour" data-scene="bench" aria-labelledby="t-tour">
+  <h2 id="t-tour">The guided tour</h2>
+  <p class="lede">Fall into <span data-el="lname">iron</span> one scroll at a time: its electron cloud, the light it gives off, the empty space inside it, its nucleus, a proton, and the quarks you can try to pull out. Every picture is computed live.</p>
+  <ol class="tour-stops">
+    <li><a href="#cloud"><b>10⁻¹⁰ m</b><span>The cloud</span></a></li>
+    <li><a href="#light"><b>10⁻¹⁰ m</b><span>Its light</span></a></li>
+    <li><a href="#empty"><b>10⁻¹² m</b><span>Empty space</span></a></li>
+    <li><a href="#nucleus"><b>10⁻¹⁴ m</b><span>The nucleus</span></a></li>
+    <li><a href="#proton"><b>10⁻¹⁵ m</b><span>A proton</span></a></li>
+    <li><a href="#pull"><b>10⁻¹⁵ m</b><span>Pull a quark</span></a></li>
+  </ol>
+</section>
 
 <!-- =============================================================== the cloud -->
 <section class="pin" id="cloud" data-scene="cloud" aria-labelledby="t-cloud">
@@ -243,15 +266,6 @@
     <li><span class="status">New</span><h3>A clock inside a nucleus</h3><p>Thorium-229&rsquo;s nuclear transition was laser-excited in 2024, and the first nuclear clocks were reported in October 2026.</p></li>
     <li><span class="status">Settled</span><h3>Two famous anomalies, closed</h3><p>The muon&rsquo;s magnetism now agrees with theory (2025), and hydrogen settled the proton&rsquo;s radius at 0.84 fm (2026).</p></li>
   </ul>
-</section>
-
-<!-- =============================================================== the workbench -->
-<section class="bench" id="bench" data-scene="bench" aria-labelledby="t-bench">
-  <div class="bench-head">
-    <h2 id="t-bench">Build it yourself</h2>
-    <p class="lede">Three things the people building the future work on every day, computed live: light a fusion reaction, make a chemical bond, and design a battery. Every number comes from measured data or a textbook formula, and each bench says which.</p>
-  </div>
-  <div id="benchHost"></div>
 </section>
 
 <!-- =============================================================== get -->

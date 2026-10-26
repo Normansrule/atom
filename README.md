@@ -1,10 +1,10 @@
 # Atom
 
-**Every element, computed from the equations, set in the cosmos that made it. Pick one, fall into it all the way down to the quarks, and see what people are building with it right now.**
+**Every element, computed from the equations, set in the cosmos that made it. Pick one, build it from its particles, test yourself on it, hear its light, or fall into it all the way down to the quarks.**
 
 ![The Atom periodic table floating in a slowly turning nebula: 118 squares light up in order of atomic number, each glowing with its element's outermost electron cloud, while the readout changes as the pointer moves across carbon, oxygen, sodium, iron, copper, silver, and gold](docs/media/table.webp)
 
-Atom is a periodic table where every square is alive. Each one shows the electron that gives its element its place in the table, ray-marched in real time on your graphics processing unit (GPU) straight from the wavefunction. Behind the table is the place the elements came from: a nebula colored by the Big Bang, the stars, and the collisions that made them, which replays the birth of whatever element you pick. Click an element and you get its whole story, from where it was forged to the open problem it is part of today. Scroll, and you fall into it: through its electron cloud, its light, the empty space inside it, its nucleus, one of its protons, and finally the quarks, where you can grab one and try to pull it out.
+Atom is a periodic table where every square is alive. Each one shows the electron that gives its element its place in the table, ray-marched in real time on your graphics processing unit (GPU) straight from the wavefunction. Behind the table is the place the elements came from: a nebula colored by the Big Bang, the stars, and the collisions that made them, which replays the birth of whatever element you pick. Click an element and you get its whole story, from where it was forged to the open problem it is part of today. Then do something with it: the labs let you build it from protons, neutrons, and electrons, answer questions about it, plug its numbers into the formulas physicists use, and hear its spectrum as a chord. Or scroll, and you fall into it: through its electron cloud, its light, the empty space inside it, its nucleus, one of its protons, and finally the quarks, where you can grab one and try to pull it out.
 
 It runs as a website, as a desktop app for Mac, Windows, and Linux, or as a single HTML file you can open offline. It is free and open source. No accounts, no tracking, and the sound stays off unless you turn it on.
 
@@ -16,7 +16,7 @@ It runs as a website, as a desktop app for Mac, Windows, and Linux, or as a sing
 
 **A sky made of the elements' origins.** The background is never plain black or white. At the table it is a living nebula whose colors are the seven places elements come from: the Big Bang, cosmic rays, merging neutron stars, exploding massive stars, dying low-mass stars, exploding white dwarfs, and laboratories. Pick gold and a kilonova flares behind its square; pick carbon and a red giant swells. Fall into an atom and the sky becomes the element's own light, mixed from its measured spectral lines, with rings at the wavelengths it emits. Go into the proton and it becomes the flickering quantum vacuum.
 
-**Three ways to read the table.** *Shapes* shows the orbitals. *Origins* gives every square a bar showing where that element was made, and you can pick a source to light up only its elements: every atom of gold you have touched came mostly from neutron stars colliding. *Frontier* marks what each element is helping build right now (fusion energy, quantum computing, batteries, chips, atomic clocks, superconductors, medicine, space, climate and energy, solar power, and magnets and motors), and you can pick a field to see which elements it depends on. Point at any square and the readout tells you what that element is doing at the frontier.
+**Four ways to read the table.** *Shapes* shows the orbitals. *Origins* gives every square a bar showing where that element was made, and you can pick a source to light up only its elements: every atom of gold you have touched came mostly from neutron stars colliding. *Frontier* marks what each element is helping build right now (fusion energy, quantum computing, batteries, chips, atomic clocks, superconductors, medicine, space, climate and energy, solar power, and magnets and motors), and you can pick a field to see which elements it depends on. Point at any square and the readout tells you what that element is doing at the frontier. *Yours* shows what you have made your own: a ring on every element you have explored, a half-filled dot on the ones you have built, and a solid dot on the ones you have mastered. To jump straight to an element, type its name, symbol, or atomic number in **Find an element**.
 
 ![The three lenses: the nebula replays gold's birth, Origins colors the table by where each element was made and filters to merging neutron stars and then the Big Bang, and Frontier lights up the elements behind quantum computing before ytterbium's card opens](docs/media/lenses.webp)
 
@@ -31,8 +31,20 @@ It runs as a website, as a desktop app for Mac, Windows, and Linux, or as a sing
 - density, melting and boiling points, abundance in Earth's crust and in the universe, who found it and when, where it comes from, what it's used for, and one thing worth knowing
 - **where it was made**, as shares of the Solar System's supply from each cosmic source
 - **building the future**: what the element is doing at the frontier right now, with a link to the source, and an **open problem**, a question nobody has answered yet that someone reading could help answer
+- **try it yourself**: build it, quiz yourself on it, or hear its light, with a line showing how far you have come with that element
 
-**The fall.** Scroll down and the square you picked grows until it fills the screen, and then each section is about *that* element:
+**Labs: learn it by doing it.** Right under the table (and behind the **Labs** button in the app) are six labs. Each has its own color, so you always know where you are:
+
+- **Build.** Put an atom together from its particles: click a proton, neutron, or electron, type the numbers, or drag a particle onto the atom. It names what you made (element, isotope, and ion), draws its nucleus and shells, and tells you whether the nucleus lasts, which way it decays if it doesn't, and when it falls apart at once. The lightest nuclei use measured limits, so oxygen stops holding together after oxygen-24, as experiments find; the rest are estimates and say so. Eight challenges, from a hydrogen atom to the edge of the nuclear map, give you something to aim for.
+- **Predict.** A question, your answer, then the reason. Questions cover neutrons and charge, atomic size and density, configurations you type in, melting points, blocks, and whether an isotope is stable. The ones you miss come back ten minutes later, then a day later, then less and less often as you keep getting them right. Three different right answers about one element and you have mastered it.
+- **Calculate.** Four calculators with real formulas: the light an electron gives off when it falls between levels (with its color and series), radioactive decay with presets from carbon-14 to uranium-238 and a Geiger counter you can listen to, E = mc² with comparisons from burning gasoline to antimatter, and the molar mass of any formula you type, hydrates included.
+- **Workbench.** The three experiments: fuse nuclei, bond two protons with one electron, and build a battery.
+- **Hear.** Each visible line in an element's spectrum becomes a tone (red light plays low, violet high), so every element has its own chord, and you can play its electrons filling their shells. Nothing plays until you press Play.
+- **You.** Today's element and its three small tasks, what you have explored, built, and mastered on a table of your own, the questions due for review, the days in a row you have explored, and fifteen badges.
+
+![The labs: building carbon from its particles and adding two neutrons to make carbon-14, a question and its explanation, radioactive decay as the slider runs through half-lives, the molar mass of caffeine, neon's light as tones, and the progress page](docs/media/labs.webp)
+
+**The guided tour.** Scroll down and the square you picked grows until it fills the screen, and then each section is about *that* element:
 
 | Depth | What you see |
 | --- | --- |
@@ -48,7 +60,7 @@ It runs as a website, as a desktop app for Mac, Windows, and Linux, or as a sing
 
 ![Pulling a quark out of a proton: the gluon flux tube stretches, the energy readout climbs, and the string snaps into a meson](docs/media/pull.webp)
 
-**Build it yourself.** A workbench runs three experiments with the same physics the rest of the app uses:
+**The workbench.** The Workbench lab runs three experiments with the same physics the rest of the app uses:
 
 - **Fuse nuclei.** Pick a reaction (deuterium and tritium, proton and boron-11, three helium-4s into carbon, even iron and iron) and a plasma temperature, then fire. The energy released comes from measured nuclear masses, the Coulomb barrier from the nuclei's charges and sizes, and the chance to tunnel from Gamow's factor, so you can watch most reactions happen far below the top of the barrier.
 - **Make a bond.** Slide two protons together around one electron and find the distance where the energy is lowest. The curve is the textbook model of the hydrogen molecular ion, H₂⁺, and the bench shows how far that simple model lands from the exact answer.
@@ -56,9 +68,9 @@ It runs as a website, as a desktop app for Mac, Windows, and Linux, or as a sing
 
 ![The workbench: deuterium and tritium fuse into helium-4 and a neutron at 11 keV, then proton and boron-11 split into three helium nuclei; two protons slide together to find their bond; and a lithium battery's voltage changes as its electrodes change](docs/media/bench.webp)
 
-**Missions.** Twelve short journeys tie it together, laid out as one route on a map, from the first stars to the clinic: light a star, forge gold, make a new element, make a molecule, pull a quark out, split the atom, fuel a fusion reactor, build a better battery, build a chip, build a qubit, keep perfect time, and fight cancer with atoms. Each step names one thing to do, and a **Show me** button does it for you. The map lights each stop you finish and draws how far you are through the ones you have started. Your progress stays on your own device.
+**Missions.** Sixteen short journeys tie it together, laid out as one route on a map, from your first atom to the clinic: build an atom, read the light, weigh a molecule, date a bone, light a star, forge gold, make a new element, make a molecule, pull a quark out, split the atom, fuel a fusion reactor, build a better battery, build a chip, build a qubit, keep perfect time, and fight cancer with atoms. Each step names one thing to do, and a **Show me** button does it for you. The map lights each stop you finish and draws how far you are through the ones you have started. Your progress stays on your own device.
 
-**The desktop app** opens on the same table, in the same nebula, with the same lenses, workbench, and missions, and goes deeper: every orbital of every element, the nuclear shell model, the four natural decay chains, a guided tour, a math panel, and the chamber you can zoom through with your trackpad. Missions follow you into the chamber and wait in the gap above the transition metals of its own small table. Scrolling out past the whole atom takes you back up to the table.
+**The desktop app** opens on the same table, in the same nebula, with the same lenses, labs, and missions, and goes deeper: every orbital of every element, the nuclear shell model, the four natural decay chains, a guided tour, a math panel, and the chamber you can zoom through with your trackpad. Missions follow you into the chamber and wait in the gap above the transition metals of its own small table. Scrolling out past the whole atom takes you back up to the table.
 
 ## Use it
 
@@ -73,11 +85,11 @@ It runs as a website, as a desktop app for Mac, Windows, and Linux, or as a sing
   - **Any other distribution:** download `Atom-Linux.AppImage`, make it runnable with `chmod +x Atom-Linux.AppImage`, and open it. If your system can't mount it, run `./Atom-Linux.AppImage --appimage-extract-and-run` instead.
 - **Anywhere else:** `app/atom.html` is the whole app in one file. Open it in any recent browser, online or off.
 
-On the table, the arrow keys move between elements, Enter opens the card, and Escape closes it. In the app, T switches between the dark chamber and the light table, G opens the guide, and M opens the math.
+On the table, the arrow keys move between elements, Enter opens the card, and Escape closes it. In the labs, the arrow keys move between the six labs, and every control works from the keyboard. In the app, T switches between the dark chamber and the light table, G opens the guide, and M opens the math.
 
 ## Privacy
 
-Atom collects nothing. It has no accounts, no analytics, no cookies, and makes no network requests: every page, picture, and number comes from the site or the app itself. The desktop apps load only their own bundled page and send every web link to your browser. Your theme and your mission progress are saved only in your own browser or app, and clearing your browser's site data erases them.
+Atom collects nothing. It has no accounts, no analytics, no cookies, and makes no network requests: every page, picture, and number comes from the site or the app itself. The desktop apps load only their own bundled page and send every web link to your browser. Your theme, your missions, and your progress in the labs are saved only in your own browser or app. **Erase my progress** on the You lab clears the labs; clearing your browser's site data erases everything.
 
 ## Found a mistake?
 
@@ -131,7 +143,8 @@ atom/
 │   │   ├── site.css
 │   │   ├── atom-data.js         generated: constants, the 118 elements, configurations, nuclear formulas
 │   │   ├── atom-engines.js      generated: the WebGL 2 orbital ray-marcher and the quark-string physics
-│   │   ├── atom-ptable.js       generated: the living table, the card, the nebula, the workbench, and the missions
+│   │   ├── atom-ptable.js       generated: the living table, the card, the nebula, the labs, and the missions
+│   │   ├── atom-labs.css        generated: the labs' styles, shared with the app
 │   │   └── fonts/               Archivo, the one typeface, and its license (OFL.txt)
 │   └── media/                   screenshots and the recordings in this README (animated WebP)
 ├── desktop/                     the Windows and Linux app: an Electron window around atom.html
@@ -159,17 +172,17 @@ atom/
 
 **One idea carries the whole thing: you can always zoom.** The table is the top of a single zoom that runs from the elements to the quarks. The square you pick becomes the cloud, the cloud gives way to the nucleus, the nucleus to a proton, and the proton to its quarks. The depth gauge on the right edge is that zoom, used as navigation.
 
-**Color always means something.** On a cloud, color is the phase of the wave, so it turns faster for tightly bound electrons, just as the energy says it must. The thin outline around each square is its chemical family. In the sky behind the table, color is origin: each of the seven cosmic sources has its own hue, and the nebula is mixed from the sources of the element you picked. Inside the atom, the sky takes the color an eye would see from the element's measured spectral lines. Red, green, and blue appear on quarks as color charge and nowhere else. There are two themes: the dark *chamber*, a deep-space sky with amber as its only accent, and the *light table*, which prints the same pictures as negatives on a pale nebula.
+**Color always means something.** In the labs, each lab has one color and keeps it everywhere it appears (Build orange, Predict violet, Calculate teal, Workbench amber, Hear pink, You green), protons are orange, neutrons gray, and electrons blue, and green, amber, and red mean right, careful, and wrong. On a cloud, color is the phase of the wave, so it turns faster for tightly bound electrons, just as the energy says it must. The thin outline around each square is its chemical family. In the sky behind the table, color is origin: each of the seven cosmic sources has its own hue, and the nebula is mixed from the sources of the element you picked. Inside the atom, the sky takes the color an eye would see from the element's measured spectral lines. Red, green, and blue appear on quarks as color charge and nowhere else. There are two themes: the dark *chamber*, a deep-space sky with amber as its only accent, and the *light table*, which prints the same pictures as negatives on a pale nebula.
 
-**Built to keep you curious.** Every card ends with a question nobody has answered, every lens asks you to look at the same 118 squares a different way, and every mission ends somewhere real: a fusion company's fuel, a quantum computer's atoms, the clock that may catch the constants of nature drifting. The point is to leave with a reason to keep going.
+**Built to keep you curious, and to bring you back.** Explore first: the table and the labs are the home page, and the guided tour is there when you want it. Every card ends with a question nobody has answered, every lens asks you to look at the same 118 squares a different way, and every mission ends somewhere real: a fusion company's fuel, a quantum computer's atoms, the clock that may catch the constants of nature drifting. Coming back pays off too: a new element every day with three small tasks, the questions you missed waiting for you at the right moment, a table of your own that fills in as you go, and badges for the milestones. Nothing nags, nothing is timed, and nothing leaves your device.
 
 **Type that gets denser as you go down.** Everything is set in Archivo, a variable typeface with a width axis. Headings start wide and light up in the electron cloud and get narrower and heavier with every step down, until inside the proton they're as compressed as the quarks.
 
-**Honest physics.** Hydrogen is the only atom whose equation can be solved exactly, so it's the only one whose spectrum is computed; everything else is measured and cited. Approximations say they're approximations: Slater's screening rules, the liquid-drop mass formula, and the Y-shaped string fitted to lattice quantum chromodynamics (QCD). Anything nobody knows yet appears only as an open question, with its status.
+**Honest physics.** Hydrogen is the only atom whose equation can be solved exactly, so it's the only one whose spectrum is computed; everything else is measured and cited. The labs check their own arithmetic every time the app starts (molar masses, hydrogen's lines, which nuclei hold together), and when the Build lab is estimating rather than reporting a measurement, it says so. Approximations say they're approximations: Slater's screening rules, the liquid-drop mass formula, and the Y-shaped string fitted to lattice quantum chromodynamics (QCD). Anything nobody knows yet appears only as an open question, with its status.
 
 **Fast on purpose.** The nebula is one full-screen shader that measures its own frame time and lowers its resolution when a machine is struggling. All 118 clouds are drawn by one WebGL context in one pass, each clipped to its own square, and repainted a slice at a time, with the slice sized by how fast your machine is drawing. Since R<sub>nl</sub>(r; Z) = Z<sup>3/2</sup> R<sub>nl</sub>(Zr; 1), about twenty radial tables cover every element. The title and introduction are plain HTML that paint before any script runs, and the scripts are deferred; in headless testing on a local server, the Largest Contentful Paint (LCP) landed around a tenth of a second.
 
-**For everyone.** Every label sits on a small plate of the background color so it reads at 7:1 contrast or better over the brightest cloud and the brightest part of the nebula, measured pixel by pixel in both themes of the app, across 49 views including every lens, the workbench, and the missions. When a lens filters the table, the squares it sets aside dim their clouds and keep readable labels. The table works with a keyboard alone. With reduced motion turned on, nothing zooms or scrubs: each section becomes a still, and every step is shown at once. Sound is always off until you ask for it.
+**For everyone.** Every label sits on a small plate of the background color so it reads at 7:1 contrast or better over the brightest cloud and the brightest part of the nebula, measured pixel by pixel in both themes of the app, across 60 views including every lens, every lab, and the missions. When a lens filters the table, the squares it sets aside dim their clouds and keep readable labels. The table works with a keyboard alone. With reduced motion turned on, nothing zooms or scrubs: each section becomes a still, and every step is shown at once. Sound is always off until you ask for it.
 
 ## Sources
 

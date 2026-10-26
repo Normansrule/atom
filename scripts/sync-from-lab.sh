@@ -22,6 +22,10 @@ grep -q "ATOM-ENGINES END" "$HERE/docs/assets/atom-engines.js" || { echo "engine
 awk '/\/\* ATOM-PTABLE BEGIN \*\//{p=1} p{print} /\/\* ATOM-PTABLE END \*\//{p=0}' "$SRC" \
   > "$HERE/docs/assets/atom-ptable.js"
 grep -q "ATOM-PTABLE END" "$HERE/docs/assets/atom-ptable.js" || { echo "table markers missing" >&2; exit 1; }
+# the labs' stylesheet (Build, Predict, Calculate, Hear, You), shared with the app
+awk '/\/\* ATOM-LABS-CSS BEGIN \*\//{p=1} p{print} /\/\* ATOM-LABS-CSS END \*\//{p=0}' "$SRC" \
+  > "$HERE/docs/assets/atom-labs.css"
+grep -q "ATOM-LABS-CSS END" "$HERE/docs/assets/atom-labs.css" || { echo "labs stylesheet markers missing" >&2; exit 1; }
 
 # the app's physics and element data, verbatim, plus the binding curve its code computes
 node "$HERE/scripts/extract-site-data.js" "$SRC" "$HERE/docs/assets/atom-data.js"

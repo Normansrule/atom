@@ -49,6 +49,7 @@ function setTheme(t){
   b.textContent=t==="light"?"Dark chamber":"Light table"; b.setAttribute("aria-pressed",t==="light"?"true":"false");
   lastTint=""; drawSpectrum(); drawLadder(); drawRadial(true); drawBinding(true);
   if(PT){ PT.recolor(); PT.redraw(); readout(PT.hover||SEL); }
+  if(LABS) LABS.redraw();
 }
 var lastTint="";
 var ELTINT={dark:"#08101a",light:"#e6edf3"};
@@ -60,8 +61,8 @@ function tint(k){ var c=(k==="cloud"||k==="light")?ELTINT[theme]:(T.tint[k]||T.t
 /* ------------------------------------------------------------------ canvases */
 var cA=D.getElementById("glA"), cB=D.getElementById("glB"), cF=D.getElementById("glField"), cO=D.getElementById("overlay");
 var ctx=cO.getContext("2d");
-var GA=null, GB=null, FIELD=null, PT=null, WORLD=null, MS=null, SIMS=null, WLIGHT=null;
-var cW=D.getElementById("world"), WL={cos:1,lit:0,vac:0}, benchVisible=false;
+var GA=null, GB=null, FIELD=null, PT=null, WORLD=null, MS=null, LABS=null, WLIGHT=null;
+var cW=D.getElementById("world"), WL={cos:1,lit:0,vac:0}, labsVisible=false;
 function resize(){
   W=window.innerWidth; H=window.innerHeight; DPR=Math.min(window.devicePixelRatio||1, mqSmall.matches?1.5:2);
   cO.width=Math.round(W*DPR); cO.height=Math.round(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -99,6 +100,7 @@ function setElement(z, quiet){
   SEL=z; EL=ELEMENTS[z-1]; ELV=PT?PT.V[z]:PTable.valence(z);
   var name=EL[2], nuc=nucleusOf(z);
   [].slice.call(D.querySelectorAll('[data-el="name"]')).forEach(function(s){ s.textContent=name; });
+  [].slice.call(D.querySelectorAll('[data-el="lname"]')).forEach(function(s){ s.textContent=name.toLowerCase(); });
   [].slice.call(D.querySelectorAll('[data-el="poss"]')).forEach(function(s){ s.textContent=poss(name); });
   [].slice.call(D.querySelectorAll('[data-el="article"]')).forEach(function(s){ s.textContent=article(name); });
   [].slice.call(D.querySelectorAll('[data-el="protons"]')).forEach(function(s){ s.textContent=z===1?"hydrogen’s one proton":poss(name.toLowerCase())+" "+z+" protons"; });
@@ -652,7 +654,8 @@ function originLine(z){
 var LENS_HELP={
   shapes:"Each square shows the electron that puts its element in the table: spheres (s), dumbbells (p), cloverleaves (d), and flowers (f). The table's shape is the orbitals' shape.",
   origin:"Where each element was made. Most of the hydrogen and helium are from the Big Bang; everything heavier was forged in stars, their explosions, and their collisions. Pick a source to see its share.",
-  frontier:"What each element is helping build right now. Pick a field to light up its elements; every card ends with an open problem someone could take on."
+  frontier:"What each element is helping build right now. Pick a field to light up its elements; every card ends with an open problem someone could take on.",
+  yours:"What you have made your own. A ring marks an element you have explored, a half-filled dot one you have built, and a solid dot one you have mastered in the labs."
 };
 function setLens(lens, filter){
   if(!PT) return;
@@ -662,11 +665,13 @@ function setLens(lens, filter){
   if(stm){ if(!stm._base) stm._base=stm.textContent; stm.textContent=lens==="shapes"?stm._base:LENS_HELP[lens]; }
   if(lens==="origin") h+='<div class="lens-keys">'+Object.keys(ORIGIN_KINDS).map(function(k){ return '<button type="button" data-filter="'+k+'" aria-pressed="'+(filter===k)+'" style="--kc:var(--o-'+k+')">'+ORIGIN_KINDS[k].name+'</button>'; }).join('')+'</div>';
   if(lens==="frontier") h+='<div class="lens-keys">'+Object.keys(TECH_KINDS).map(function(k){ return '<button type="button" data-filter="'+k+'" aria-pressed="'+(filter===k)+'" style="--kc:var(--t-'+k+')">'+TECH_KINDS[k].name+'</button>'; }).join('')+'</div>';
-  lg.innerHTML=lens==="shapes"?"":h; root.classList.toggle("lens-on",lens!=="shapes"); readout(PT.hover||SEL);
+  lg.innerHTML=lens==="shapes"?"":h; root.classList.toggle("lens-on",lens==="origin"||lens==="frontier"); readout(PT.hover||SEL);
   if(MS) MS.signal("lens:"+lens+(filter?":"+filter:""));
 }
 function openSheet(z){
   sheetBody.innerHTML=PTable.detail(z);
+  AtomLabs.progress.mark("seen",z);
+  var hd=sheetBody.querySelector(".pd-head"); if(hd) hd.insertAdjacentHTML("afterend",AtomLabs.cardActions(z));
   if(MS) MS.signal("card:"+z);
   sheet.hidden=false; ptsec.classList.add("sheet-open"); root.classList.add("card-open"); fitTable();
   requestAnimationFrame(function(){ sheet.classList.add("open"); });
@@ -679,6 +684,22 @@ function closeSheet(focusTile){
   if(focusTile&&PT) PT.focusSelected();
 }
 D.getElementById("sheetClose").addEventListener("click",function(){ closeSheet(true); });
+/* the card's "try it" row: build it, quiz yourself on it, or hear its light, in the labs below the table */
+sheetBody.addEventListener("click",function(e){ var b=e.target.closest("[data-la]"); if(!b) return;
+  var k=b.getAttribute("data-la"); closeSheet(false); goLabs(k==="quiz"?"predict":k, SEL); });
+function goLabs(tab, z){
+  var L=D.getElementById("labs"); if(!L||!LABS) return;
+  window.scrollTo({top:L.getBoundingClientRect().top+window.scrollY-56, behavior:CALM?"auto":"smooth"});
+  if(tab==="build"&&z) LABS.build(z); else if(tab==="predict"&&z) LABS.quiz(z); else if(tab==="hear"&&z) LABS.hear(z); else LABS.show(tab||LABS.current(), z);
+}
+/* today's element: three small tasks, and the button says how many are done */
+function today(){
+  var d=AtomLabs.progress.daily(), n=(d.card?1:0)+(d.build?1:0)+(d.quiz?1:0), e=ELEMENTS[d.z-1], b=D.getElementById("todayBtn");
+  if(!b) return;
+  D.getElementById("todayEl").textContent=e[1]; D.getElementById("todayN").textContent=d.done?"done":n+" of 3";
+  b.setAttribute("aria-label","Today "+e[1]+" "+(d.done?"done":n+" of 3")+": today's element is "+e[2]+". See your progress.");
+  b.classList.toggle("done",!!d.done);
+}
 D.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!sheet.hidden) closeSheet(true); });
 D.getElementById("fallIn").addEventListener("click",function(){
   closeSheet(false);
@@ -815,7 +836,7 @@ function frame(now){
   var was=active; measure(); if(frames%6===0) markGauge(); tint(active);
   if(was!==active||frames===1){ root.classList.toggle("at-table",active==="table"); root.classList.toggle("at-bench",active==="bench"); if(MS&&was!==active) MS.signal("depth:"+active); }
   drawWorld(now, dt);
-  if(SIMS && benchVisible) SIMS.frame(now);
+  if(LABS && labsVisible) LABS.frame(now);
   stepPull(now); stepEmit(now);
   var t=now/1000;
   if(PT){ PT.hidden=(active!=="table"); PT.frame(now);
@@ -950,13 +971,14 @@ function frame(now){
 
 /* "Show me": what a mission step asks for, done for you */
 function missionGo(a){
+  if(a.lab && LABS){ goLabs(); LABS.act(a); return; }
   if(a.pick){ var z=a.pick; if(z!==SEL) setElement(z); if(PT){ PT.select(z); readout(z); }
     if(active!=="table") window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); if(MS) MS.signal("pick:"+z); }
   if(a.lens) { if(active!=="table") window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setLens(a.lens, a.filter||""); }
   if(a.card){ var zc=a.card; if(zc!==SEL) setElement(zc); if(PT) PT.select(zc); window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setTimeout(function(){ openSheet(zc); }, CALM?0:500); }
   if(a.depth){ var sec=D.getElementById(a.depth); if(sec){ var y=sec.getBoundingClientRect().top+window.scrollY+(sec.classList.contains("pin")?H*0.2:0); window.scrollTo({top:y,behavior:CALM?"auto":"smooth"}); } }
-  if(a.sim){ var b=D.getElementById("bench"); if(b) window.scrollTo({top:b.getBoundingClientRect().top+window.scrollY,behavior:CALM?"auto":"smooth"});
-    if(SIMS){ SIMS.show(a.sim); if(a.react){ var HOST=D.getElementById("benchHost"), rb=HOST.querySelector('[data-r="'+a.react+'"]'); if(rb) rb.click();
+  if(a.sim && LABS){ goLabs("bench"); var SIMS=LABS.sims();
+    if(SIMS){ SIMS.show(a.sim); if(a.react){ var HOST=D.getElementById("labsHost"), rb=HOST.querySelector('[data-r="'+a.react+'"]'); if(rb) rb.click();
       var T=HOST.querySelector('[data-i="T"]'); if(T&&a.hot&&+T.value<440){ T.value=440; T.dispatchEvent(new Event("input")); }   /* about 12.6 keV */
       var fb=HOST.querySelector('[data-i="fire"]'); if(fb&&!fb.closest("[hidden]")) fb.click(); } } }
 }
@@ -1011,15 +1033,29 @@ function boot(){
   D.getElementById("lensLegend").addEventListener("click",function(e){ var b=e.target.closest("[data-filter]"); if(!b) return;
     var f=b.getAttribute("data-filter"); setLens(PT.lens, PT.filter===f?"":f); });
   setLens("shapes","");
-  /* the workbench */
-  var bh=D.getElementById("benchHost");
-  if(bh){
-    SIMS=AtomSims.mount(bh,{calm:CALM, theme:function(){ return {light:theme==="light", plate:T.plate, ink:T.ink, ink2:T.ink2, ink3:T.ink3, acc:T.acc, sub:T.sub,
-        pF:T.pF, nF:T.nF, pos:T.gl.pos, neg:T.gl.neg, posInk:T.gl.posInk, negInk:T.gl.negInk}; },
+  /* the labs: build, predict, calculate, the workbench, hear, and your progress */
+  var lh=D.getElementById("labsHost");
+  if(lh){
+    var simTheme=function(){ return {light:theme==="light", plate:T.plate, ink:T.ink, ink2:T.ink2, ink3:T.ink3, acc:T.acc, sub:T.sub,
+        pF:T.pF, nF:T.nF, pos:T.gl.pos, neg:T.gl.neg, posInk:T.gl.posInk, negInk:T.gl.negInk}; };
+    var toTable=function(z, card){ if(z!==SEL) setElement(z); if(PT) PT.select(z); if(MS) MS.signal("pick:"+z); readout(z);
+      if(card){ window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setTimeout(function(){ openSheet(z); }, CALM?0:600); } };
+    LABS=AtomLabs.mount(lh,{calm:CALM, theme:simTheme, simTheme:simTheme, catColor:catColor,
+      element:function(){ return SEL; },
       onEvent:function(e){ if(MS) MS.signal(e); },
-      pick:function(z){ if(z!==SEL) setElement(z); if(PT) PT.select(z); if(MS) MS.signal("pick:"+z); readout(z); window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setTimeout(function(){ openSheet(z); }, CALM?0:600); }});
-    if("IntersectionObserver" in window) new IntersectionObserver(function(es){ es.forEach(function(e){ benchVisible=e.isIntersecting; }); },{rootMargin:"100px"}).observe(bh);
+      select:function(z){ toTable(z,false); },
+      card:function(z){ toTable(z,true); },
+      fall:function(z){ toTable(z,false); var c=D.getElementById("cloud"); window.scrollTo({top:c.getBoundingClientRect().top+window.scrollY, behavior:CALM?"auto":"smooth"}); }});
+    if("IntersectionObserver" in window) new IntersectionObserver(function(es){ es.forEach(function(e){ labsVisible=e.isIntersecting; }); },{rootMargin:"100px"}).observe(lh);
+    else labsVisible=true;
   }
+  /* find an element, today's element, and the "Yours" lens kept current */
+  var fi=D.getElementById("ptFind");
+  if(fi) AtomLabs.search(fi,function(z){ toTable(z,false); openSheet(z); });
+  var tb=D.getElementById("todayBtn");
+  if(tb) tb.addEventListener("click",function(){ goLabs("you"); });
+  AtomLabs.progress.on(function(){ today(); if(PT&&PT.lens==="yours") PT.setLens("yours",""); });
+  today();
   /* missions */
   var md=D.getElementById("missions");
   if(md) MS=Missions.create({host:md, go:missionGo});

@@ -14,11 +14,11 @@ concurrency:
 jobs:
   site:
     name: Website and in-browser app
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Install the checkers
@@ -37,7 +37,7 @@ jobs:
     runs-on: macos-14
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Build (signed ad hoc)
@@ -48,7 +48,7 @@ jobs:
           sleep 15
           pgrep -x Atom
           pkill -x Atom || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Atom-mac
           path: |
@@ -61,12 +61,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -91,7 +91,7 @@ jobs:
           xvfb-run -a node desktop/smoke-desktop.mjs
           chmod +x desktop/dist/Atom-Linux.AppImage
           APPIMAGE_EXTRACT_AND_RUN=1 ATOM_EXE=desktop/dist/Atom-Linux.AppImage xvfb-run -a node desktop/smoke-desktop.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: desktop-${{ runner.os }}

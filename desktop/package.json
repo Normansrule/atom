@@ -1,7 +1,7 @@
 {
   "name": "atom-periodic-table",
   "productName": "Atom",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Every element, computed from the equations and set in the cosmos that made it. Fall into any one, down to the quarks.",
   "author": {
     "name": "Thomas J. Norman",

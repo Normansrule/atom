@@ -140,6 +140,10 @@ var PTable=(function(){
         var w=1;
         if(lens==="origin"){ var m=ORIGIN[z-1]; w=filter?Math.max(0.12,Math.min(1,(m[filter]||0)*1.6)):0.55; }
         else if(lens==="frontier"){ var tg=FRONTIER[z-1][0]; w=filter?(tg.indexOf(filter)>=0?1:0.1):(tg.length?1:0.14); }
+        /* "yours": what this reader has explored (1), built (2), and mastered (3), kept on the device by the labs */
+        var lv=(typeof AtomLabs!=="undefined")?AtomLabs.progress.level(z):0;
+        if(lens==="yours") w=[0.12,0.5,0.8,1][lv];
+        if(lens==="yours") tiles[z].setAttribute("data-lv",lv); else tiles[z].removeAttribute("data-lv");
         lensW[z]=w; tiles[z].classList.toggle("pt-dim", w<0.3);
       }
       dirty=true;
@@ -880,18 +884,43 @@ var AtomSims=(function(){
 })();
 
 /* ----------------------------------------------------------------------------
-   Missions: short journeys through the table, the depths, and the workbench.
+   Missions: short journeys through the labs, the table, and the depths.
    Each step names something to do; doing it (or pressing "Show me") moves you
    on. The host app reports what happens with signal("pick:26"),
    signal("depth:nucleus"), signal("fusion:dt") and so on, and performs the
    "Show me" actions it is handed. Progress is kept on this device only.
 
-   The twelve are laid out as one route, from the first stars to the clinic,
+   The sixteen are laid out as one route, from your first atom through the
+   first stars to the clinic,
    and the map draws that route: a mission done is a lit stop, a mission under
    way is a stop with its share of steps drawn around it.
    ---------------------------------------------------------------------------- */
 var Missions=(function(){
   var LIST=[
+    {id:"atom", short:"Atom", title:"Build an atom", blurb:"Protons, neutrons, and electrons, put together by hand.", steps:[
+      {say:"Open the labs and build carbon: six protons, six neutrons, and six electrons.", show:{lab:"build", z:6}, when:"build:6:12:0"},
+      {say:"Add two neutrons to make carbon-14. Cosmic rays make it in the air, and its steady decay is the clock that dates wood and bone.", show:{lab:"build", z:6, a:14}, when:"build:6:14:*"},
+      {say:"Now make an ion. Build fluorine and give it one extra electron: a fluoride ion, the kind toothpaste delivers.", show:{lab:"build", z:9, a:19, e:10}, when:"build:9:19:-1"},
+      {say:"Find the edge of the nuclear map. Build oxygen and keep adding neutrons until the last one won't stay.", show:{lab:"build", z:8, a:25}, when:"goal:drip"}],
+     done:"Everything you have ever touched is some count of these three particles. Protons decide the element, neutrons decide whether it lasts, and electrons decide how it bonds."},
+    {id:"light", short:"Light", title:"Read the light", blurb:"Why every element glows in its own colors.", steps:[
+      {say:"In the labs, open Calculate and find hydrogen's red line: an electron falling from level 3 to level 2.", show:{lab:"calc", calc:"light", line:"3,2"}, when:"calc:line:1:3-2"},
+      {say:"Now let the electron fall all the way to level 1. That light is ultraviolet, too energetic for your eye to see.", show:{lab:"calc", calc:"light", line:"2,1"}, when:"calc:line:1:*-1"},
+      {say:"Open Hear and play neon's light. Each line in its spectrum becomes a tone.", show:{lab:"hear", z:10, play:true}, when:"hear:10"},
+      {say:"Play hydrogen's light and compare. No two elements share the same set of lines, which is how astronomers tell what a star is made of.", show:{lab:"hear", z:1, play:true}, when:"hear:1"}],
+     done:"Helium was found this way. In 1868 its yellow line turned up in sunlight, 27 years before anyone found the element on Earth."},
+    {id:"mole", short:"Mole", title:"Weigh a molecule", blurb:"From the mass of one atom to grams on a scale.", steps:[
+      {say:"In the labs, open Calculate, then Molar mass, and type water: H2O.", show:{lab:"calc", calc:"molar", formula:"H2O"}, when:"calc:molar:H2O"},
+      {say:"Type glucose, C6H12O6, the sugar your cells burn for energy.", show:{lab:"calc", calc:"molar", formula:"C6H12O6"}, when:"calc:molar:C6H12O6"},
+      {say:"Type caffeine, C8H10N4O2.", show:{lab:"calc", calc:"molar", formula:"C8H10N4O2"}, when:"calc:molar:C8H10N4O2"},
+      {say:"Pick the element that carries the largest share of caffeine's mass.", show:{pick:6}, when:"pick:6"}],
+     done:"A mole is 6.022 × 10²³ of anything. Molar mass turns that unimaginable count into grams you can weigh: 18 grams of water is one mole of water molecules."},
+    {id:"decay", short:"Decay", title:"Date a bone", blurb:"Radioactive decay, used as a clock.", steps:[
+      {say:"In the labs, open Calculate, then Radioactive decay, and choose carbon-14.", show:{lab:"calc", calc:"decay", preset:"6,14"}, when:"calc:decay:6,14"},
+      {say:"Slide time forward until a quarter of the carbon-14 is left. That takes two half-lives, about 11,400 years.", show:{lab:"calc", calc:"decay", half:2}, when:"calc:decay:half:2"},
+      {say:"Press Listen like a Geiger counter and hear the clicks thin out as the atoms run out.", show:{lab:"calc", calc:"decay", listen:true}, when:"calc:listen"},
+      {say:"Open Predict and answer a question.", show:{lab:"predict"}, when:"quiz:*"}],
+     done:"Radiocarbon dating reaches back about 50,000 years; after that too little carbon-14 is left to count. For older rocks, geologists use slower clocks, such as uranium-238, with a half-life of 4.5 billion years."},
     {id:"star", short:"Star", title:"Light a star", blurb:"The reaction that powers the Sun, and why it is so slow.", steps:[
       {say:"Pick hydrogen. The Sun is about three-quarters hydrogen.", show:{pick:1}, when:"pick:1"},
       {say:"In the workbench, fuse two protons. This is the first step of the chain that powers the Sun.", show:{sim:"fuse", react:"pp"}, when:"fusion:pp"},
@@ -1069,6 +1098,833 @@ var Missions=(function(){
     return api;
   }
   return {create:create, LIST:LIST};
+})();
+
+/* ----------------------------------------------------------------------------
+   The labs: Atom you learn by doing. Shared by the website and the app.
+
+     Build      put protons, neutrons, and electrons together by clicking,
+                typing, or dragging, and see which element, isotope, and ion
+                you made, whether it holds together, and why.
+     Predict    a question, your answer, then the reason. Questions you miss
+                come back on a widening schedule (spaced repetition).
+     Calculate  plug numbers into four real formulas: the light an atom gives
+                off, radioactive decay, E = mc^2, and molar mass from a formula
+                you type.
+     Workbench  the fusion, chemical-bond, and battery simulations.
+     Hear       an element's light played as tones, and the order electrons
+                fill their shells. Sound plays only when you press Play.
+     You        what you have explored, built, and mastered; today's element;
+                badges; and questions due for review. Kept on this device only.
+   ---------------------------------------------------------------------------- */
+var AtomLabs=(function(){
+  var D=document;
+  /* ------------------------------------------------------------ helpers */
+  function el(z){ return ELEMENTS[z-1]; }
+  function nm(z){ return el(z)[2]; }
+  function lc(z){ return el(z)[2].toLowerCase(); }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+  function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+  function fmt(x,d){ return (+x).toLocaleString("en-US",{maximumFractionDigits:d,minimumFractionDigits:d}).replace(/^-/,"\u2212"); }
+  function supNum(n){ return String(n).replace(/\u2212/g,"-").split("").map(function(c){ var i="-0123456789+".indexOf(c); return i<0?c:"⁻⁰¹²³⁴⁵⁶⁷⁸⁹⁺".charAt(i); }).join(""); }
+  function sci(x,dig){
+    if(!isFinite(x)) return "—"; if(x===0) return "0";
+    var s=x<0?"−":"", a=Math.abs(x), e=Math.floor(Math.log10(a));
+    if(e>=-2&&e<6) return s+fmt(a, Math.max(0,Math.min(4,(dig||3)-1-e)));
+    return s+fmt(a/Math.pow(10,e),(dig||3)-1)+" × 10"+supNum(e);
+  }
+  function words(n){ return ["no","one","two","three","four","five","six","seven","eight","nine","ten"][n]||String(n); }
+  function hash(s){ var h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+  function rng(seed){ var a=seed>>>0; return function(){ a=(a+0x6D2B79F5)>>>0; var t=a; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
+  function fit(c){ var r=c.getBoundingClientRect(), d=Math.min(window.devicePixelRatio||1,2);
+    var w=Math.max(1,Math.round(r.width*d)), h=Math.max(1,Math.round(r.height*d));
+    if(c.width!==w||c.height!==h){ c.width=w; c.height=h; }
+    var g=c.getContext("2d"); g.setTransform(d,0,0,d,0,0); return {g:g,w:r.width,h:r.height}; }
+  /* a label on a small plate of the ground color, so it reads over any drawing */
+  function label(g,t,x,y,th,align){
+    g.textAlign=align||"center"; var m=g.measureText(t), w=m.width, a=m.actualBoundingBoxAscent||10, d=m.actualBoundingBoxDescent||3,
+      x0=g.textAlign==="center"?x-w/2:(g.textAlign==="right"?x-w:x);
+    g.save(); g.globalAlpha=0.86; g.fillStyle=th.plate; g.fillRect(x0-3,y-a-3,w+6,a+d+6); g.restore(); g.fillText(t,x,y);
+  }
+  /* visible wavelength to a display color (after Bruton's approximation) */
+  function wlRGB(w){
+    var r=0,g=0,b=0;
+    if(w>=380&&w<440){ r=-(w-440)/60; b=1; } else if(w<490){ g=(w-440)/50; b=1; } else if(w<510){ g=1; b=-(w-510)/20; }
+    else if(w<580){ r=(w-510)/70; g=1; } else if(w<645){ r=1; g=-(w-645)/65; } else if(w<=780){ r=1; }
+    var f=w<420?0.3+0.7*(w-380)/40:(w>700?0.3+0.7*(780-w)/80:1);
+    return "rgb("+[r,g,b].map(function(v){ return Math.round(255*Math.pow(Math.max(0,v)*f,0.8)); }).join(",")+")";
+  }
+  var SYM={}; ELEMENTS.forEach(function(e){ SYM[e[1]]=e[0]; SYM[e[1].toLowerCase()]=e[0]; SYM[e[2].toLowerCase()]=e[0]; });
+  SYM.aluminum=13; SYM.cesium=55; SYM.sulphur=16;
+  function zOf(s){ s=String(s||"").trim(); if(/^\d+$/.test(s)){ var n=+s; return n>=1&&n<=118?n:0; } return SYM[s]||SYM[s.toLowerCase()]||0; }
+  function commonA(z){ var e=el(z); return e[16]||Math.round(e[3]); }
+
+  /* ------------------------------------------------------------ progress */
+  var Progress=(function(){
+    var KEY="atom.progress", subs=[], P=null;
+    function blank(){ return {v:1, seen:{}, built:{}, heard:{}, calc:{}, learn:{}, mastered:{}, days:{}, daily:{}, badges:{}, goals:{}, run:0, best:0, right:0, reviewed:0, ion:0, unstable:0}; }
+    function load(){ var b=blank(), d=null; try{ d=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ d=null; }
+      if(!d||typeof d!=="object") d=b; for(var k in b) if(d[k]==null||typeof d[k]!==typeof b[k]) d[k]=b[k]; P=d; }
+    load();
+    function save(){ try{ localStorage.setItem(KEY,JSON.stringify(P)); }catch(e){} }
+    function pad(n){ return (n<10?"0":"")+n; }
+    function day(t){ var d=t?new Date(t):new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+    function count(o){ return Object.keys(o).length; }
+    function today(){ var k=day(); if(!P.daily[k]) P.daily[k]={}; P.days[k]=1; return P.daily[k]; }
+    function dailyZ(t){ var d=new Date(t||Date.now()), n=Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5); return (n*37)%103+1; }
+    var BADGES=[
+      {id:"first",    name:"First atom",     desc:"Build any atom.",                                   test:function(){ return count(P.built)>0; }},
+      {id:"ion",      name:"Charged",        desc:"Build an ion: more or fewer electrons than protons.",test:function(){ return !!P.ion; }},
+      {id:"unstable", name:"Unstable",       desc:"Build a radioactive isotope.",                      test:function(){ return !!P.unstable; }},
+      {id:"isotopes", name:"Isotope hunter", desc:"Build three isotopes of one element.",              test:function(){ for(var z in P.built) if(count(P.built[z])>=3) return true; return false; }},
+      {id:"builder",  name:"Builder",        desc:"Build ten different elements.",                     test:function(){ return count(P.built)>=10; }},
+      {id:"goals",    name:"Workshop",       desc:"Finish every Build challenge.",                     test:function(){ return count(P.goals)>=8; }},
+      {id:"sharp",    name:"Sharp",          desc:"Answer five questions right in a row.",             test:function(){ return P.best>=5; }},
+      {id:"recall",   name:"Remembered",     desc:"Get a question right that came back for review.",   test:function(){ return P.reviewed>=1; }},
+      {id:"master",   name:"Master",         desc:"Master five elements (three different right answers each).", test:function(){ return count(P.mastered)>=5; }},
+      {id:"calc",     name:"Calculator",     desc:"Use all four calculators.",                         test:function(){ return count(P.calc)>=4; }},
+      {id:"listen",   name:"Listener",       desc:"Hear the light of five elements.",                  test:function(){ return count(P.heard)>=5; }},
+      {id:"explorer", name:"Explorer",       desc:"Open 25 element cards.",                            test:function(){ return count(P.seen)>=25; }},
+      {id:"regular",  name:"Regular",        desc:"Explore on three different days.",                  test:function(){ return count(P.days)>=3; }},
+      {id:"daily",    name:"Element of the day", desc:"Finish all three of today's tasks.",            test:function(){ for(var k in P.daily) if(P.daily[k].done) return true; return false; }},
+      {id:"collector",name:"Collector",      desc:"Open all 118 element cards.",                       test:function(){ return count(P.seen)>=118; }}
+    ];
+    function award(){ var got=[]; BADGES.forEach(function(b){ if(!P.badges[b.id]&&b.test()){ P.badges[b.id]=Date.now(); got.push(b); } }); return got; }
+    function finishDaily(){ var t=today(); if(t.card&&t.build&&t.quiz) t.done=1; }
+    function emit(kind,info){ subs.forEach(function(f){ try{ f(kind,info); }catch(e){} }); }
+    function mark(kind,z,x){
+      var t=today(), dz=dailyZ();
+      if(kind==="seen"){ P.seen[z]=1; if(z===dz) t.card=1; }
+      else if(kind==="built"){ (P.built[z]=P.built[z]||{})[x.A]=1; if(x.q) P.ion=1; if(x.unstable) P.unstable=1; if(z===dz&&x.A===commonA(z)) t.build=1; }
+      else if(kind==="heard") P.heard[z]=1;
+      else if(kind==="calc") P.calc[x]=1;
+      else if(kind==="goal") P.goals[x]=1;
+      finishDaily(); var got=award(); save(); emit(kind,{z:z,x:x,badges:got}); return got;
+    }
+    var GAP=[0,1,3,7,16,35];   /* days until a question comes back, by how many times in a row it was right */
+    function answer(key,z,ok){
+      var t=today(), now=Date.now(), r=P.learn[key]||{b:0,due:0,ok:0,no:0,last:0};
+      var review=r.last>0 && now-r.last>12*3600e3;
+      if(ok){ r.b=Math.min(5,r.b+1); r.ok++; P.run++; P.right++; if(P.run>P.best) P.best=P.run; if(review) P.reviewed++; if(z===dailyZ()) t.quiz=1; }
+      else { r.b=0; r.no++; P.run=0; }
+      r.due=now+(ok?GAP[r.b]*864e5:10*60e3); r.last=now; P.learn[key]=r;
+      if(z&&ok){ var n=0; for(var k in P.learn){ if(k.split(":")[1]===String(z)&&P.learn[k].ok>0) n++; } if(n>=3) P.mastered[z]=1; }
+      finishDaily(); var got=award(); save(); emit("answer",{z:z,ok:ok,badges:got}); return got;
+    }
+    function due(){ var now=Date.now(), out=[]; for(var k in P.learn){ var r=P.learn[k]; if(r.due<=now&&r.b<4) out.push([r.due,k]); } return out.sort(function(a,b){ return a[0]-b[0]; }).map(function(x){ return x[1]; }); }
+    function level(z){ return P.mastered[z]?3:(P.built[z]?2:(P.seen[z]?1:0)); }
+    function streak(){ var n=0, t=Date.now(); if(!P.days[day(t)]) t-=864e5; while(P.days[day(t)]){ n++; t-=864e5; } return n; }
+    function stats(){ return {seen:count(P.seen), built:count(P.built), mastered:count(P.mastered), days:count(P.days), streak:streak(), right:P.right, best:P.best, badges:count(P.badges), due:due().length}; }
+    function daily(){ var t=P.daily[day()]||{}; return {z:dailyZ(), card:!!t.card, build:!!t.build, quiz:!!t.quiz, done:!!t.done}; }
+    function reset(){ P=blank(); save(); emit("reset",{}); }
+    return {mark:mark, answer:answer, due:due, level:level, stats:stats, daily:daily, badges:BADGES, has:function(id){ return !!P.badges[id]; },
+      goal:function(id){ return !!P.goals[id]; }, on:function(f){ subs.push(f); }, reset:reset, data:function(){ return P; }};
+  })();
+
+  /* ------------------------------------------------------------ nuclei */
+  var ANION={1:"hydride",6:"carbide",7:"nitride",8:"oxide",9:"fluoride",15:"phosphide",16:"sulfide",17:"chloride",34:"selenide",35:"bromide",53:"iodide"};
+  function chargeStr(q){ return q===0?"0":(Math.abs(q)===1?"":Math.abs(q))+(q>0?"+":"−"); }
+  function isoName(z,a){ if(z===1&&a===2) return "deuterium (hydrogen-2)"; if(z===1&&a===3) return "tritium (hydrogen-3)"; return lc(z)+"-"+a; }
+  function hlWords(t){ return t.replace(/\b(\d+) (\d{3})\b/,"$1,$2").replace(/ ky$/," thousand years").replace(/ My$/," million years").replace(/ Gy$/," billion years").replace(/ y$/," years").replace(/ d$/," days").replace(/ h$/," hours").replace(/ min$/," minutes"); }
+  function modeWords(m){ return m.replace("beta-","beta-minus decay").replace("beta+","beta-plus decay").replace(/\bEC\b/,"electron capture").replace(/^alpha/,"alpha decay").replace("SF","spontaneous fission"); }
+  function nuclide(z,a){
+    if(z<=0){
+      if(a===0) return {kind:"none",tone:"",title:"Nothing yet",text:"Add a proton and you have hydrogen. Every element is just a number of protons."};
+      if(a===1) return {kind:"radioactive",tone:"warn",title:"A free neutron",text:"On its own a neutron lasts about 15 minutes on average, then turns into a proton, an electron, and an antineutrino."};
+      return {kind:"unbound",tone:"bad",title:"Falls apart",text:"Neutrons alone don't hold together: without protons, this flies apart at once."};
+    }
+    if(z>118) return {kind:"unknown",tone:"warn",title:"Not made yet",text:"No one has made an element with "+z+" protons. The heaviest so far is oganesson, with 118."};
+    var st=STABLE[z]||[], name=isoName(z,a);
+    if(st.indexOf(a)>=0) return {kind:"stable",tone:"ok",title:"Stable",
+      text:cap(name)+(st.length>1?" is one of "+lc(z)+"'s "+words(st.length)+" stable isotopes."+(a===commonA(z)?" It is the most common one.":""):" is "+lc(z)+"'s only stable isotope.")+" It can last forever."};
+    if(z===83&&a===209) return {kind:"stable",tone:"ok",title:"Practically stable",text:"Bismuth-209 does decay, but its half-life is about 2 × 10¹⁹ years, a billion times the age of the universe."};
+    var nb=(NOTABLE[z]||[]).filter(function(r){ return r[0]===a; })[0];
+    if(nb) return {kind:"radioactive",tone:"warn",title:"Radioactive",text:cap(name)+" decays by "+modeWords(nb[2])+", with a half-life of "+hlWords(nb[1])+". "+cap(nb[3])+"."};
+    /* the lightest nuclei are measured, not estimated: the liquid-drop model
+       is far off for them, so their edges come from experiment (NUBASE2020;
+       fluorine-31 and neon-34, Ahn et al. 2019; oxygen-28, Kondo et al. 2023) */
+    if(z<=10){
+      var rg=LIGHT_BOUND[z], gp=LIGHT_GAPS[z]||[];
+      if(LIGHT_NOTE[z+"-"+a]) return {kind:"unbound",tone:"bad",title:"Falls apart",text:LIGHT_NOTE[z+"-"+a]};
+      if(a>rg[1]) return {kind:"unbound",tone:"bad",title:"Falls apart",text:"With this many neutrons the last one isn't held at all; it leaves almost at once. Experiments find "+isoName(z,rg[1])+" is the heaviest "+lc(z)+" that holds together. You have found the edge of the nuclear map."};
+      if(a<rg[0]) return {kind:"unbound",tone:"bad",title:"Falls apart",text:"With so few neutrons the protons push each other out, and one leaves almost at once. The lightest "+lc(z)+" that holds together is "+isoName(z,rg[0])+"."};
+      if(gp.indexOf(a)>=0) return {kind:"unbound",tone:"bad",title:"Falls apart",text:cap(name)+" falls apart almost at once: a neutron leaves it, even though "+lc(z)+"-"+(a-1)+" and "+lc(z)+"-"+(a+1)+" hold together. Neutrons hold on better in pairs."};
+    }
+    var B=bindingSEMF(z,a), Sn=a>1?B-bindingSEMF(z,a-1):B, Sp=(z>1&&a>1)?B-bindingSEMF(z-1,a-1):B;
+    if(z>10&&a>1&&(B<=0||Sn<0)) return {kind:"unbound",tone:"bad",title:"Falls apart",text:"With this many neutrons the last one isn't held at all; it would drip off almost at once. You have found the edge of the nuclear map. (Estimated from the liquid-drop model.)"};
+    if(z>10&&a>1&&Sp<0) return {kind:"unbound",tone:"bad",title:"Falls apart",text:"With so few neutrons the protons push each other out, and one would leave almost at once. (Estimated from the liquid-drop model.)"};
+    /* which way it decays: toward the line stable nuclei lie on, where the
+       neutron excess grows as 0.4 A^2 / (A + 200) (Green's approximation) */
+    var none=st.length===0, v=(a-0.4*a*a/(a+200))/2, why;
+    if(z>=84) why="Nuclei this heavy decay by shedding an alpha particle, two protons and two neutrons, which would make "+lc(z-2)+"-"+(a-4)+". One with extra neutrons may instead turn a neutron into a proton (beta-minus decay). Which wins depends on details this estimate can't settle.";
+    else if(z<v-0.5) why="It has more neutrons than "+lc(z)+" can hold steadily, so a neutron will turn into a proton (beta-minus decay), making "+lc(z+1)+"-"+a+".";
+    else if(z>v+0.5) why="It has too few neutrons, so a proton will turn into a neutron (beta-plus decay or electron capture), making "+(z>1?lc(z-1)+"-"+a:"a neutron-rich nucleus")+".";
+    else why="It sits right on the line where stable nuclei lie, but its neighbors with the same mass are more tightly bound, so it will turn into one of them by beta decay.";
+    return {kind:"radioactive",tone:"warn",title:"Radioactive",text:(none?"No isotope of "+lc(z)+" is stable. ":"")+why+" (An estimate: this isotope isn't in Atom's list of measured ones.)"};
+  }
+  var LIGHT_BOUND={1:[1,3],2:[3,8],3:[6,11],4:[7,14],5:[8,19],6:[9,22],7:[12,23],8:[13,24],9:[17,31],10:[17,34]};
+  var LIGHT_GAPS={2:[5,7],3:[10],4:[13],5:[16,18],6:[21],9:[28,30],10:[33]};
+  var MASS5="No nucleus with five particles holds together, and none with eight lasts as long as a second. Those two gaps are a main reason the Big Bang made almost nothing heavier than lithium.";
+  var LIGHT_NOTE={"2-5":"Helium-5 falls apart almost at once. "+MASS5, "3-5":"Lithium-5 falls apart almost at once. "+MASS5,
+    "4-8":"Beryllium-8 splits into two helium-4 nuclei in about 10⁻¹⁶ seconds. Stars get past it only by catching a third helium nucleus before it splits, which is how the universe makes its carbon."};
+  function halfLifeSeconds(text){
+    var m=/([\d\s.]+)\s*(s|min|h|d|y|ky|My|Gy)\b/.exec(text); if(!m) return 0;
+    var v=parseFloat(m[1].replace(/\s/g,"")), Y=365.25*86400;
+    return v*{s:1,min:60,h:3600,d:86400,y:Y,ky:1e3*Y,My:1e6*Y,Gy:1e9*Y}[m[2]];
+  }
+
+  /* ------------------------------------------------------------ sound */
+  var Sound=(function(){
+    var ac=null, out=null, vol=0.5, live=[];
+    function ctx(){ if(!ac){ var A=window.AudioContext||window.webkitAudioContext; if(!A) return null; ac=new A(); out=ac.createGain(); out.gain.value=vol; out.connect(ac.destination); }
+      if(ac.state==="suspended") ac.resume(); return ac; }
+    function tone(f,t0,dur,gain,type){ var a=ctx(); if(!a) return; var o=a.createOscillator(), g=a.createGain();
+      o.type=type||"sine"; o.frequency.value=f; g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(gain,t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+      o.connect(g); g.connect(out); o.start(t0); o.stop(t0+dur+0.05); live.push(o); o.onended=function(){ var i=live.indexOf(o); if(i>=0) live.splice(i,1); }; }
+    function click(){ var a=ctx(); if(!a) return; var n=Math.floor(a.sampleRate*0.004), buf=a.createBuffer(1,n,a.sampleRate), d=buf.getChannelData(0);
+      for(var i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3); var s=a.createBufferSource(), g=a.createGain(); g.gain.value=0.6; s.buffer=buf; s.connect(g); g.connect(out); s.start(); }
+    function stop(){ live.slice().forEach(function(o){ try{ o.stop(); }catch(e){} }); live=[]; }
+    function now(){ var a=ctx(); return a?a.currentTime:0; }
+    function setVol(v){ vol=v; if(out) out.gain.value=v; }
+    return {tone:tone, click:click, stop:stop, now:now, setVol:setVol, ok:function(){ return !!(window.AudioContext||window.webkitAudioContext); }};
+  })();
+  /* light to sound: 750 nm (red) is 220 Hz and 380 nm (violet) is 880 Hz; frequency rises with the light's */
+  function lightHz(w){ var x=(1/w-1/750)/(1/380-1/750); return 220*Math.pow(2,2*Math.max(-0.5,Math.min(1.5,x))); }
+
+  /* ------------------------------------------------------------ formulas */
+  function parseFormula(src){
+    var s=String(src).replace(/[₀-₉]/g,function(c){ return String(c.charCodeAt(0)-0x2080); }).replace(/\s+/g,"").replace(/[·•∙*]/g,".");
+    if(!s) throw new Error("Type a formula, like H2O.");
+    var i=0;
+    function num(){ var m=/^\d+/.exec(s.slice(i)); if(!m) return 1; i+=m[0].length; return +m[0]; }
+    function add(t,o,k){ for(var x in o) t[x]=(t[x]||0)+o[x]*k; }
+    function group(close){
+      var tot={};
+      while(i<s.length){
+        var c=s[i];
+        if(c==="("||c==="["){ i++; var inner=group(c==="("?")":"]"); add(tot,inner,num()); }
+        else if(c===")"||c==="]"){ if(c!==close) throw new Error("A bracket doesn't match."); i++; return tot; }
+        else if(c==="."){ if(close) throw new Error("A dot can't sit inside brackets."); i++; var k=num(), part=group(null); add(tot,part,k); return tot; }
+        else if(/[A-Z]/.test(c)){ var m=/^[A-Z][a-z]?/.exec(s.slice(i)), sym=m[0];
+          if(!SYM[sym]||el(SYM[sym])[1]!==sym){ if(sym.length===2&&SYM[sym[0]]&&el(SYM[sym[0]])[1]===sym[0]&&!/[a-z]/.test(s[i+2]||"")){ sym=sym[0]; } else throw new Error("There is no element \""+sym+"\"."); }
+          i+=sym.length; var n=num(); tot[sym]=(tot[sym]||0)+n; }
+        else if(/\d/.test(c)&&i===0){ var lead=num(), rest=group(close); add(tot,rest,lead); return tot; }
+        else throw new Error("I can't read \""+c+"\" here. Use element symbols, numbers, and brackets.");
+      }
+      if(close) throw new Error("A bracket is never closed.");
+      return tot;
+    }
+    var out=group(null);
+    if(!Object.keys(out).length) throw new Error("Type a formula, like H2O.");
+    return out;
+  }
+
+  /* one electron around a nucleus of charge Z (hydrogen, He+, Li2+): the Bohr
+     levels with the reduced-mass correction, so hydrogen-alpha lands on its
+     measured 656.47 nm (vacuum) */
+  var HY={1:{n:"hydrogen",m:938.272},2:{n:"helium ion He⁺",m:3727.379},3:{n:"lithium ion Li²⁺",m:6533.833}};
+  function lineOf(Zc,nu,nl){ var f=1/(1+0.51099895/HY[Zc].m), E=13.605693122990*Zc*Zc*f*(1/(nl*nl)-1/(nu*nu)); return {E:E, w:1239.841984/E}; }
+
+  /* the Hill order chemists index formulas by: carbon, then hydrogen, then the rest alphabetically */
+  function hill(counts){ var k=Object.keys(counts), c=counts.C?["C"].concat(counts.H?["H"]:[]):[];
+    k=c.concat(k.filter(function(x){ return c.indexOf(x)<0; }).sort());
+    return k.map(function(x){ return x+(counts[x]>1?counts[x]:""); }).join(""); }
+
+  /* ------------------------------------------------------------ questions */
+  function same(a,b){ return String(a).trim().toLowerCase()===String(b).trim().toLowerCase(); }
+  function normNum(s){ return String(s).replace(/[−–]/g,"-").replace(/[,\s]/g,"").replace(/°?c$/i,""); }
+  function chargeOf(s){ s=String(s).replace(/[−–]/g,"-").replace(/\s/g,""); var m=/^([+-]?)(\d*)([+-]?)$/.exec(s); if(!m) return NaN;
+    if(m[2]===""&&!m[1]&&!m[3]) return NaN; var n=m[2]===""?1:+m[2], sg=(m[1]||m[3]||"+")==="-"?-1:1; return n===0?0:sg*n; }
+  function occOf(text){
+    var s=String(text).replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g,function(c){ return String("⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(c)); }).toLowerCase(), occ={}, core=/\[(he|ne|ar|kr|xe|rn)\]/.exec(s), m, re=/([1-7])\s*([spdf])\s*(\d{1,2})/g, ok=false;
+    if(core){ configOf(zOf(cap(core[1]))).forEach(function(x){ occ[x[0]+","+x[1]]=x[2]; }); ok=true; }
+    while((m=re.exec(s))){ occ[m[1]+","+"spdf".indexOf(m[2])]=(occ[m[1]+","+"spdf".indexOf(m[2])]||0)+(+m[3]); ok=true; }
+    return ok?occ:null;
+  }
+  function neighbors(z,useGroup){
+    var e=el(z), out=[];
+    ELEMENTS.forEach(function(f){ var w=f[0]; if(w===z||!ARAD[w-1]||!ARAD[z-1]) return;
+      if(useGroup ? (e[6]&&f[6]===e[6]&&Math.abs(f[7]-e[7])===1) : (f[7]===e[7]&&f[6]&&e[6]&&Math.abs(f[6]-e[6])<=3))
+        if(Math.abs(ARAD[w-1]-ARAD[z-1])>=10) out.push(w); });
+    return out;
+  }
+  var QTYPES={
+    n:{ ok:function(z){ return (STABLE[z]||[]).length>0||(NOTABLE[z]||[]).length>0; },
+        param:function(z,r){ var l=(STABLE[z]||[]).concat((NOTABLE[z]||[]).map(function(x){ return x[0]; })); return l[Math.floor(r()*l.length)]; },
+        make:function(z,a){ return {text:"How many neutrons are in "+isoName(z,a)+"?", input:"number", hint:"Type a number",
+          check:function(v){ var ok=+normNum(v)===a-z; return {ok:ok, answer:String(a-z),
+            why:"The mass number, "+a+", counts protons and neutrons together. Every "+lc(z)+" atom has "+z+" proton"+(z>1?"s":"")+", so "+a+" − "+z+" = "+(a-z)+" neutron"+(a-z===1?"":"s")+"."}; }}; }},
+    q:{ ok:function(z){ return z<=56; },
+        param:function(z,r){ var d=[1,2,-1,-2,3,-3][Math.floor(r()*6)]; return Math.max(0,z-d); },
+        make:function(z,e){ return {text:"An atom has "+z+" proton"+(z>1?"s":"")+" and "+e+" electron"+(e===1?"":"s")+". What is its charge?", input:"text", hint:"For example +2, −1, or 0",
+          check:function(v){ var q=z-e, ok=chargeOf(v)===q; return {ok:ok, answer:q>0?"+"+q:(q<0?"−"+(-q):"0"),
+            why:"Each proton carries +1 and each electron −1, so the charge is "+z+" − "+e+" = "+(q>0?"+"+q:(q<0?"−"+(-q):"0"))+"."+(q?" "+cap(q>0?"Losing":"Gaining")+" electrons makes "+(q>0?"a positive":"a negative")+" ion"+(q<0&&ANION[z]?", here a "+ANION[z]+" ion":"")+".":" Equal numbers make a neutral atom.")}; }}; }},
+    z:{ ok:function(){ return true; }, param:function(){ return 0; },
+        make:function(z){ return {text:"Which element has atomic number "+z+"?", input:"text", hint:"Type its name or symbol", tiles:[],
+          check:function(v){ var ok=zOf(v)===z; return {ok:ok, answer:nm(z)+" ("+el(z)[1]+")", why:"The atomic number is the number of protons, and it alone decides the element: every atom with "+z+" proton"+(z>1?"s":"")+" is "+lc(z)+"."}; }}; }},
+    r:{ ok:function(z){ return neighbors(z,true).length+neighbors(z,false).length>0; },
+        param:function(z,r){ var l=neighbors(z,true).concat(neighbors(z,false)); return l[Math.floor(r()*l.length)]; },
+        make:function(z,w){ var a=[z,w].sort(function(x,y){ return x-y; }); return {text:"Which atom is bigger?", choices:[a[0],a[1]].map(function(k){ return {v:k, label:nm(k)}; }), tiles:a,
+          check:function(v){ var big=ARAD[z-1]>ARAD[w-1]?z:w, small=big===z?w:z, sameGroup=el(z)[6]===el(w)[6];
+            var trend=sameGroup?(el(big)[7]>el(small)[7]):(big<small);
+            return {ok:+v===big, answer:nm(big), right:big,
+              why:cap(lc(big))+" ("+ARAD[big-1]+" pm) beats "+lc(small)+" ("+ARAD[small-1]+" pm). "+(trend?(sameGroup?"Going down a group adds a whole new shell of electrons, so atoms grow.":"Across a period each step adds a proton that pulls the same shell in tighter, so atoms shrink from left to right."):"This pair runs against the usual trend, which happens where electron shells fill unevenly.")}; }}; }},
+    c:{ ok:function(z){ return z<=36; }, param:function(){ return 0; },
+        make:function(z){ return {text:"Type the electron configuration of "+lc(z)+".", input:"text", hint:"For example 1s2 2s2 2p4, or [He] 2s2 2p4",
+          check:function(v){ var occ=occOf(v), want={}, ok=!!occ; configOf(z).forEach(function(x){ want[x[0]+","+x[1]]=x[2]; });
+            if(ok){ for(var k in want) if(occ[k]!==want[k]) ok=false; for(k in occ) if(occ[k]&&!want[k]) ok=false; }
+            return {ok:ok, answer:configStr(z,false), why:"Electrons fill the lowest-energy subshells first: 1s, 2s, 2p, 3s, 3p, 4s, 3d, 4p. An s subshell holds 2, p holds 6, and d holds 10."+(EXCEPT[z]?" "+lc(z).replace(/^./,function(c){ return c.toUpperCase(); })+" is one of the exceptions to this order.":"")}; }}; }},
+    s:{ ok:function(z){ return z<=94&&((STABLE[z]||[]).length>0||(NOTABLE[z]||[]).length>0); },
+        param:function(z,r){ var st=STABLE[z]||[], nb=(NOTABLE[z]||[]).map(function(x){ return x[0]; }), ca=commonA(z);
+          var pool=st.concat(nb).concat([ca+3,Math.max(z,ca-3)]); return pool[Math.floor(r()*pool.length)]; },
+        make:function(z,a){ var info=nuclide(z,a); return {text:"Is "+isoName(z,a)+" stable or radioactive?", choices:[{v:"stable",label:"Stable"},{v:"radioactive",label:"Radioactive"}],
+          check:function(v){ var right=info.kind==="stable"?"stable":"radioactive"; return {ok:v===right, answer:cap(right), right:right, why:info.text}; }}; }},
+    d:{ ok:function(z){ return el(z)[8]!=="gas"&&el(z)[9]&&z<=94; },
+        param:function(z,r){ var l=ELEMENTS.filter(function(f){ return f[0]!==z&&f[8]!=="gas"&&f[9]&&f[0]<=94&&Math.abs(f[9]-el(z)[9])/Math.max(f[9],el(z)[9])>0.15; }); return l[Math.floor(r()*l.length)][0]; },
+        make:function(z,w){ var a=[z,w].sort(function(x,y){ return x-y; }); return {text:"Which is denser?", choices:a.map(function(k){ return {v:k,label:nm(k)}; }), tiles:a,
+          check:function(v){ var big=el(z)[9]>el(w)[9]?z:w, small=big===z?w:z; return {ok:+v===big, answer:nm(big), right:big,
+            why:cap(lc(big))+" packs "+fmt(el(big)[9],2)+" grams into each cubic centimeter; "+lc(small)+", "+fmt(el(small)[9],2)+". Density depends on how heavy the atoms are and how tightly they stack."}; }}; }},
+    m:{ ok:function(z){ return el(z)[10]>0&&z<=103&&z!==2; }, param:function(){ return 0; },
+        make:function(z){ return {text:"Estimate: at what temperature does "+lc(z)+" melt, in °C?", input:"number", hint:"Within 15 percent counts",
+          check:function(v){ var K=el(z)[10], g=+normNum(v)+273.15, ok=isFinite(g)&&g>0&&(Math.abs(g-K)<=Math.max(50,0.15*K));
+            return {ok:ok, answer:fmt(K-273.15,0)+" °C", why:cap(lc(z))+" melts at "+fmt(K-273.15,0)+" °C ("+fmt(K,0)+" K). "+(K<300?"That is below room temperature, so it is "+(el(z)[8]==="gas"?"a gas":"a liquid")+" on a normal day.":"Metals with many shared electrons, like tungsten, hold together hardest.")}; }}; }},
+    b:{ ok:function(){ return true; }, param:function(){ return 0; },
+        make:function(z){ var bk=blockOf(z); return {text:"Which block of the periodic table is "+lc(z)+" in?", choices:["s","p","d","f"].map(function(k){ return {v:k,label:k+"-block"}; }), tiles:[z],
+          check:function(v){ return {ok:v===bk, answer:bk+"-block", right:bk, why:"A block is named for the subshell its newest electron goes into. "+cap(lc(z))+"'s configuration is "+configStr(z,true)+", so it sits in the "+bk+"-block."}; }}; }}
+  };
+  function makeQ(key){ var p=key.split(":"), t=QTYPES[p[0]], z=+p[1], par=+p[2]; if(!t||!z) return null; var q=t.make(z,par); q.key=key; q.z=z; q.type=p[0]; return q; }
+  function newKey(z,r){ var types=Object.keys(QTYPES).filter(function(k){ return QTYPES[k].ok(z); }); if(!types.length) return null;
+    var t=types[Math.floor(r()*types.length)]; return t+":"+z+":"+QTYPES[t].param(z,r); }
+
+  /* ------------------------------------------------------------ the labs */
+  var TABS=[["build","Build"],["predict","Predict"],["calc","Calculate"],["bench","Workbench"],["hear","Hear"],["you","You"]];
+  var GOALS=[
+    {id:"h",    text:"Make a hydrogen atom",                              test:function(p,n,e){ return p===1&&e===1; }},
+    {id:"he4",  text:"Make an alpha particle: helium-4 with no electrons",test:function(p,n,e){ return p===2&&n===2&&e===0; }},
+    {id:"c14",  text:"Make carbon-14, the radiocarbon clock",             test:function(p,n){ return p===6&&n===8; }},
+    {id:"f",    text:"Make a fluoride ion, F⁻, the one in toothpaste",    test:function(p,n,e){ return p===9&&e===10; }},
+    {id:"na",   text:"Make a sodium ion, Na⁺, the one in table salt",     test:function(p,n,e){ return p===11&&e===10; }},
+    {id:"fe56", text:"Make iron-56, among the most tightly bound nuclei", test:function(p,n){ return p===26&&n===30; }},
+    {id:"u235", text:"Make uranium-235, the fuel of nuclear reactors",    test:function(p,n){ return p===92&&n===143; }},
+    {id:"drip", text:"Find the edge: add neutrons to oxygen until one won't stay", test:function(p,n){ return p===8&&nuclide(8,8+n).kind==="unbound"&&n>8; }}
+  ];
+  var CALCS=[["light","Light from an atom"],["decay","Radioactive decay"],["emc","E = mc²"],["molar","Molar mass"]];
+
+  function mount(host,opt){
+    opt=opt||{};
+    var th=function(){ return opt.theme(); };
+    var cur="build", built={}, Z=opt.element?opt.element():1, api={}, COL={};
+    /* particle and lab colors are CSS custom properties (--lb-p, --lb-e, ...),
+       so the canvases use exactly the colors the buttons and labels use */
+    var lastEv="";
+    function ev(e){ if(e===lastEv) return; lastEv=e; if(opt.onEvent) opt.onEvent(e); }
+    function col(k){ if(!COL[k]) COL[k]=(getComputedStyle(host).getPropertyValue("--lb-"+k)||"").trim()||th().ink2; return COL[k]; }
+    host.classList.add("lb");
+    host.innerHTML='<div class="lb-tabs" role="tablist" aria-label="Labs">'+TABS.map(function(t,i){
+        return '<button type="button" role="tab" id="lbTab-'+t[0]+'" data-lt="'+t[0]+'" aria-controls="lbPane-'+t[0]+'" aria-selected="'+(i?"false":"true")+'" tabindex="'+(i?-1:0)+'">'+t[1]+(t[0]==="you"?' <span class="lb-due" hidden></span>':'')+'</button>'; }).join('')+'</div>'+
+      TABS.map(function(t,i){ return '<div class="lb-pane" role="tabpanel" id="lbPane-'+t[0]+'" data-lp="'+t[0]+'" aria-labelledby="lbTab-'+t[0]+'"'+(i?' hidden':'')+'></div>'; }).join('')+
+      '<div class="lb-toast" role="status" aria-live="polite" hidden></div>';
+    var $=function(s){ return host.querySelector(s); }, pane=function(t){ return host.querySelector('[data-lp="'+t+'"]'); };
+    var tabsEl=$(".lb-tabs");
+    function show(t){
+      if(!pane(t)) return; lastEv=""; if(t!=="calc"&&C.listen){ C.listen=false; if(built.calc) calcForm(); } cur=t;
+      [].forEach.call(host.querySelectorAll('[role="tab"]'),function(b){ var on=b.getAttribute("data-lt")===t; b.setAttribute("aria-selected",on?"true":"false"); b.tabIndex=on?0:-1; });
+      [].forEach.call(host.querySelectorAll(".lb-pane"),function(p){ p.hidden=p.getAttribute("data-lp")!==t; });
+      host.setAttribute("data-tab",t);
+      if(!built[t]){ built[t]=true; BUILD[t](pane(t)); }
+      if(REFRESH[t]) REFRESH[t]();
+      dirty=true; if(opt.onEvent) opt.onEvent("lab:"+t);
+    }
+    tabsEl.addEventListener("click",function(e){ var b=e.target.closest("[data-lt]"); if(b) show(b.getAttribute("data-lt")); });
+    tabsEl.addEventListener("keydown",function(e){ var order=TABS.map(function(t){ return t[0]; }), i=order.indexOf(cur);
+      if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ e.preventDefault(); var n=order[(i+(e.key==="ArrowRight"?1:order.length-1))%order.length]; show(n); $('[data-lt="'+n+'"]').focus(); } });
+    var toastT=0;
+    function toast(msg){ var t=$(".lb-toast"); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(function(){ t.hidden=true; },4200); }
+    function celebrate(got){ if(got&&got.length){ toast("Badge earned: "+got.map(function(b){ return b.name; }).join(", ")); if(navigator.vibrate) try{ navigator.vibrate(18); }catch(e){} } }
+    function refreshDue(){ var n=Progress.stats().due, b=$(".lb-due"); if(b){ b.hidden=!n; b.textContent=n?n+" to review":""; } }
+    Progress.on(function(){ refreshDue(); if(cur==="you"&&built.you) REFRESH.you(); });
+    var dirty=true;
+    function tile(z,big){ var e=el(z); return '<span class="lb-tile'+(big?' big':'')+'" style="--cat:'+(opt.catColor?opt.catColor(e[5]):CAT[e[5]][1])+'"><i>'+z+'</i><b>'+e[1]+'</b><span>'+e[2]+'</span></span>'; }
+
+    /* ======================================================== Build */
+    var B={p:6,n:6,e:6,anim:0,spin:0};
+    function buildState(){
+      var p=B.p, n=B.n, e=B.e, a=p+n, q=p-e, info=nuclide(p,a);
+      return {p:p,n:n,e:e,a:a,q:q,info:info};
+    }
+    function drawBuild(now){
+      var c=host.querySelector('[data-c="atom"]'); if(!c||!c.offsetParent) return false;
+      var f=fit(c), g=f.g, w=f.w, h=f.h, T=th(), s=buildState(), cx=w/2, cy=h/2, R=Math.min(w,h)/2-16;
+      g.clearRect(0,0,w,h);
+      var shells=s.e>0?shellsOf(Math.min(s.e,118)):[], ns=Math.max(1,shells.length), nucR=Math.min(R*0.34,R*0.07*Math.pow(Math.max(1,s.a),1/3)+8);
+      var gap=(R-nucR-10)/Math.max(ns,3);
+      /* shells */
+      g.lineWidth=1; shells.forEach(function(cnt,k){ var r=nucR+10+gap*(k+0.7);
+        g.strokeStyle=T.ink3; g.globalAlpha=0.45; g.beginPath(); g.arc(cx,cy,r,0,6.2832); g.stroke(); g.globalAlpha=1;
+        var spin=opt.calm?0:now/1000*(0.6/(k+1));
+        for(var i=0;i<cnt;i++){ var ang=spin+i*6.2832/cnt+k*0.4, x=cx+Math.cos(ang)*r, y=cy+Math.sin(ang)*r;
+          g.fillStyle=col("e"); g.beginPath(); g.arc(x,y,Math.max(3,Math.min(6,gap*0.18)),0,6.2832); g.fill(); }
+      });
+      /* the key: one line per shell, from the inside out */
+      g.font="500 14px Archivo, sans-serif";
+      shells.forEach(function(cnt,k){ g.fillStyle=T.ink2; label(g,"Shell "+(k+1)+": "+cnt+" electron"+(cnt===1?"":"s"),16,28+k*22,T,"left"); });
+      if(s.a+s.e>0&&s.a+s.e<4){ g.fillStyle=T.ink2; label(g,"Drag a particle onto the atom, or press one below",cx,h-16,T); }
+      /* nucleus: the same packing the chamber uses, projected */
+      if(s.a>0&&s.p<=118&&s.n<=200){
+        var pk=packNucleus(s.p,s.n), A=pk.A, pos=pk.pos, ord=[], k, sc=0;
+        for(k=0;k<A;k++){ ord.push(k); sc=Math.max(sc,Math.hypot(pos[3*k],pos[3*k+1])); }
+        sc=sc>0?(nucR-5)/sc:0; ord.sort(function(i,j){ return pos[3*i+2]-pos[3*j+2]; });
+        var r=Math.max(3,Math.min(13,(nucR-2)/Math.max(1,Math.pow(A,1/3))*0.95));
+        ord.forEach(function(i){ var x=cx+pos[3*i]*sc, y=cy+pos[3*i+1]*sc, pr=pk.kind[i]===1, gr=g.createRadialGradient(x-r*0.35,y-r*0.35,r*0.15,x,y,r);
+          gr.addColorStop(0,pr?T.pF[0]:T.nF[0]); gr.addColorStop(1,pr?T.pF[1]:T.nF[1]); g.fillStyle=gr; g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); });
+      } else if(s.a>200){ g.fillStyle=T.ink2; g.font="500 14px Archivo, sans-serif"; label(g,"too many to draw",cx,cy,T); }
+      if(s.p===0&&s.n===0&&s.e===0){ g.fillStyle=T.ink2; g.font="500 15px Archivo, sans-serif"; label(g,"Add a proton to begin",cx,cy,T); }
+      return !opt.calm&&s.e>0;
+    }
+    function readBuild(){
+      var s=buildState(), info=s.info, p=s.p, idEl=$(".lb-id"), say=$(".lb-say");
+      [["p",p],["n",s.n],["e",s.e]].forEach(function(x){ var i=$('[data-in="'+x[0]+'"]'); if(i&&document.activeElement!==i) i.value=x[1]; });
+      var head;
+      if(p>=1&&p<=118){
+        var e=el(p), q=s.q, sym=e[1]+(q?supNum(chargeStr(q)):"");
+        head=tile(p,true)+'<div class="lb-idt"><h3>'+(q?(q<0&&ANION[p]?cap(ANION[p])+" ion":e[2]+" ion"):e[2]+" atom")+' <span class="lb-sym">'+supNum(s.a)+esc(sym)+'</span></h3>'+
+          '<p>'+cap(isoName(p,s.a))+' · '+e[2]+' has '+p+' proton'+(p>1?'s':'')+'</p></div>';
+      } else head='<div class="lb-idt"><h3>'+(p>118?"Element "+p:"No element yet")+'</h3><p>'+(p>118?"Beyond the table":"An element is its number of protons")+'</p></div>';
+      idEl.innerHTML=head;
+      var cvA=host.querySelector('[data-c="atom"]'); if(cvA) cvA.setAttribute("aria-label",(p>=1&&p<=118?cap(isoName(p,s.a)):"Particles")+": "+p+" proton"+(p===1?"":"s")+", "+s.n+" neutron"+(s.n===1?"":"s")+", "+s.e+" electron"+(s.e===1?"":"s")+". "+info.title+".");
+      var q=s.q, cfg=p>=1&&s.e>=1&&s.e<=118?configStr(s.e,true):"—";
+      $(".lb-facts").innerHTML=
+        '<div><dt>Mass number</dt><dd>'+s.a+'</dd></div>'+
+        '<div><dt>Charge</dt><dd>'+(q>0?"+"+q:(q<0?"−"+(-q):"0, neutral"))+'</dd></div>'+
+        '<div class="lb-tone-'+(info.tone||"none")+'"><dt>Nucleus</dt><dd>'+esc(info.title)+'</dd></div>'+
+        '<div><dt>Electrons by shell</dt><dd>'+(s.e?shellsOf(Math.min(s.e,118)).join(", "):"none")+'</dd></div>';
+      say.innerHTML=esc(info.text)+(p>=1&&p<=118&&s.e>0?' <span class="lb-cfg">Configuration of '+s.e+' electrons: '+esc(cfg).replace(/([spdf])(\d+)/g,"$1<sup>$2</sup>")+'.</span>':'')+
+        (Math.abs(q)>3&&p>0?' <span class="lb-cfg">Real atoms rarely gain or lose more than three electrons.</span>':'');
+      var gl=$(".lb-goals"); gl.innerHTML='<h3 class="lb-h">Challenges</h3><ul>'+GOALS.map(function(g){ var done=Progress.goal(g.id); return '<li class="'+(done?"done":"")+'"><span class="lb-mark" role="img" aria-label="'+(done?"done":"not yet")+'">'+(done?"✓":"○")+'</span> '+esc(g.text)+'</li>'; }).join('')+'</ul>';
+      dirty=true;
+    }
+    var buildTimer=0;
+    function changed(){
+      readBuild();
+      clearTimeout(buildTimer);
+      buildTimer=setTimeout(function(){
+        var s=buildState(), got=[];
+        if(s.p>=1&&s.p<=118){
+          got=got.concat(Progress.mark("built",s.p,{A:s.a,q:s.q,unstable:s.info.kind==="radioactive"}));
+          if(opt.onEvent) opt.onEvent("build:"+s.p+":"+s.a+":"+s.q);
+          if(opt.select&&s.p!==Z){ Z=s.p; opt.select(s.p); }
+        }
+        GOALS.forEach(function(g){ if(g.test(s.p,s.n,s.e)&&opt.onEvent) opt.onEvent("goal:"+g.id); });
+        GOALS.forEach(function(g){ if(!Progress.goal(g.id)&&g.test(s.p,s.n,s.e)){ got=got.concat(Progress.mark("goal",s.p,g.id)); toast("Challenge done: "+g.text.replace(/^Make /,"").replace(/^./,function(c){ return c.toUpperCase(); })); } });
+        celebrate(got); readBuild();
+      },500);
+    }
+    function setB(k,v){ var max={p:120,n:200,e:122}[k]; B[k]=Math.max(0,Math.min(max,Math.round(+v||0))); changed(); }
+    var BUILD={}, REFRESH={};
+    BUILD.build=function(P){
+      P.innerHTML='<div class="lb-cols"><div class="lb-stagewrap"><canvas class="lb-cv lb-atomcv" data-c="atom" role="img" aria-label="The atom you are building"></canvas>'+
+        '<div class="lb-tray" aria-label="Drag a particle onto the atom, or click to add one">'+
+          '<button type="button" class="lb-tok p" data-add="p"><b aria-hidden="true">p⁺</b><span>+ proton</span></button>'+
+          '<button type="button" class="lb-tok n" data-add="n"><b aria-hidden="true">n</b><span>+ neutron</span></button>'+
+          '<button type="button" class="lb-tok e" data-add="e"><b aria-hidden="true">e⁻</b><span>+ electron</span></button></div>'+
+          '<div class="lb-goals"></div></div>'+
+        '<div class="lb-side"><div class="lb-id"></div>'+
+          '<div class="lb-counters">'+[["p","Protons","decides the element"],["n","Neutrons","decide the isotope"],["e","Electrons","decide the charge"]].map(function(x){
+            return '<div class="lb-ctr '+x[0]+'"><label for="lbIn-'+x[0]+'"><b>'+x[1]+'</b><span>'+x[2]+'</span></label><div class="lb-step">'+
+              '<button type="button" data-step="'+x[0]+'" data-d="-1" aria-label="One fewer '+x[1].toLowerCase().replace(/s$/,"")+'">−</button>'+
+              '<input id="lbIn-'+x[0]+'" type="number" inputmode="numeric" min="0" max="200" data-in="'+x[0]+'">'+
+              '<button type="button" data-step="'+x[0]+'" data-d="1" aria-label="One more '+x[1].toLowerCase().replace(/s$/,"")+'">+</button></div></div>'; }).join('')+'</div>'+
+          '<dl class="lb-facts"></dl><p class="lb-say" aria-live="polite"></p>'+
+          '<div class="lb-row"><button type="button" class="lb-btn" data-b="common">Most common isotope</button><button type="button" class="lb-btn" data-b="neutral">Make it neutral</button>'+
+            '<button type="button" class="lb-btn" data-b="card">Open its card</button>'+(opt.fall?'<button type="button" class="lb-btn" data-b="fall">Fall into it</button>':'')+'<button type="button" class="lb-btn ghost" data-b="clear">Start over</button></div>'+
+          '</div></div>';
+      P.addEventListener("click",function(e){
+        var a=e.target.closest("[data-add]"), st=e.target.closest("[data-step]"), b=e.target.closest("[data-b]");
+        if(a&&!dragMoved){ setB(a.getAttribute("data-add"),B[a.getAttribute("data-add")]+1); }
+        if(st) setB(st.getAttribute("data-step"),B[st.getAttribute("data-step")]+(+st.getAttribute("data-d")));
+        if(b){ var k=b.getAttribute("data-b");
+          if(k==="common"&&B.p>=1&&B.p<=118){ B.n=commonA(B.p)-B.p; changed(); }
+          if(k==="neutral"){ B.e=B.p; changed(); }
+          if(k==="clear"){ B.p=0; B.n=0; B.e=0; changed(); }
+          if(k==="card"&&B.p>=1&&B.p<=118&&opt.card) opt.card(B.p);
+          if(k==="fall"&&B.p>=1&&B.p<=118&&opt.fall) opt.fall(B.p); }
+      });
+      P.addEventListener("input",function(e){ var i=e.target.closest("[data-in]"); if(i&&i.value!=="") setB(i.getAttribute("data-in"),i.value); });
+      P.addEventListener("change",function(e){ var i=e.target.closest("[data-in]"); if(i) setB(i.getAttribute("data-in"),i.value); });
+      /* drag a particle from the tray onto the atom */
+      var drag=null, dragMoved=false;
+      P.addEventListener("pointerdown",function(e){ var t=e.target.closest("[data-add]"); if(!t) return; drag={k:t.getAttribute("data-add"),x:e.clientX,y:e.clientY,ghost:null}; dragMoved=false; });
+      window.addEventListener("pointermove",function(e){ if(!drag) return;
+        if(!drag.ghost&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>6){ dragMoved=true; var gh=D.createElement("div"); gh.className="lb-ghost "+drag.k; gh.textContent={p:"p⁺",n:"n",e:"e⁻"}[drag.k]; D.body.appendChild(gh); drag.ghost=gh; }
+        if(drag.ghost){ drag.ghost.style.left=e.clientX+"px"; drag.ghost.style.top=e.clientY+"px"; } });
+      window.addEventListener("pointerup",function(e){ if(!drag) return; var d=drag; drag=null;
+        if(d.ghost){ d.ghost.remove(); var c=P.querySelector('[data-c="atom"]').getBoundingClientRect();
+          if(e.clientX>=c.left&&e.clientX<=c.right&&e.clientY>=c.top&&e.clientY<=c.bottom) setB(d.k,B[d.k]+1); }
+        setTimeout(function(){ dragMoved=false; },0); });
+      readBuild();
+    };
+    REFRESH.build=function(){ readBuild(); };
+
+    /* ======================================================== Predict */
+    var Qs={q:null,answered:false,mode:"mix",r:rng(Date.now()&0xffffffff),streak:0};
+    function nextQuestion(focus){
+      var due=Progress.due(), key=null;
+      if(Qs.mode==="review"&&due.length) key=due[0];
+      else if(Qs.mode!=="review"&&due.length&&Qs.r()<0.3) key=due[Math.floor(Qs.r()*due.length)];
+      if(!key){ var z=Qs.mode==="this"?Z:(Qs.r()<0.45?Z:(Qs.r()<0.5?Progress.daily().z:1+Math.floor(Qs.r()*(Qs.r()<0.7?56:103)))); for(var tries=0;tries<12&&!key;tries++){ key=newKey(z,Qs.r); if(!key) z=1+Math.floor(Qs.r()*86); } }
+      if(Qs.mode==="review"&&!due.length) Qs.mode="mix";
+      Qs.q=makeQ(key); Qs.answered=false; renderQ(focus);
+    }
+    function renderQ(focus){
+      var P=pane("predict"), q=Qs.q, st=Progress.stats(); if(!q) return;
+      P.querySelector(".lb-qmodes").innerHTML=[["mix","Mixed"],["this","About "+nm(Z)],["review","Review"+(st.due?" ("+st.due+")":"")]].map(function(m){
+        return '<button type="button" data-qm="'+m[0]+'" aria-pressed="'+(Qs.mode===m[0])+'"'+(m[0]==="review"&&!st.due?' disabled':'')+'>'+esc(m[1])+'</button>'; }).join('')+
+        '<span class="lb-score">'+(Qs.streak?"Streak "+Qs.streak+" · ":"")+st.right+" right so far</span>";
+      P.querySelector(".lb-qtext").textContent=q.text;
+      P.querySelector(".lb-qvis").innerHTML=(q.tiles||[q.z]).map(function(z){ return tile(z,false); }).join('');
+      var a=P.querySelector(".lb-qans");
+      if(q.choices) a.innerHTML='<div class="lb-choices">'+q.choices.map(function(c){ return '<button type="button" class="lb-choice" data-ch="'+esc(c.v)+'">'+esc(c.label)+'</button>'; }).join('')+'</div>';
+      else a.innerHTML='<form class="lb-qform"><input id="lbAns" class="lb-input" aria-label="Your answer" autocomplete="off" spellcheck="false" '+(q.input==="number"?'inputmode="decimal"':'')+' placeholder="'+esc(q.hint||"")+'"><button type="submit" class="lb-btn go">Check</button></form>';
+      P.querySelector(".lb-fb").innerHTML=''; P.querySelector(".lb-fb").className="lb-fb";
+      P.querySelector(".lb-next").hidden=true;
+      if(focus&&cur==="predict"){ var f0=P.querySelector("#lbAns")||P.querySelector("[data-ch]"); if(f0) try{ f0.focus({preventScroll:true}); }catch(e){} }
+    }
+    function answerQ(v){
+      if(Qs.answered||!Qs.q) return; var P=pane("predict"), r=Qs.q.check(v); Qs.answered=true;
+      Qs.streak=r.ok?Qs.streak+1:0;
+      var got=Progress.answer(Qs.q.key,Qs.q.z,r.ok);
+      var fb=P.querySelector(".lb-fb"); fb.className="lb-fb "+(r.ok?"ok":"bad");
+      fb.innerHTML='<p class="lb-verdict"><span aria-hidden="true">'+(r.ok?"✓":"✗")+'</span> '+(r.ok?"Right.":"Not quite. The answer is "+esc(r.answer)+".")+'</p><p>'+esc(r.why)+'</p>'+
+        (r.ok?'':'<p class="lb-later">This question will come back in a few minutes, then later in the week.</p>');
+      [].forEach.call(P.querySelectorAll("[data-ch]"),function(b){ var cv=b.getAttribute("data-ch"); b.disabled=true;
+        if(cv===String(r.right)) b.classList.add("ok"); else if(cv===String(v)) b.classList.add("bad"); });
+      var inp=P.querySelector("#lbAns"); if(inp) inp.readOnly=true;
+      P.querySelector(".lb-next").hidden=false; P.querySelector(".lb-next").focus({preventScroll:true});
+      if(opt.onEvent) opt.onEvent(r.ok?"quiz:right":"quiz:wrong");
+      if(r.ok&&navigator.vibrate) try{ navigator.vibrate(10); }catch(e){}
+      celebrate(got); renderModes();
+    }
+    function renderModes(){ var st=Progress.stats(), m=pane("predict").querySelector(".lb-score"); if(m) m.textContent=(Qs.streak?"Streak "+Qs.streak+" · ":"")+st.right+" right so far"; }
+    BUILD.predict=function(P){
+      P.innerHTML='<div class="lb-quiz"><div class="lb-qmodes" role="group" aria-label="Which questions"></div>'+
+        '<div class="lb-qcard"><div class="lb-qvis"></div><p class="lb-qtext" aria-live="polite"></p><div class="lb-qans"></div><div class="lb-fb" aria-live="polite"></div>'+
+        '<button type="button" class="lb-btn go lb-next" hidden>Next question</button></div>'+
+        '<p class="lb-note">Questions you miss come back after ten minutes, then a day later, then less and less often as you keep getting them right. Get three different questions right about one element and you have mastered it.</p></div>';
+      P.addEventListener("click",function(e){ var c=e.target.closest("[data-ch]"), m=e.target.closest("[data-qm]");
+        if(c&&!c.disabled) answerQ(c.getAttribute("data-ch"));
+        if(m){ Qs.mode=m.getAttribute("data-qm"); nextQuestion(false); P.querySelector('[data-qm="'+Qs.mode+'"]').focus(); }
+        if(e.target.closest(".lb-next")) nextQuestion(true); });
+      P.addEventListener("submit",function(e){ e.preventDefault(); var i=P.querySelector("#lbAns"); if(i&&i.value.trim()) answerQ(i.value); });
+      nextQuestion();
+    };
+
+    /* ======================================================== Calculate */
+    var C={tab:"light", nu:3, nl:2, cz:1, hl:"6,14", t:5730, tu:"y", n0:100, half:5700*31557600, listen:false, lastClick:0, mass:1, mu:"g", formula:"C6H12O6"};
+    var PRESETS=[];
+    for(var pz in NOTABLE) NOTABLE[pz].forEach(function(r){ PRESETS.push({id:pz+","+r[0], label:nm(+pz)+"-"+r[0]+" ("+r[1]+")", s:halfLifeSeconds(r[1])}); });
+    PRESETS.push({id:"43,99m",label:"Technetium-99m (6.01 h)",s:6.01*3600},{id:"9,18",label:"Fluorine-18 (109.8 min)",s:109.8*60});
+    PRESETS=PRESETS.filter(function(p){ return p.s>0; }).sort(function(a,b){ return a.s-b.s; });
+    (function(){ var c14=PRESETS.filter(function(p){ return p.id==="6,14"; })[0]; if(c14){ C.half=c14.s; C.t=11400; C.tu="y"; } })();
+    var UNITS=[["s",1],["min",60],["h",3600],["d",86400],["y",31557600],["ky",31557600e3],["My",31557600e6],["Gy",31557600e9]];
+    function unitS(u){ for(var i=0;i<UNITS.length;i++) if(UNITS[i][0]===u) return UNITS[i][1]; return 1; }
+    function bestUnit(s){ var u=UNITS[0]; UNITS.forEach(function(x){ if(s>=x[1]*0.999) u=x; }); return u; }
+    function lightCalc(){ var L=lineOf(C.cz,C.nu,C.nl), E=L.E, w=L.w;
+      var series=["Lyman","Balmer","Paschen","Brackett","Pfund","Humphreys","",""][C.nl-1]||"";
+      return {E:E,w:w,series:series,region:w<380?"ultraviolet":(w<=750?"visible":"infrared")}; }
+    function calcOut(){
+      var P=pane("calc"), o=P.querySelector(".lb-cout"), vis=P.querySelector(".lb-cvis"), c;
+      vis.innerHTML="";
+      if(C.tab==="light"){ c=lightCalc(); ev("calc:line:"+C.cz+":"+C.nu+"-"+C.nl);
+        o.innerHTML='<dl class="lb-big"><div><dt>Photon energy</dt><dd>'+fmt(c.E,3)+' eV</dd></div><div><dt>Wavelength</dt><dd>'+fmt(c.w,c.w<100?2:1)+' nm</dd></div><div><dt>Kind of light</dt><dd>'+c.region+'</dd></div></dl>'+
+          '<p class="lb-say">'+(c.series?"This line belongs to the "+c.series+" series, the lines that end on level "+C.nl+". ":"")+(c.region==="visible"?"Your eye sees it as "+(c.w<450?"violet":c.w<495?"blue":c.w<570?"green":c.w<590?"yellow":c.w<620?"orange":"red")+".":"Your eye can't see it; "+(c.region==="ultraviolet"?"it is beyond violet.":"it is beyond red.")+"")+
+          ' E = 13.6 eV × Z² × (1/'+C.nl+'² − 1/'+C.nu+'²), then λ = hc / E.</p>'; }
+      else if(C.tab==="decay"){ var t=C.t*unitS(C.tu), k=t/C.half, rem=C.n0*Math.pow(0.5,k), bu=bestUnit(C.half);
+        ev("calc:decay:half:"+Math.floor(k+1e-6));
+        o.innerHTML='<dl class="lb-big"><div><dt>Left after '+fmt(C.t,C.t<10?2:0)+' '+C.tu+'</dt><dd>'+sci(rem,4)+'</dd></div><div><dt>Fraction left</dt><dd>'+(rem/C.n0*100<0.01?sci(rem/C.n0*100,3):fmt(rem/C.n0*100,2))+'%</dd></div><div><dt>Half-lives passed</dt><dd>'+fmt(k,2)+'</dd></div></dl>'+
+          '<p class="lb-say">Every half-life, half of what is left decays: N = N₀ × ½<sup>t / t½</sup>. With a half-life of '+sci(C.half/bu[1],3)+' '+bu[0]+', no single atom knows when it will go; only the crowd is predictable.</p>'; }
+      else if(C.tab==="emc"){ var kg=C.mass*{u:1.66053906892e-27,mg:1e-6,g:1e-3,kg:1,t:1000}[C.mu], E=kg*299792458*299792458;
+        o.innerHTML='<dl class="lb-big"><div><dt>Energy</dt><dd>'+sci(E,3)+' J</dd></div><div><dt>In electricity</dt><dd>'+sci(E/3.6e6,3)+' kWh</dd></div><div><dt>As TNT</dt><dd>'+sci(E/4.184e9,3)+' tons</dd></div></dl>'+
+          '<p class="lb-say">That is enough to power a typical U.S. home, which uses roughly 10,500 kWh of electricity a year, for '+sci(E/3.6e6/10500,3)+' years. But only matter meeting antimatter turns all of its mass into energy.</p>';
+        vis.innerHTML='<h3 class="lb-h">How much of the fuel\'s mass each reaction turns into energy</h3><ul class="lb-bars">'+[["Matter meets antimatter",1],["Hydrogen fusing to helium in the Sun",0.0071],["Deuterium and tritium fusing",0.00375],["Uranium-235 splitting",0.00091],["Burning gasoline",5.1e-10]].map(function(x){
+            var wv=Math.max(2,100+Math.log10(x[1])*10); return '<li><span>'+x[0]+'</span><i style="--w:'+wv.toFixed(1)+'%"></i><b>'+(x[1]>=0.001?fmt(x[1]*100,x[1]>=0.01?1:3):sci(x[1]*100,2))+'%</b></li>'; }).join('')+'</ul><p class="lb-note">Bars use a logarithmic scale: each step is ten times smaller.</p>'; }
+      else if(C.tab==="molar"){
+        try{ var counts=parseFormula(C.formula), tot=0, rows=[];
+          ev("calc:molar:"+hill(counts));
+          for(var s in counts){ var zz=SYM[s], m=el(zz)[3]*counts[s]; tot+=m; rows.push([zz,counts[s],m]); }
+          rows.sort(function(a,b){ return b[2]-a[2]; });
+          o.innerHTML='<dl class="lb-big"><div><dt>Molar mass</dt><dd>'+fmt(tot,tot<100?3:2)+' g/mol</dd></div><div><dt>Atoms in one unit</dt><dd>'+rows.reduce(function(a,r){ return a+r[1]; },0)+'</dd></div></dl>'+
+            '<p class="lb-say">One mole of it, 6.022 × 10²³ units, weighs '+fmt(tot,2)+' grams. Each element\'s share of the mass is its atomic mass times how many of its atoms there are.</p>';
+          vis.innerHTML='<h3 class="lb-h">Where the mass is</h3><div class="lb-stack" role="img" aria-label="'+esc(rows.map(function(r){ return nm(r[0])+" "+fmt(r[2]/tot*100,1)+" percent"; }).join(", "))+'">'+
+            rows.map(function(r){ var e=el(r[0]); return '<i style="flex-basis:'+(r[2]/tot*100).toFixed(2)+'%;--cat:'+(opt.catColor?opt.catColor(e[5]):CAT[e[5]][1])+'"></i>'; }).join('')+'</div>'+
+            '<ul class="lb-comp">'+rows.map(function(r){ var e=el(r[0]); return '<li><button type="button" data-pick="'+r[0]+'" style="--cat:'+(opt.catColor?opt.catColor(e[5]):CAT[e[5]][1])+'"><b>'+e[1]+'</b><span>'+e[2]+' × '+r[1]+'</span><i style="--w:'+(r[2]/tot*100).toFixed(1)+'%"></i><em>'+fmt(r[2]/tot*100,1)+'% of the mass</em></button></li>'; }).join('')+'</ul><p class="lb-note">Pick an element to open its card.</p>';
+        }catch(err){ o.innerHTML='<p class="lb-say lb-err">'+esc(err.message)+'</p>'; }
+      }
+      dirty=true;
+    }
+    /* a preset isotope starts the clock at one half-life */
+    function setPreset(id){ var p=PRESETS.filter(function(x){ return x.id===id; })[0]; if(!p) return;
+      C.hl=id; C.half=p.s; var u=bestUnit(p.s); C.t=+(p.s/u[1]).toPrecision(4); C.tu=u[0]; calcForm(); ev("calc:decay:"+id); }
+    function calcForm(){
+      var P=pane("calc"), f=P.querySelector(".lb-cform");
+      if(C.tab==="light") f.innerHTML='<label>Atom<select data-cv="cz">'+[1,2,3].map(function(z){ return '<option value="'+z+'"'+(C.cz===z?' selected':'')+'>'+cap(HY[z].n)+'</option>'; }).join('')+'</select></label>'+
+        '<label>Electron falls from level<input type="number" min="2" max="9" data-cv="nu" value="'+C.nu+'"></label><label>down to level<input type="number" min="1" max="8" data-cv="nl" value="'+C.nl+'"></label>'+
+        '<div class="lb-chips">'+[[3,2,"Hydrogen-alpha (red)"],[4,2,"Hydrogen-beta"],[2,1,"Lyman-alpha (UV)"],[4,3,"Paschen-alpha (IR)"]].map(function(x){ return '<button type="button" data-lpre="'+x[0]+','+x[1]+'">'+x[2]+'</button>'; }).join('')+'</div>'+
+        '<button type="button" class="lb-btn" data-tone="1">Hear this line</button>';
+      else if(C.tab==="decay") f.innerHTML='<label>Isotope<select data-cv="preset"><option value="">Your own half-life</option>'+PRESETS.map(function(p){ return '<option value="'+p.id+'"'+(C.hl===p.id?' selected':'')+'>'+esc(p.label)+'</option>'; }).join('')+'</select></label>'+
+        '<label>Starting amount<input type="number" min="0" step="any" data-cv="n0" value="'+C.n0+'"></label>'+
+        '<label>Half-life<span class="lb-pair"><input type="number" min="0" step="any" data-cv="hv" value="'+sci(C.half/bestUnit(C.half)[1],4).replace(/,/g,"")+'"><select data-cv="hu">'+UNITS.map(function(u){ return '<option'+(u[0]===bestUnit(C.half)[0]?' selected':'')+'>'+u[0]+'</option>'; }).join('')+'</select></span></label>'+
+        '<label>Time passed<span class="lb-pair"><input type="number" min="0" step="any" data-cv="t" value="'+C.t+'"><select data-cv="tu">'+UNITS.map(function(u){ return '<option'+(u[0]===C.tu?' selected':'')+'>'+u[0]+'</option>'; }).join('')+'</select></span></label>'+
+        '<label>Or slide through time<input type="range" min="0" max="500" data-cv="slide" value="'+Math.round(Math.min(500,C.t*unitS(C.tu)/C.half*100))+'"></label>'+
+        '<button type="button" class="lb-btn" data-listen aria-pressed="'+C.listen+'">'+(C.listen?"Stop the counter":"Listen like a Geiger counter")+'</button>';
+      else if(C.tab==="emc") f.innerHTML='<label>Mass<span class="lb-pair"><input type="number" min="0" step="any" data-cv="mass" value="'+C.mass+'"><select data-cv="mu">'+[["u","atomic mass units"],["mg","milligrams"],["g","grams"],["kg","kilograms"],["t","tonnes"]].map(function(u){ return '<option value="'+u[0]+'"'+(u[0]===C.mu?' selected':'')+'>'+u[1]+'</option>'; }).join('')+'</select></span></label>'+
+        '<div class="lb-chips">'+[[1,"g","A paper clip, about 1 g"],[0.5,"g","A raisin"],[4.3e9,"kg","What the Sun turns to light each second"],[1,"u","One atomic mass unit"]].map(function(x){ return '<button type="button" data-em="'+x[0]+','+x[1]+'">'+x[2]+'</button>'; }).join('')+'</div>';
+      else f.innerHTML='<label>Type a chemical formula<input class="lb-input" data-cv="formula" value="'+esc(C.formula)+'" autocomplete="off" spellcheck="false" placeholder="For example H2O or Ca(OH)2"></label>'+
+        '<div class="lb-chips">'+["H2O","CO2","NaCl","C6H12O6","CaCO3","Fe2O3","C8H10N4O2","CuSO4·5H2O"].map(function(x){ return '<button type="button" data-fm="'+x+'">'+x.replace(/([A-Za-z)])(\d+)/g,"$1<sub>$2</sub>")+'</button>'; }).join('')+'</div>';
+    }
+    function drawCalc(now){
+      var c=host.querySelector('[data-c="calc"]'); if(!c||!c.offsetParent) return false;
+      var f=fit(c), g=f.g, w=f.w, h=f.h, T=th(); g.clearRect(0,0,w,h); g.font="500 14px Archivo, sans-serif";
+      if(C.tab==="light"){
+        var c0=lightCalc(), top=24, bot=h-36, lv=function(n){ var E=-13.6*C.cz*C.cz/(n*n), Emin=-13.6*C.cz*C.cz; return top+(bot-top)*(E/Emin); };
+        for(var n=1;n<=7;n++){ var y=lv(n); g.strokeStyle=(n===C.nu||n===C.nl)?T.ink:T.ink3; g.lineWidth=(n===C.nu||n===C.nl)?2:1; g.beginPath(); g.moveTo(80,y); g.lineTo(w*0.62,y); g.stroke();
+          if(n<=4||n===C.nu||n===C.nl){ g.fillStyle=T.ink2; label(g,"n = "+n,40,y+5,T); } }
+        var x=w*0.38, y1=lv(C.nu), y2=lv(C.nl), lineCol=c0.region==="visible"?wlRGB(c0.w):T.ink2;
+        g.strokeStyle=lineCol; g.fillStyle=lineCol; g.lineWidth=3; g.beginPath(); g.moveTo(x,y1); g.lineTo(x,y2-8); g.stroke(); g.beginPath(); g.moveTo(x-7,y2-12); g.lineTo(x+7,y2-12); g.lineTo(x,y2-1); g.fill();
+        /* the spectrum strip */
+        var sx=w*0.68, sw=w-sx-16, sy=top, sh=bot-top;
+        g.fillStyle=T.light?"#fff":"#000"; g.fillRect(sx,sy,sw,sh);
+        for(var i=0;i<sh;i++){ var wl=380+400*i/sh; g.globalAlpha=0.18; g.fillStyle=wlRGB(wl); g.fillRect(sx,sy+i,sw,1); } g.globalAlpha=1;
+        if(c0.w>=380&&c0.w<=780){ var ly=sy+sh*(c0.w-380)/400; g.fillStyle=wlRGB(c0.w); g.fillRect(sx,ly-2,sw,4); }
+        g.fillStyle=T.ink2; label(g,"380 nm",sx+sw/2,sy-6,T); label(g,"780 nm",sx+sw/2,sy+sh+18,T);
+        if(c0.w<380||c0.w>780){ g.fillStyle=T.ink; label(g,c0.w<380?"beyond violet":"beyond red",sx+sw/2,c0.w<380?sy+16:sy+sh-6,T); }
+        return false;
+      }
+      if(C.tab==="decay"){
+        var t=C.t*unitS(C.tu), k=t/C.half, kmax=Math.max(5,Math.ceil(k)), pl=46, pr=14, pt=16, pb=34, W=w-pl-pr, H=(h-pt-pb)*0.48;
+        g.strokeStyle=T.ink3; g.lineWidth=1; g.beginPath(); g.moveTo(pl,pt); g.lineTo(pl,pt+H); g.lineTo(pl+W,pt+H); g.stroke();
+        g.beginPath(); for(var j=0;j<=200;j++){ var xx=pl+W*j/200, yy=pt+H*(1-Math.pow(0.5,kmax*j/200)); if(j) g.lineTo(xx,yy); else g.moveTo(xx,yy); } g.strokeStyle=col("calc"); g.lineWidth=2.5; g.stroke();
+        var mx=pl+W*Math.min(1,k/kmax), my=pt+H*(1-Math.pow(0.5,Math.min(k,kmax)));
+        g.setLineDash([4,4]); g.strokeStyle=T.ink2; g.lineWidth=1; g.beginPath(); g.moveTo(mx,pt+H); g.lineTo(mx,my); g.lineTo(pl,my); g.stroke(); g.setLineDash([]);
+        g.fillStyle=T.ink; g.beginPath(); g.arc(mx,my,5,0,6.2832); g.fill();
+        g.fillStyle=T.ink2; label(g,"100%",pl-22,pt+10,T); label(g,"0",pl-10,pt+H,T);
+        for(var hh=1;hh<=kmax;hh++){ if(kmax<=10||hh%2===0) label(g,String(hh),pl+W*hh/kmax,pt+H+18,T); }
+        label(g,"half-lives",pl+W-34,pt+H+32,T);
+        /* 400 atoms, each with its own random moment to decay */
+        var cols=40, rows=10, cs=Math.min((W)/cols,(h-pt-H-pb-30)/rows), ox=pl, oy=pt+H+44, rr=rng(7);
+        var live=0;
+        for(var a=0;a<cols*rows;a++){ var td=-Math.log(1-rr())/Math.LN2, gone=td<k; if(!gone) live++;
+          g.fillStyle=gone?T.ink3:col("calc"); g.globalAlpha=gone?0.35:1; g.beginPath(); g.arc(ox+(a%cols+0.5)*cs,oy+(Math.floor(a/cols)+0.5)*cs,cs*0.32,0,6.2832); g.fill(); }
+        g.globalAlpha=1;
+        if(C.listen&&now-C.lastClick>0){ var rate=Math.min(30,0.5+22*live/400); if(Math.random()<rate/60) Sound.click(); C.lastClick=now; return true; }
+        return !!C.listen;
+      }
+      return false;
+    }
+    BUILD.calc=function(P){
+      P.innerHTML='<div class="lb-subtabs" role="group" aria-label="Calculator">'+CALCS.map(function(c){ return '<button type="button" data-ct="'+c[0]+'" aria-pressed="'+(C.tab===c[0])+'">'+c[1]+'</button>'; }).join('')+'</div>'+
+        '<div class="lb-cols calc"><div class="lb-cside"><form class="lb-cform"></form><div class="lb-cout" aria-live="polite"></div></div>'+
+        '<div class="lb-cright"><div class="lb-stagewrap"><canvas class="lb-cv" data-c="calc" role="img" aria-label="A drawing of the calculation"></canvas></div><div class="lb-cvis"></div></div></div>';
+      P.querySelector(".lb-cform").addEventListener("submit",function(e){ e.preventDefault(); });
+      function setTab(t){ C.tab=t; [].forEach.call(P.querySelectorAll("[data-ct]"),function(b){ b.setAttribute("aria-pressed",b.getAttribute("data-ct")===t?"true":"false"); });
+        P.setAttribute("data-calc",t); calcForm(); calcOut(); Progress.mark("calc",0,t); if(opt.onEvent) opt.onEvent("calc:"+t); }
+      P.addEventListener("click",function(e){ var t=e.target.closest("[data-ct]"), lp=e.target.closest("[data-lpre]"), em=e.target.closest("[data-em]"), fm=e.target.closest("[data-fm]"), pk=e.target.closest("[data-pick]");
+        if(t) setTab(t.getAttribute("data-ct"));
+        if(lp){ var v=lp.getAttribute("data-lpre").split(","); C.nu=+v[0]; C.nl=+v[1]; C.cz=1; calcForm(); calcOut(); }
+        if(em){ var m=em.getAttribute("data-em").split(","); C.mass=+m[0]; C.mu=m[1]; calcForm(); calcOut(); }
+        if(fm){ C.formula=fm.getAttribute("data-fm"); calcForm(); calcOut(); }
+        if(pk){ Z=+pk.getAttribute("data-pick"); if(opt.card) opt.card(Z); else if(opt.select) opt.select(Z); }
+        if(e.target.closest("[data-tone]")){ var c0=lightCalc(); if(c0.w>=300&&c0.w<=1000){ var t0=Sound.now()+0.02; Sound.tone(lightHz(Math.max(380,Math.min(750,c0.w))),t0,1.2,0.3); } else toast("This line is far outside visible light, so it has no tone here."); }
+        if(e.target.closest("[data-listen]")){ C.listen=!C.listen; if(C.listen) Sound.now(); calcForm(); dirty=true; var lb=P.querySelector("[data-listen]"); if(lb) lb.focus(); if(opt.onEvent) opt.onEvent("calc:listen"); }
+      });
+      P.addEventListener("input",function(e){ var i=e.target.closest("[data-cv]"); if(!i) return; var k=i.getAttribute("data-cv"), v=i.value;
+        if(k==="cz") C.cz=+v; if(k==="nu") C.nu=Math.max(2,Math.min(9,Math.round(+v||2))); if(k==="nl") C.nl=Math.max(1,Math.min(8,Math.round(+v||1)));
+        if(C.nl>=C.nu){ if(k==="nl") C.nu=C.nl+1; else C.nl=Math.max(1,C.nu-1); }
+        if(k==="preset"&&v) setPreset(v);
+        if(k==="n0") C.n0=Math.max(0,+v||0); if(k==="hv") C.half=Math.max(1e-6,(+v||1)*unitS(P.querySelector('[data-cv="hu"]').value)), C.hl="";
+        if(k==="hu") C.half=Math.max(1e-6,(+P.querySelector('[data-cv="hv"]').value||1)*unitS(v)), C.hl="";
+        if(k==="t") C.t=Math.max(0,+v||0); if(k==="tu") C.tu=v;
+        if(k==="slide"){ var secs=+v/100*C.half, u2=bestUnit(C.half); C.tu=u2[0]; C.t=+(secs/u2[1]).toPrecision(4); var ti=P.querySelector('[data-cv="t"]'), tu=P.querySelector('[data-cv="tu"]'); if(ti) ti.value=C.t; if(tu) tu.value=C.tu; }
+        if(k==="mass") C.mass=Math.max(0,+v||0); if(k==="mu") C.mu=v; if(k==="formula") C.formula=v;
+        if(k==="nu"||k==="nl"){ var a=P.querySelector('[data-cv="nu"]'), b=P.querySelector('[data-cv="nl"]'); if(a&&document.activeElement!==a) a.value=C.nu; if(b&&document.activeElement!==b) b.value=C.nl; }
+        calcOut(); });
+      setTab(C.tab);
+    };
+
+    /* ======================================================== Workbench */
+    var sims=null;
+    BUILD.bench=function(P){
+      if(typeof AtomSims==="undefined"){ P.innerHTML='<p class="lb-say">The workbench is not available here.</p>'; return; }
+      P.innerHTML='<p class="lb-note">Three experiments with the physics running live: fuse two nuclei, bond two protons with one electron, or build a battery from its electrodes.</p><div class="lb-sims"></div>';
+      sims=AtomSims.mount(P.querySelector(".lb-sims"),{calm:opt.calm, theme:opt.simTheme||opt.theme, onEvent:opt.onEvent, pick:function(z){ if(opt.card) opt.card(z); }});
+    };
+
+    /* ======================================================== Hear */
+    var H={z:0, playing:[], until:0};
+    function lineEls(){ var out=[{z:1}]; for(var k in LINES) out.push({z:+k}); return out.filter(function(x,i,a){ return a.findIndex(function(y){ return y.z===x.z; })===i; }).sort(function(a,b){ return a.z-b.z; }); }
+    function playLight(z){
+      var L=PTable.lineList(z); if(!L){ toast("Atom has no measured spectrum for "+lc(z)+" yet."); return; }
+      var lines=L.lines.filter(function(p){ return p[0]>=380&&p[0]<=750; }).sort(function(a,b){ return b[0]-a[0]; });
+      if(!lines.length){ toast(cap(lc(z))+"'s strongest lines are outside visible light."); return; }
+      var mx=Math.max.apply(null,lines.map(function(p){ return p[1]; })), t0=Sound.now()+0.05, nowMs=performance.now();
+      H.z=z; H.playing=[];
+      lines.forEach(function(p,i){ var gain=0.08+0.22*Math.sqrt(p[1]/mx), at=t0+i*0.22; Sound.tone(lightHz(p[0]),at,0.6,gain); H.playing.push({w:p[0],t:nowMs+i*220,d:600}); });
+      var tc=t0+lines.length*0.22+0.2; lines.forEach(function(p){ Sound.tone(lightHz(p[0]),tc,2.2,0.05+0.12*Math.sqrt(p[1]/mx)); H.playing.push({w:p[0],t:nowMs+(tc-t0)*1000,d:2200}); });
+      H.until=nowMs+(tc-t0)*1000+2300; dirty=true;
+      var got=Progress.mark("heard",z); celebrate(got); if(opt.onEvent) opt.onEvent("hear:"+z);
+      var say=pane("hear").querySelector(".lb-hsay"); if(say) say.textContent=cap(lc(z))+": "+lines.length+" visible line"+(lines.length>1?"s":"")+", played from red to violet, then all together. Redder light plays lower, violet light higher.";
+    }
+    function playShells(z){
+      var c=configOf(z), t=Sound.now()+0.05, scale=[0,2,4,7,9,12,14,16,19,21,24,26,28,31,33,36,38,40,43], i=0, nowMs=performance.now();
+      H.z=z; H.playing=[];
+      c.forEach(function(sub,si){ for(var k=0;k<sub[2];k++){ Sound.tone(196*Math.pow(2,scale[Math.min(si,scale.length-1)]/12),t,0.18,0.18,"triangle"); t+=0.09; i++; } t+=0.18; });
+      H.until=nowMs+(t-Sound.now())*1000; dirty=true;
+      var say=pane("hear").querySelector(".lb-hsay"); if(say) say.textContent=cap(lc(z))+"'s "+z+" electron"+(z>1?"s":"")+", one note each, filling "+c.map(function(x){ return x[0]+"spdf"[x[1]]+x[2]; }).join(" ")+". Each new subshell plays a step higher; the pauses are where one subshell ends.";
+      if(opt.onEvent) opt.onEvent("hear:shells:"+z);
+    }
+    function drawHear(now){
+      var c=host.querySelector('[data-c="hear"]'); if(!c||!c.offsetParent) return false;
+      var f=fit(c), g=f.g, w=f.w, h=f.h, T=th(), z=H.z||Z, L=PTable.lineList(z); g.clearRect(0,0,w,h);
+      var x0=16, x1=w-16, y0=26, y1=h-36;
+      g.fillStyle=T.light?"#fff":"#000"; g.fillRect(x0,y0,x1-x0,y1-y0);
+      if(L) L.lines.forEach(function(p){ if(p[0]<380||p[0]>780) return; var x=x0+(x1-x0)*(p[0]-380)/400, hot=0;
+        H.playing.forEach(function(q){ if(Math.abs(q.w-p[0])<0.01&&now>=q.t&&now<=q.t+q.d) hot=1-(now-q.t)/q.d; });
+        g.globalAlpha=Math.min(1,0.45+0.55*Math.min(1,p[1])+hot*0.4); g.fillStyle=T.light?"#111":wlRGB(p[0]); g.fillRect(x-1.5-hot*3,y0,3+hot*6,y1-y0); g.globalAlpha=1; });
+      g.fillStyle=T.ink2; g.font="500 14px Archivo, sans-serif"; label(g,"380 nm violet",x0+48,y1+22,T); label(g,"red 780 nm",x1-44,y1+22,T);
+      g.fillStyle=T.ink; label(g,L?nm(z)+(L.computed?" (computed)":" (measured)"):"No spectrum for "+nm(z),(x0+x1)/2,y0-8,T);
+      return now<H.until;
+    }
+    BUILD.hear=function(P){
+      P.innerHTML='<p class="lb-note">Sound plays only when you press a button. Each line of an element\'s light becomes a tone: red light plays low, violet light high, so every element has its own chord.</p>'+
+        '<div class="lb-stagewrap hear"><canvas class="lb-cv" data-c="hear" role="img" aria-label="The element\'s visible spectrum"></canvas></div>'+
+        '<div class="lb-row"><button type="button" class="lb-btn go" data-hp="light"><span>Play <span class="lb-hname"></span>\u2019s light</span></button><button type="button" class="lb-btn" data-hp="shells">Play its electrons filling in</button><button type="button" class="lb-btn ghost" data-hp="stop">Stop</button>'+
+        '<label class="lb-vol">Volume<input type="range" min="0" max="100" value="50" data-vol></label></div><p class="lb-say lb-hsay" aria-live="polite"></p>'+
+        '<h3 class="lb-h">Elements with measured light</h3><div class="lb-chips lb-hchips">'+lineEls().map(function(x){ return '<button type="button" data-hz="'+x.z+'">'+el(x.z)[1]+' <span>'+nm(x.z)+'</span></button>'; }).join('')+'</div>'+
+        (Sound.ok()?'':'<p class="lb-say lb-err">This browser can\'t play sound.</p>');
+      P.addEventListener("click",function(e){ var p=e.target.closest("[data-hp]"), hz=e.target.closest("[data-hz]");
+        if(hz){ H.z=+hz.getAttribute("data-hz"); REFRESH.hear(); playLight(H.z); }
+        if(p){ var k=p.getAttribute("data-hp"), z=H.z||Z; if(k==="light") playLight(z); if(k==="shells") playShells(z); if(k==="stop"){ Sound.stop(); H.until=0; H.playing=[]; } } });
+      P.addEventListener("input",function(e){ if(e.target.matches("[data-vol]")) Sound.setVol(+e.target.value/100); });
+    };
+    REFRESH.hear=function(){ var P=pane("hear"), z=H.z||Z, n=P.querySelector(".lb-hname"); if(n) n.textContent=nm(z); dirty=true; };
+
+    /* ======================================================== You */
+    BUILD.you=function(P){
+      P.innerHTML='<div class="lb-you"></div>';
+      P.addEventListener("click",function(e){ var b=e.target.closest("[data-yz]"), a=e.target.closest("[data-ya]");
+        if(b&&opt.card) opt.card(+b.getAttribute("data-yz"));
+        if(a){ var k=a.getAttribute("data-ya"), dz=Progress.daily().z;
+          if(k==="card"&&opt.card) opt.card(dz);
+          if(k==="build"){ B.p=dz; B.n=commonA(dz)-dz; B.e=dz; show("build"); changed(); }
+          if(k==="quiz"){ Z=dz; if(opt.select) opt.select(dz); Qs.mode="this"; show("predict"); nextQuestion(); }
+          if(k==="review"){ Qs.mode="review"; show("predict"); nextQuestion(); }
+          if(k==="reset"&&window.confirm("Erase your progress on this device? This can't be undone.")) Progress.reset(); } });
+    };
+    REFRESH.you=function(){
+      var P=pane("you").querySelector(".lb-you"), s=Progress.stats(), d=Progress.daily(), e=el(d.z), Pd=Progress.data();
+      var mini='<div class="lb-mini" role="group" aria-label="Your table">'+ELEMENTS.map(function(f){ var lv=Progress.level(f[0]), pos=PTable.pos?PTable.pos(f[0]):null;
+        return '<button type="button" class="l'+lv+'" data-yz="'+f[0]+'" style="--cat:'+(opt.catColor?opt.catColor(f[5]):CAT[f[5]][1])+';'+(pos?'grid-row:'+pos.r+';grid-column:'+pos.c:'')+'" title="'+esc(f[2])+'" aria-label="'+f[1]+', '+esc(f[2])+': '+["not yet explored","explored","built","mastered"][lv]+'">'+f[1]+'</button>'; }).join('')+'</div>';
+      P.innerHTML=
+        '<section class="lb-today"><h3>Today\'s element</h3><div class="lb-trow">'+tile(d.z,true)+'<div><p class="lb-tname">'+esc(e[2])+'</p><p>'+esc(USES[d.z-1][1].replace(/^./,function(c){ return c.toUpperCase(); }))+(USES[d.z-1][2]?' · '+esc(USES[d.z-1][2]):'')+'</p></div></div>'+
+          '<ol class="lb-tasks">'+[["card","Open its card",d.card,"Open card"],["build","Build its most common isotope, "+e[2].toLowerCase()+"-"+commonA(d.z),d.build,"Build it"],["quiz","Answer a question about it",d.quiz,"Ask me"]].map(function(t){
+            return '<li class="'+(t[2]?"done":"")+'"><span class="lb-mark" role="img" aria-label="'+(t[2]?"done":"not yet")+'">'+(t[2]?"✓":"○")+'</span> '+esc(t[1])+(t[2]?'':' <button type="button" class="lb-btn sm" data-ya="'+t[0]+'">'+t[3]+'</button>')+'</li>'; }).join('')+'</ol>'+
+          (d.done?'<p class="lb-say">All three done. A new element arrives tomorrow.</p>':'')+'</section>'+
+        '<section class="lb-stats"><dl class="lb-big">'+
+          '<div><dt>Explored</dt><dd>'+s.seen+' <small>of 118</small></dd></div><div><dt>Built</dt><dd>'+s.built+'</dd></div><div><dt>Mastered</dt><dd>'+s.mastered+'</dd></div>'+
+          '<div><dt>Days in a row</dt><dd>'+s.streak+'</dd></div><div><dt>Right answers</dt><dd>'+s.right+'</dd></div></dl>'+
+          (s.due?'<p class="lb-say">'+s.due+' question'+(s.due>1?'s are':' is')+' ready to review. <button type="button" class="lb-btn sm go" data-ya="review">Review now</button></p>':'')+
+          '<h3 class="lb-h">Your table</h3><p class="lb-legend"><span class="l1">Explored</span><span class="l2">Built</span><span class="l3">Mastered</span></p>'+mini+'</section>'+
+        '<section class="lb-badges"><h3 class="lb-h">Badges, '+s.badges+' of '+Progress.badges.length+'</h3><ul>'+Progress.badges.map(function(b){ var has=Progress.has(b.id);
+          return '<li class="'+(has?"has":"")+'"><b>'+(has?'<span role="img" aria-label="earned">★</span> ':'')+esc(b.name)+'</b><span>'+esc(b.desc)+'</span></li>'; }).join('')+'</ul>'+
+          '<p class="lb-note">Your progress stays on this device. Nothing is sent anywhere. <button type="button" class="lb-link" data-ya="reset">Erase my progress</button></p></section>';
+      refreshDue();
+    };
+
+    /* ======================================================== frame and API */
+    var anim=false;
+    api.frame=function(now){
+      if(cur==="bench"&&sims) sims.frame(now);
+      if(!dirty&&!anim) return;
+      dirty=false;
+      anim=cur==="build"?drawBuild(now):(cur==="calc"?drawCalc(now):(cur==="hear"?drawHear(now):false));
+    };
+    api.show=function(t,z){ if(z) api.setElement(z,true); show(t||cur); };
+    api.setElement=function(z,fromHost){ if(!z) return; Z=z; if(cur==="predict"&&Qs.mode==="this"&&built.predict) nextQuestion(); if(built.hear&&!H.z) REFRESH.hear(); if(built.predict) renderModes(); dirty=true; };
+    api.build=function(z){ B.p=z; B.n=commonA(z)-z; B.e=z; show("build"); changed(); };
+    api.quiz=function(z){ Z=z; Qs.mode="this"; show("predict"); nextQuestion(); };
+    api.hear=function(z){ H.z=z; show("hear"); REFRESH.hear(); };
+    /* what a mission's "Show me" asks of the labs */
+    api.act=function(a){
+      var t=a.lab||cur; lastEv="";
+      if(t==="build"){ if(a.z){ B.p=a.z; B.n=(a.a||commonA(a.z))-a.z; B.e=a.e!=null?a.e:a.z; } show("build"); changed(); return; }
+      if(t==="calc"){ show("calc");
+        if(a.calc&&a.calc!==C.tab){ var cb=pane("calc").querySelector('[data-ct="'+a.calc+'"]'); if(cb) cb.click(); }
+        if(a.line){ var lv=a.line.split(","); C.cz=1; C.nu=+lv[0]; C.nl=+lv[1]; calcForm(); }
+        if(a.preset) setPreset(a.preset);
+        if(a.formula){ C.formula=a.formula; calcForm(); }
+        if(a.half){ var hu=bestUnit(C.half); C.tu=hu[0]; C.t=+(a.half*C.half/hu[1]).toPrecision(4); calcForm(); }
+        if(a.listen&&!C.listen){ C.listen=true; Sound.now(); calcForm(); ev("calc:listen"); dirty=true; }
+        calcOut(); return; }
+      if(t==="hear"){ if(a.z) H.z=a.z; show("hear"); REFRESH.hear(); if(a.play) playLight(H.z||Z); return; }
+      if(t==="predict"){ if(a.z) api.quiz(a.z); else show("predict"); return; }
+      show(t);
+    };
+    api.current=function(){ return cur; };
+    api.redraw=function(){ COL={}; dirty=true; if(sims) sims.redraw(); if(built.you&&cur==="you") REFRESH.you(); if(built.build) readBuild(); };
+    api.toast=toast;
+    api.sims=function(){ if(!built.bench){ built.bench=true; BUILD.bench(pane("bench")); } return sims; };
+    api.pause=function(){ if(C.listen){ C.listen=false; if(built.calc) calcForm(); } Sound.stop(); };
+    show("build");
+    refreshDue();
+    return api;
+  }
+
+  /* ------------------------------------------------------------ search */
+  function search(input,onPick){
+    var id="lbList"+Math.floor(Math.random()*1e6), dl=D.createElement("datalist"); dl.id=id;
+    dl.innerHTML=ELEMENTS.map(function(e){ return '<option value="'+esc(e[2])+'">'+e[1]+' · '+e[0]+'</option>'; }).join('');
+    input.setAttribute("list",id); input.parentNode.appendChild(dl);
+    function go(){ var z=zOf(input.value); if(z){ onPick(z); input.value=""; input.blur(); } else if(input.value.trim()) input.setAttribute("aria-invalid","true"); }
+    input.addEventListener("change",go);
+    input.addEventListener("keydown",function(e){ input.removeAttribute("aria-invalid"); if(e.key==="Enter"){ e.preventDefault(); go(); } });
+  }
+
+  /* ------------------------------------------------------------ the card's "try it" row */
+  function cardActions(z){
+    var P=Progress.data(), nb=P.built[z]?Object.keys(P.built[z]).length:0, ok=0, L=PTable.lineList(z), k;
+    for(k in P.learn) if(k.split(":")[1]===String(z)&&P.learn[k].ok>0) ok++;
+    var vis=L&&L.lines.some(function(p){ return p[0]>=380&&p[0]<=750; });
+    return '<section class="pd-acts" aria-label="Try it yourself"><div>'+
+      '<button type="button" data-la="build">Build '+esc(lc(z))+'</button>'+
+      '<button type="button" data-la="quiz">Quiz me on it</button>'+
+      (vis?'<button type="button" data-la="hear">Hear its light</button>':'')+'</div>'+
+      '<p class="pd-mine"><span class="on">Explored</span><span'+(nb?' class="on"':'')+'>'+(nb?'Built '+nb+' isotope'+(nb>1?'s':''):'Not built yet')+'</span>'+
+      '<span'+(P.mastered[z]?' class="on"':'')+'>'+(P.mastered[z]?'Mastered':Math.min(ok,3)+' of 3 right answers toward mastery')+'</span></p></section>';
+  }
+
+  /* ------------------------------------------------------------ the labs' own checks, run with the app's self-test */
+  function molar(f){ var c=parseFormula(f), m=0; for(var k in c) m+=el(SYM[k])[3]*c[k]; return m; }
+  function selfTest(){
+    var out=[], throws=function(f){ try{ parseFormula(f); return false; }catch(e){ return true; } };
+    function t(name, pass, why){ out.push([name, !!pass, pass?"":why]); }
+    var mw=molar("H2O"), mg=molar("C6H12O6"), mc=molar("CuSO4·5H2O"), mb=molar("Ca(OH)2");
+    t("labs: molar masses of water, glucose, Ca(OH)2 and a hydrate", Math.abs(mw-18.015)<0.01&&Math.abs(mg-180.156)<0.02&&Math.abs(mb-74.09)<0.02&&Math.abs(mc-249.68)<0.05,
+      [mw,mg,mb,mc].map(function(x){ return x.toFixed(3); }).join(" "));
+    t("labs: a formula with a made-up symbol or an open bracket is refused", throws("Xx2")&&throws("Ca(OH2")&&!throws("NaCl"), "parser accepted bad input");
+    t("labs: Hill order (C, H, then A-Z)", hill(parseFormula("HOH"))==="H2O"&&hill(parseFormula("OCH4"))==="CH4O"&&hill(parseFormula("NaCl"))==="ClNa", hill(parseFormula("OCH4")));
+    var ha=lineOf(1,3,2).w, ly=lineOf(1,2,1).w;
+    t("labs: hydrogen-alpha 656.47 nm and Lyman-alpha 121.57 nm (vacuum)", Math.abs(ha-656.47)<0.05&&Math.abs(ly-121.57)<0.02, ha.toFixed(3)+" "+ly.toFixed(3));
+    var k=[[6,12,"stable"],[6,14,"radioactive"],[8,24,"radioactive"],[8,25,"unbound"],[4,8,"unbound"],[2,5,"unbound"],[26,56,"stable"],[0,2,"unbound"]], bad=[];
+    k.forEach(function(x){ if(nuclide(x[0],x[1]).kind!==x[2]) bad.push(x[0]+"-"+x[1]); });
+    if(!/cobalt-60/.test(nuclide(26,60).text)) bad.push("Fe-60 decays to Co-60");
+    if(!/boron-10/.test(nuclide(4,10).text)) bad.push("Be-10 decays to B-10");
+    t("labs: what a built nucleus does (stable, radioactive, falls apart, which way it decays)", bad.length===0, bad.join(", "));
+    var fe=occOf("[Ar] 3d6 4s2"), ok=!!fe&&fe["3,2"]===6&&fe["4,0"]===2&&fe["1,0"]===2&&fe["3,1"]===6;
+    t("labs: a typed configuration with a noble-gas core is read correctly", ok, JSON.stringify(fe));
+    t("labs: half-lives in the presets parse (5700 y, 1.248 Gy, 211 ky)", Math.abs(halfLifeSeconds("5700 y")/31557600-5700)<1e-6&&Math.abs(halfLifeSeconds("1.248 Gy")/31557600e9-1.248)<1e-9&&Math.abs(halfLifeSeconds("24 110 y")/31557600-24110)<1e-6, "half-life text misread");
+    return out;
+  }
+
+  return {mount:mount, progress:Progress, search:search, nuclide:nuclide, parseFormula:parseFormula, zOf:zOf, sound:Sound, cardActions:cardActions, selfTest:selfTest};
 })();
 
 /* ATOM-PTABLE END */
