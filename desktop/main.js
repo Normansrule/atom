@@ -104,8 +104,11 @@ if (!app.requestSingleInstanceLock()) {
     const mac = process.platform === "darwin";
     const template = [
       ...(mac ? [{ role: "appMenu" }] : []),
-      { label: "&File", submenu: [mac ? { role: "close" } : { role: "quit", label: "E&xit" }] },
-      { label: "&Edit", submenu: [{ role: "copy" }, { role: "selectAll" }] },
+      { label: "&File", submenu: [
+        { label: "&Print…", accelerator: "CmdOrCtrl+P", click: () => win && win.webContents.print() },
+        { type: "separator" },
+        mac ? { role: "close" } : { role: "quit", label: "E&xit" }] },
+      { label: "&Edit", submenu: [{ role: "undo" }, { role: "redo" }, { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }] },
       {
         label: "&View",
         submenu: [
@@ -135,9 +138,11 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(() => {
     // The page needs no camera, microphone, location, notifications, or
-    // anything else a website can ask for. Full screen is the one exception.
-    session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => cb(permission === "fullscreen"));
-    session.defaultSession.setPermissionCheckHandler((_wc, permission) => permission === "fullscreen");
+    // anything else a website can ask for. Full screen, and writing a link to
+    // the clipboard when you press "Copy link", are the two exceptions.
+    const allowed = (permission) => permission === "fullscreen" || permission === "clipboard-sanitized-write";
+    session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => cb(allowed(permission)));
+    session.defaultSession.setPermissionCheckHandler((_wc, permission) => allowed(permission));
     buildMenu();
     createWindow();
   });

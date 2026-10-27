@@ -101,6 +101,7 @@ function setElement(z, quiet){
   var name=EL[2], nuc=nucleusOf(z);
   [].slice.call(D.querySelectorAll('[data-el="name"]')).forEach(function(s){ s.textContent=name; });
   [].slice.call(D.querySelectorAll('[data-el="lname"]')).forEach(function(s){ s.textContent=name.toLowerCase(); });
+  if(LABS) LABS.setElement(z);
   [].slice.call(D.querySelectorAll('[data-el="poss"]')).forEach(function(s){ s.textContent=poss(name); });
   [].slice.call(D.querySelectorAll('[data-el="article"]')).forEach(function(s){ s.textContent=article(name); });
   [].slice.call(D.querySelectorAll('[data-el="protons"]')).forEach(function(s){ s.textContent=z===1?"hydrogen’s one proton":poss(name.toLowerCase())+" "+z+" protons"; });
@@ -1058,7 +1059,10 @@ function boot(){
   today();
   /* missions */
   var md=D.getElementById("missions");
-  if(md) MS=Missions.create({host:md, go:missionGo});
+  if(md) MS=Missions.create({host:md, go:missionGo, onStart:function(){ if(LABS) LABS.resync(); }});
+  /* a shared atom or challenge (#build=6-8-6, #challenge=A1...) opens in the labs */
+  function shared(){ var sp=AtomLabs.fromHash(location.hash); if(sp&&LABS){ goLabs(); LABS.open(sp); } }
+  window.addEventListener("hashchange",shared); setTimeout(shared,300);
 }
 if(D.readyState==="loading") D.addEventListener("DOMContentLoaded",boot); else boot();
 })();

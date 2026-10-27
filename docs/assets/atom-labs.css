@@ -97,7 +97,7 @@
   border:1px solid var(--c);background:var(--lb-raise);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 .lb-tok.n{--c:var(--lb-n)} .lb-tok.e{--c:var(--lb-e)}
 .lb-tok b{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--c);color:var(--lb-onk);font-size:var(--fs-body,15.5px)}
-.lb-tok span{font-size:var(--fs-ui,14px);font-weight:600}
+.lb-tok span{font-size:var(--fs-ui,14px);font-weight:600;white-space:nowrap}
 .lb-ghost{--c:#ff9a55;position:fixed;z-index:1000;display:grid;place-items:center;width:44px;height:44px;transform:translate(-50%,-50%);border-radius:50%;
   background:var(--c);color:var(--lb-onk,#141005);font-family:"Archivo",system-ui,sans-serif;font-size:var(--fs-body,15.5px);font-weight:600;line-height:1;
   pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.35)}
@@ -252,7 +252,7 @@
 /* ---------------------------------------------------------------- the toast */
 .lb-toast{position:fixed;left:50%;bottom:24px;z-index:60;transform:translateX(-50%);max-width:min(560px,calc(100vw - 32px));padding:12px 16px;
   border-radius:var(--lb-r2,12px);background:var(--ink);color:var(--lb-sunk);font-size:var(--fs-ui,14px);font-weight:600;box-shadow:0 12px 32px rgba(0,0,0,.35)}
-.lb-toast[hidden]{display:none}
+.lb-toast:empty{opacity:0;pointer-events:none;padding:0;box-shadow:none}
 
 /* ---------------------------------------------------------------- narrow */
 @media (max-width:900px){
@@ -266,8 +266,11 @@
 @media (max-width:520px){
   .lb-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px 12px}
   .lb-tabs [role="tab"]{flex:none}
-  .lb-tok span{display:none}
-  .lb-tok{padding:4px}
+  .lb-tray{gap:4px;padding:8px 4px}
+  .lb-tok{gap:4px;padding:4px 6px 4px 4px;min-height:40px}
+  .lb-tok b{width:28px;height:28px;font-size:var(--fs-ui,14px)}
+  .lb-tok span{font-size:var(--fs-micro,13px)}
+  .lb-box{width:40px;height:40px}
   .lb-facts{grid-template-columns:minmax(0,1fr)}
   .lb-bars li{grid-template-columns:minmax(0,1fr) auto}
   .lb-bars i{grid-column:1 / -1;grid-row:2}
@@ -299,4 +302,74 @@
 .pd-mine span{display:inline-flex;align-items:center;gap:6px}
 .pd-mine span::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--lb-you);box-sizing:border-box}
 .pd-mine span.on::before{background:var(--lb-you)}
+/* ---------------------------------------------------------------- build: the one-line summary, and sharing */
+.lb-sum{font-size:var(--fs-ui,14px);color:var(--ink2);margin-top:4px}
+.lb-bshare{margin-top:4px}
+.lb-sharebox{display:grid;gap:8px;padding:12px 16px;border-radius:var(--lb-r,8px);border:1px solid var(--lb-line);background:var(--lb-panel)}
+.lb-linkrow{display:flex;gap:8px}
+.lb-linkrow .lb-input{flex:1;min-width:0;font-size:var(--fs-ui,14px)}
+.lb-code{font-variant-numeric:tabular-nums;letter-spacing:.02em;word-break:break-all;color:var(--ink)}
+
+/* ---------------------------------------------------------------- build: orbital boxes */
+.lb-cols.boxes{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
+.lb-boardwrap{display:grid;gap:12px;padding:16px;border-radius:var(--lb-r2,12px);border:1px solid var(--lb-line);background:var(--lb-sunk)}
+.lb-board{display:grid;gap:6px}
+.lb-orow{display:flex;align-items:center;gap:12px}
+.lb-olab{width:40px;flex:none;font-size:var(--fs-body,15.5px);font-weight:700;color:var(--ink)}
+.lb-oboxes{display:flex;flex-wrap:wrap;gap:4px}
+.lb-box{display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:var(--lb-r,6px);border:2px solid var(--lb-line2);background:var(--lb-raise);
+  color:var(--lb-e);font-size:var(--fs-h2,19px);font-weight:700;line-height:1;cursor:pointer}
+.lb-box.s1,.lb-box.s2{border-color:var(--lb-e)}
+.lb-box:active{transform:scale(.94)}
+@media (max-width:900px){ .lb-cols.boxes{grid-template-columns:minmax(0,1fr)} }
+.lb-rules{display:grid;gap:8px}
+.lb-rules li{padding-left:12px;border-left:3px solid var(--lb-build);font-size:var(--fs-ui,14px);color:var(--ink2)}
+.lb-rulecheck{display:grid;gap:4px}
+.lb-rulecheck li{display:flex;gap:8px;align-items:baseline;font-size:var(--fs-ui,14px);color:var(--ink)}
+.lb-rulecheck li.ok .lb-mark{color:var(--lb-ok);font-weight:700}
+.lb-rulecheck li.bad .lb-mark{color:var(--lb-bad);font-weight:700}
+
+/* ---------------------------------------------------------------- predict: challenges */
+.lb-maker{display:grid;gap:12px;padding:16px;border-radius:var(--lb-r2,12px);border:1px solid var(--lb-line);background:var(--lb-panel)}
+.lb-field{display:grid;gap:4px;font-size:var(--fs-ui,14px);font-weight:600;color:var(--ink2)}
+.lb-field .lb-input,.lb-field select{color:var(--ink);font-weight:400}
+.lb-types{margin:0;padding:12px;border:1px solid var(--lb-line);border-radius:var(--lb-r,8px);display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px 12px}
+.lb-types legend{padding:0 4px;font-size:var(--fs-ui,14px);font-weight:600;color:var(--ink2)}
+.lb-types label{display:flex;align-items:center;gap:8px;min-height:32px;font-size:var(--fs-ui,14px);color:var(--ink);cursor:pointer}
+.lb-types input{width:18px;height:18px;accent-color:var(--k);flex:none}
+.lb-mkout{display:grid;gap:8px}
+.lb-mkout:empty{display:none}
+.lb-qsum{display:grid;gap:12px;padding:24px;border-radius:var(--lb-r2,12px);background:var(--lb-panel);border:1px solid var(--lb-line);border-top:4px solid var(--k)}
+.lb-qsum h3:focus{outline:none}
+.lb-tscore{font-size:var(--fs-h2,19px)}
+.lb-results{margin:0;padding-left:24px;list-style:decimal;display:grid;gap:6px}
+.lb-results li{font-size:var(--fs-ui,14px);color:var(--ink)}
+.lb-results li i{font-style:normal;color:var(--ink2)}
+.lb-results .lb-mark{font-weight:700}
+.lb-results li.ok .lb-mark{color:var(--lb-ok)} .lb-results li.bad .lb-mark{color:var(--lb-bad)}
+
+/* ---------------------------------------------------------------- hear: name it by ear */
+.lb-guess{display:grid;gap:12px;margin-top:16px}
+.lb-guess:empty{display:none}
+.lb-guess .lb-score{margin-left:0}
+
+/* ---------------------------------------------------------------- you: printing, erasing, challenges */
+.lb-youfoot{margin-top:16px}
+.lb-confirm{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--lb-r,8px);border:1px solid var(--lb-bad)}
+.lb-confirm b{font-size:var(--fs-ui,14px)}
+.lb-today .lb-chh{margin-top:16px}
+.lb-chl{display:grid;gap:4px}
+.lb-chl li{display:flex;gap:8px;align-items:baseline;font-size:var(--fs-ui,14px)}
+.lb-chl li span{color:var(--ink2);word-break:break-all}
+
+/* ---------------------------------------------------------------- printing: only the report */
+.lb-print{display:none}
+@media print{
+  html.lb-printing body > *:not(.lb-print){display:none !important}
+  html.lb-printing body{background:#fff !important}
+  html.lb-printing .lb-print{display:block;color:#000;background:#fff;font-family:"Archivo",system-ui,sans-serif;font-size:12pt;line-height:1.45}
+  .lb-print h1{font-size:20pt;margin:0 0 6pt} .lb-print h2{font-size:14pt;margin:14pt 0 4pt}
+  .lb-print ul,.lb-print ol{padding-left:18pt} .lb-print i{font-style:normal}
+  .lb-print .lb-mark{font-weight:700}
+}
 /* ATOM-LABS-CSS END */

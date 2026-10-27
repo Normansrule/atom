@@ -2,6 +2,34 @@
 
 Atom follows [semantic versioning](https://semver.org). The newest release is at the top.
 
+## [1.2.0] - 2026-10-26
+
+More to do in the labs, a way for teachers to share them, and a round of fixes from an independent review of every sentence and calculation.
+
+### New in the labs
+- **Orbital boxes** (in Build): fill an element's electrons by hand and check them against the Aufbau principle, the Pauli exclusion principle, and Hund's rule, exceptions such as chromium and copper included.
+- **Predict** asks fifteen kinds of questions, up from nine: valence electrons, the ions elements form, where they were made, which was discovered first, how common they are in Earth's crust, and naming an element from its configuration.
+- **Guess by ear** (in Hear): a mystery element's light as a chord, and four names to choose from. Tones are now exactly 40 octaves below the light, so each chord keeps the light's real proportions.
+- **Ions show their own electrons:** iron(II) is [Ar] 3d⁶, because a positive ion gives up its outermost (4s) electrons first.
+- Slow primordial isotopes, such as tellurium-130 and indium-115, get their real half-lives and decay modes, and elements with no stable isotope point to their longest-lived one.
+
+### Teaching and sharing
+- **Challenges:** pick elements, a number of questions, and the kinds of questions, then share a link or a short code. Everyone who opens it gets the same questions in the same order, then a score, what they missed, and a page to print. Nothing is collected; the questions are rebuilt from the code itself.
+- **Share this atom:** a link that opens the atom you built in someone else's Build lab.
+- **Print my progress:** a one-page summary of what you have explored, built, and mastered, with badges and challenge scores. The Mac app gains File > Print, and both desktop apps' Edit menus gain Undo, Cut, and Paste for the labs' text fields.
+- Three new badges, eighteen in all.
+
+### Fixes from the review
+- Nuclei with too few neutrons were sometimes described as having too many; boron-9 is now correctly unbound.
+- Configurations typed without spaces (1s22s22p4) or in superscripts are read correctly.
+- Hear plays electrons in the order they fill (4s before 3d).
+- Ion names only at their usual charge ("an oxide ion" is O²⁻), with "a" and "an" right.
+- The melting-point question skips elements that sublime or whose values are only predicted, and its hint matches how it grades; negative answers can be typed on phones.
+- The block question uses the elements tables agree on, and atom-size questions use only measured radii.
+- Missions notice a step you have already done, keep the focus on Show me, and announce each new step.
+- The labs follow the element you pick on the table, a second window shares your progress, and erasing progress asks first, in the page.
+- Particle buttons keep their names on phones, and the Build lab tells a screen reader one short summary once you stop clicking.
+
 ## [1.1.0] - 2026-10-26
 
 Learn it by doing it. Atom now opens on the table and six hands-on labs, with the scroll-down descent kept as an optional guided tour.

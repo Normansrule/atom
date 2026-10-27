@@ -1,10 +1,12 @@
 // Atom for macOS: a window around one HTML file.
 //
 // The whole app is app/atom.html, copied into the bundle's Resources as
-// index.html by build-mac-app.sh. This shell does five things and nothing
+// index.html by build-mac-app.sh. This shell does six things and nothing
 // else: opens a window, loads that file, sends web links to your browser,
-// recovers if the page's process ever stops, and gives the app a normal Mac
-// menu bar. No network access, no bridge into the system, no data collected.
+// recovers if the page's process ever stops, gives the app a normal Mac menu
+// bar, and prints. The page can send exactly one message, "print", because a
+// web view can't open the print panel by itself. No network access, no data
+// collected.
 //
 // Build: mac/build-mac-app.sh   (needs the Xcode command line tools)
 
@@ -18,7 +20,7 @@ private let repoURL = URL(string: "https://github.com/normansrule/atom")!
 private let issuesURL = URL(string: "https://github.com/normansrule/atom/issues/new/choose")!
 private let releasesURL = URL(string: "https://github.com/normansrule/atom/releases")!
 
-final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
     var window: NSWindow!
     var webView: WKWebView!
 
@@ -36,7 +38,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     private func buildWindow() {
         let config = WKWebViewConfiguration()
         config.preferences.javaScriptCanOpenWindowsAutomatically = false
-        config.websiteDataStore = .default()                   // keeps the theme and mission progress between launches
+        config.websiteDataStore = .default()                   // keeps the theme, missions, and lab progress between launches
+        config.userContentController.add(self, name: "atomPrint")   // the labs' Print buttons
         webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = self
         webView.uiDelegate = self
@@ -107,6 +110,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         return nil
     }
 
+    // The page asks to print (the labs' "Print my progress" and "Print my
+    // results"); it has already laid out the page it wants printed.
+    func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+        if message.name == "atomPrint" { printPage(nil) }
+    }
+
+    @objc func printPage(_ sender: Any?) {
+        guard let webView = webView, let window = window else { return }
+        let info = NSPrintInfo.shared
+        info.topMargin = 36; info.bottomMargin = 36; info.leftMargin = 36; info.rightMargin = 36
+        info.horizontalPagination = .fit
+        info.verticalPagination = .automatic
+        let op = webView.printOperation(with: info)
+        op.showsPrintPanel = true
+        op.showsProgressPanel = true
+        op.view?.frame = webView.bounds                        // without a frame, WebKit prints blank pages
+        op.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
+    }
+
     // If the page's process is ever stopped (memory pressure, a GPU reset),
     // load it again rather than leave an empty window.
     func webViewWebContentProcessDidTerminate(_ wv: WKWebView) { loadPage() }
@@ -133,9 +155,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         appMenu.addItem(withTitle: "Quit Atom", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
 
+        let fileItem = NSMenuItem(); main.addItem(fileItem)
+        let file = NSMenu(title: "File")
+        file.addItem(withTitle: "Print…", action: #selector(printPage(_:)), keyEquivalent: "p")
+        fileItem.submenu = file
+
+        // The labs have text fields (answers, formulas, codes), so the Edit
+        // menu carries the keyboard shortcuts typing needs.
         let editItem = NSMenuItem(); main.addItem(editItem)
         let edit = NSMenu(title: "Edit")
+        edit.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        let redo = edit.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "z")
+        redo.keyEquivalentModifierMask = [.command, .shift]
+        edit.addItem(.separator())
+        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
         edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
         edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editItem.submenu = edit
 
