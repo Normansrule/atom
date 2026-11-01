@@ -634,7 +634,7 @@ var ELEMENTS = [
  "China (dominant), Laos, Vietnam, Mexico, Japan, Korea.",
  "Non-toxic replacement for lead in solders, plumbing brass, fishing weights and ammunition; bismuth subsalicylate (Pepto-Bismol); low-melting fusible alloys for sprinklers and safety plugs; and cosmetics.",
  "Bismuth-209 was thought to be the heaviest stable nuclide until 2003, when a French team measured it alpha-decaying with a half-life of 2.01 x 10^19 years — a billion times the age of the universe. It is also the most diamagnetic metal."],
-[84,"Po","Polonium",209,1,"an",16,6,"solid",9.196,527,1235,1898,"Marie and Pierre Curie",2e-10,null,209,
+[84,"Po","Polonium",209,1,"pt",16,6,"solid",9.196,527,1235,1898,"Marie and Pierre Curie",2e-10,null,209,
  "A transient member of the uranium-238 decay chain. About 100 micrograms of Po-210 exist in a tonne of uranium ore. Tobacco leaves concentrate it from phosphate fertiliser and soil.",
  "Made by neutron irradiation of bismuth-209 in reactors; Russia has been the main supplier.",
  "Static eliminators in paper and textile mills, and as a compact heat source for spacecraft (Po-210 gives 140 W per gram). Also used, historically, as a neutron initiator in early nuclear weapons.",

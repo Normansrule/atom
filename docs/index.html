@@ -55,8 +55,8 @@
   <nav aria-label="Sections">
     <a href="#top">Elements</a>
     <a href="#labs">Labs</a>
-    <a href="#tour">Guided tour</a>
-    <a href="#edge">Open questions</a>
+    <a href="#tour">Tour</a>
+    <button type="button" class="nav-ms" id="msBarBtn" aria-controls="missions" aria-expanded="false">Missions</button>
   </nav>
   <div class="bar-actions">
     <div class="find"><input id="ptFind" type="search" placeholder="Find an element" aria-label="Find an element by name, symbol, or atomic number" autocomplete="off" spellcheck="false" enterkeyhint="go"></div>
@@ -102,11 +102,11 @@
     </div>
     <div class="lens-legend" id="lensLegend" aria-live="polite"></div>
     <div class="pt-foot" id="ptFoot">
-      <p class="pt-hint"><b>Pick an element</b> to build it, quiz yourself on it, hear its light, or fall into it.</p>
       <p class="pt-swipe">Swipe the table sideways for all 18 columns.</p>
       <div class="actions">
-        <button type="button" class="btn today" id="todayBtn"><span>Today</span> <b id="todayEl">H</b> <i id="todayN">0 of 3</i></button>
-        <a class="btn btn-primary labs-go" href="#labs">Open the labs</a>
+        <a class="btn btn-primary btn-small labs-go" href="#labs">Open the labs</a>
+        <button type="button" class="btn btn-small today" id="todayBtn"><span>Today</span> <b id="todayEl">H</b> <i id="todayN">0 of 3</i></button>
+        <button type="button" class="btn btn-small ms-foot" id="msFootBtn" aria-controls="missions" aria-expanded="false">Missions</button>
       </div>
     </div>
   </div>
@@ -122,11 +122,13 @@
 
 <!-- =============================================================== the labs -->
 <section class="labs" id="labs" data-scene="bench" aria-labelledby="t-labs">
-  <div class="labs-head">
-    <h2 id="t-labs">Labs</h2>
-    <p class="lede">Learn it by doing it. Build an atom from its particles, test what you know, plug numbers into the formulas physicists use, run three experiments, and listen to the light each element gives off. Your progress stays in this browser.</p>
+  <div class="labs-panel">
+    <div class="labs-head">
+      <h2 id="t-labs">Labs</h2>
+      <p class="lede">Learn it by doing it: build atoms and molecules, explore the table's patterns, test yourself, and run real experiments. Your progress stays in this browser.</p>
+    </div>
+    <div id="labsHost"></div>
   </div>
-  <div id="labsHost"></div>
 </section>
 
 <!-- =============================================================== the tour -->
@@ -278,8 +280,9 @@
     <a class="btn" data-os="linux" href="https://github.com/normansrule/atom/releases/latest/download/Atom-Linux.AppImage">Download for Linux</a>
     <a class="btn" data-os="web" href="app/">Open in your browser</a>
   </div>
+  <p class="qual"><label for="siteQual">Picture quality</label> <select id="siteQual"><option value="auto">Auto</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select> <span id="siteQualNote"></span></p>
   <div class="shots">
-    <figure><img src="media/app-dark.jpg" alt="The Atom app opening on its periodic table, floating in a nebula: 118 squares, each glowing with its element's outermost electron cloud in phase colors, with hydrogen's readout in the gap above the transition metals and the Shapes, Origins, and Frontier lenses above the table" width="1440" height="960" loading="lazy" decoding="async"><figcaption>The app opens on the same living table.</figcaption></figure>
+    <figure><img src="media/app-dark.jpg" alt="The Atom app opening on its periodic table, floating in a nebula: 118 squares, each glowing with its element's outermost electron cloud in phase colors, with hydrogen's readout in the gap above the transition metals and the Shapes, Origins, Frontier, and Yours lenses under the title" width="1440" height="960" loading="lazy" decoding="async"><figcaption>The app opens on the same living table.</figcaption></figure>
     <figure><img src="media/app-light.png" alt="The Atom app in its light theme, zoomed into a neutron of iron-56 with one quark pulled out on its gluon string, and the string's length, energy and pull listed beside it" width="1440" height="960" loading="lazy" decoding="async"><figcaption>Inside iron, on the light table: pulling a quark, with the live numbers.</figcaption></figure>
   </div>
   <p class="fine">Mac: Apple silicon or Intel, macOS 12 or later. Windows: 10 or 11, 64-bit, with an installer or a <a href="https://github.com/normansrule/atom/releases/latest/download/Atom-Windows-portable.zip">portable zip</a>. Linux: 64-bit, as an AppImage for any distribution or a <a href="https://github.com/normansrule/atom/releases/latest/download/Atom-Linux.deb">.deb for Debian and Ubuntu</a>. The builds aren&rsquo;t signed by Apple or Microsoft yet, so the first launch asks you to confirm it once: on a Mac, choose Open Anyway in System Settings, under Privacy &amp; Security; on Windows, choose More info, then Run anyway. Every file&rsquo;s checksum is on the <a href="https://github.com/normansrule/atom/releases/latest">releases page</a>, and the <a href="https://github.com/normansrule/atom">source code</a> is on GitHub.</p>
@@ -295,6 +298,7 @@
     <ol id="sourceList">
       <li>Abel, C., et al. (2020). Measurement of the permanent electric dipole moment of the neutron. <i>Physical Review Letters, 124</i>(8), 081803. <a href="https://doi.org/10.1103/PhysRevLett.124.081803">https://doi.org/10.1103/PhysRevLett.124.081803</a></li>
       <li>Aliberti, R., et al. (2025). The anomalous magnetic moment of the muon in the Standard Model: An update. <i>Physics Reports, 1143</i>, 1–158. <a href="https://doi.org/10.1016/j.physrep.2025.08.002">https://doi.org/10.1016/j.physrep.2025.08.002</a></li>
+      <li>Allred, A. L. (1961). Electronegativity values from thermochemical data. <i>Journal of Inorganic and Nuclear Chemistry, 17</i>(3–4), 215–221. <a href="https://doi.org/10.1016/0022-1902(61)80142-5">https://doi.org/10.1016/0022-1902(61)80142-5</a></li>
       <li>Anderson, E. K., et al. (ALPHA Collaboration). (2023). Observation of the effect of gravity on the motion of antimatter. <i>Nature, 621</i>, 716–722. <a href="https://doi.org/10.1038/s41586-023-06527-1">https://doi.org/10.1038/s41586-023-06527-1</a></li>
       <li>Bali, G. S., Neff, H., Düssel, T., Lippert, T., &amp; Schilling, K. (2005). Observation of string breaking in QCD. <i>Physical Review D, 71</i>(11), 114513. <a href="https://doi.org/10.1103/PhysRevD.71.114513">https://doi.org/10.1103/PhysRevD.71.114513</a></li>
       <li>Ball, R. D., et al. (NNPDF Collaboration). (2022). Evidence for intrinsic charm quarks in the proton. <i>Nature, 608</i>, 483–487. <a href="https://doi.org/10.1038/s41586-022-04998-2">https://doi.org/10.1038/s41586-022-04998-2</a></li>
@@ -302,11 +306,14 @@
       <li>Bullis, R. G., et al. (2026). Precision spectroscopy of 2S–nS transitions in atomic hydrogen: A determination of the proton charge radius. <i>Physical Review Letters</i>. <a href="https://doi.org/10.1103/lgl2-6cb8">https://doi.org/10.1103/lgl2-6cb8</a></li>
       <li>Burkert, V. D., Elouadrhiri, L., &amp; Girod, F. X. (2018). The pressure distribution inside the proton. <i>Nature, 557</i>, 396–399. <a href="https://doi.org/10.1038/s41586-018-0060-z">https://doi.org/10.1038/s41586-018-0060-z</a></li>
       <li>Cochran, T. A., et al. (2025). Visualizing dynamics of charges and strings in (2 + 1)D lattice gauge theories. <i>Nature, 642</i>, 315–320. <a href="https://doi.org/10.1038/s41586-025-08999-9">https://doi.org/10.1038/s41586-025-08999-9</a></li>
+      <li>Cordero, B., Gómez, V., Platero-Prats, A. E., Revés, M., Echeverría, J., Cremades, E., Barragán, F., &amp; Alvarez, S. (2008). Covalent radii revisited. <i>Dalton Transactions</i>, (21), 2832–2838. <a href="https://doi.org/10.1039/b801115j">https://doi.org/10.1039/b801115j</a></li>
       <li>Duran, B., et al. (2023). Determining the gluonic gravitational form factors of the proton. <i>Nature, 615</i>, 813–816. <a href="https://doi.org/10.1038/s41586-023-05730-4">https://doi.org/10.1038/s41586-023-05730-4</a></li>
       <li>Edlén, B. (1966). The refractive index of air. <i>Metrologia, 2</i>(2), 71–80. <a href="https://doi.org/10.1088/0026-1394/2/2/002">https://doi.org/10.1088/0026-1394/2/2/002</a></li>
       <li>Fan, X., Myers, T. G., Sukra, B. A. D., &amp; Gabrielse, G. (2023). Measurement of the electron magnetic moment. <i>Physical Review Letters, 130</i>(7), 071801. <a href="https://doi.org/10.1103/PhysRevLett.130.071801">https://doi.org/10.1103/PhysRevLett.130.071801</a></li>
       <li>González-Cuadra, D., et al. (2025). Observation of string breaking on a (2 + 1)D Rydberg quantum simulator. <i>Nature, 642</i>, 321–326. <a href="https://doi.org/10.1038/s41586-025-09051-6">https://doi.org/10.1038/s41586-025-09051-6</a></li>
       <li>Jaffe, A., &amp; Witten, E. (n.d.). <i>Quantum Yang–Mills theory</i> [Millennium Prize problem description]. Clay Mathematics Institute. <a href="https://www.claymath.org/millennium/yang-mills-the-maths-gap/">https://www.claymath.org/millennium/yang-mills-the-maths-gap/</a></li>
+      <li>Johnson, R. D., III (Ed.). (2022). <i>NIST computational chemistry comparison and benchmark database</i> (NIST Standard Reference Database 101, Release 22) [Data set]. National Institute of Standards and Technology. <a href="https://doi.org/10.18434/T47C7Z">https://doi.org/10.18434/T47C7Z</a></li>
+      <li>Jimenez, J. (2014). <i>Next generation post processing in Call of Duty: Advanced Warfare</i> [Conference talk]. SIGGRAPH 2014 Advances in Real-Time Rendering in Games course, Vancouver, BC, Canada. <a href="https://advances.realtimerendering.com/s2014/">https://advances.realtimerendering.com/s2014/</a></li>
       <li>Ji, X., Yuan, F., &amp; Zhao, Y. (2021). What we know and what we don't know about the proton spin after 30 years. <i>Nature Reviews Physics, 3</i>, 27–38. <a href="https://doi.org/10.1038/s42254-020-00248-4">https://doi.org/10.1038/s42254-020-00248-4</a></li>
       <li>Kramida, A., Ralchenko, Yu., Reader, J., &amp; NIST ASD Team. (2024). <i>NIST Atomic Spectra Database</i> (Version 5.12) [Data set]. National Institute of Standards and Technology. <a href="https://doi.org/10.18434/T4W30F">https://doi.org/10.18434/T4W30F</a></li>
       <li>Maisenbacher, L., et al. (2026). Sub-part-per-trillion test of the Standard Model with atomic hydrogen. <i>Nature</i>. <a href="https://doi.org/10.1038/s41586-026-10124-3">https://doi.org/10.1038/s41586-026-10124-3</a></li>
@@ -325,6 +332,7 @@
       <li>UCNτ Collaboration. (2025). Measurement of the free neutron lifetime in a magneto-gravitational trap with in situ detection. <i>Physical Review C, 111</i>(4), 045501. <a href="https://doi.org/10.1103/PhysRevC.111.045501">https://doi.org/10.1103/PhysRevC.111.045501</a></li>
       <li>Unsöld, A. (1927). Beiträge zur Quantenmechanik der Atome. <i>Annalen der Physik, 387</i>(3), 355–393. <a href="https://doi.org/10.1002/andp.19273870304">https://doi.org/10.1002/andp.19273870304</a></li>
       <li>Wang, M., Huang, W. J., Kondev, F. G., Audi, G., &amp; Naimi, S. (2021). The AME 2020 atomic mass evaluation (II): Tables, graphs and references. <i>Chinese Physics C, 45</i>(3), 030003. <a href="https://doi.org/10.1088/1674-1137/abddaf">https://doi.org/10.1088/1674-1137/abddaf</a></li>
+      <li>Wyman, C., Sloan, P.-P., &amp; Shirley, P. (2013). Simple analytic approximations to the CIE XYZ color matching functions. <i>Journal of Computer Graphics Techniques, 2</i>(2), 1–11. <a href="https://jcgt.org/published/0002/02/01/">https://jcgt.org/published/0002/02/01/</a></li>
       <li>Yang, Y.-B., et al. (2018). Proton mass decomposition from the QCD energy momentum tensor. <i>Physical Review Letters, 121</i>(21), 212001. <a href="https://doi.org/10.1103/PhysRevLett.121.212001">https://doi.org/10.1103/PhysRevLett.121.212001</a></li>
       <li>Yue, A. T., et al. (2013). Improved determination of the neutron lifetime. <i>Physical Review Letters, 111</i>(22), 222501. <a href="https://doi.org/10.1103/PhysRevLett.111.222501">https://doi.org/10.1103/PhysRevLett.111.222501</a></li>
       <li>Zhang, C., et al. (2024). Frequency ratio of the ²²⁹ᵐTh nuclear isomeric transition and the ⁸⁷Sr atomic clock. <i>Nature, 633</i>, 63–70. <a href="https://doi.org/10.1038/s41586-024-07839-6">https://doi.org/10.1038/s41586-024-07839-6</a></li>

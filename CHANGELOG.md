@@ -2,6 +2,59 @@
 
 Atom follows [semantic versioning](https://semver.org). The newest release is at the top.
 
+## [1.3.0] - 2026-10-31
+
+Smoother, calmer, more real, and four new ways to explore: compare any two elements, color the table by its trends, walk the chart of every nucleus, and build molecules.
+
+### A more real picture
+- **The electron cloud is drawn smoother for less work.** Each ray now starts at an offset from an evenly spread pattern (interleaved gradient noise) instead of random noise, so the cloud shows no banding and no grain; and while the view holds still, frames are averaged, so each one can take fewer steps and the picture still converges to a smooth one. The cloud's core has a filmic shoulder, so the brightest lobes keep their shape and color instead of clipping to flat white.
+- **A quality tier is picked at startup** from the graphics card's own name (nothing is fetched): software and low-power renderers start low, discrete and Apple parts high. The tier sets the ray steps, the buffer size, the sky's detail, and whether the living fields and film grain are on; the frame-time governor still moves within it. A **Quality** control (Auto, Low, Medium, High) sits under Show in the app and under the downloads on the website, says which tier Auto chose and for which card, and keeps your choice on your device. In a software renderer the website's cloud scene went from 151 to 46 ms a frame, the light scene from 125 to 35, the nucleus from 84 to 29, and the app's chamber from 107 to 63.
+- **Every emission line is the color the eye would see:** computed from the CIE 1931 color-matching functions and mapped into the screen's gamut, so hydrogen's red is red, its blue-green is blue-green, and sodium's doublet is amber, in the spectrum, the rings around the atom, the light scene, and the Hear lab.
+- **The sky has a filmic shoulder, dither, and grain:** a birth's white-hot core rolls off into warm white instead of clipping, the dark gas shows no banding on an 8-bit screen, and on the faster tiers a faint moving grain reads as film. On the high tier the nebula's filaments drift on the curl of a slow noise, the gluon field's glue swirls and tears, and each spectral line carries a faint bloom.
+- **The nucleus has a glow and depth,** on the website and in the chamber: a soft halo behind it in the dark theme, and nucleons farther back shaded darker, so it reads as a ball and not a flat pile of discs.
+- **The Build lab's atom is lit too:** nucleons are shaded spheres with contact shadows, and each electron is a small glowing sphere with a short trail along its orbit.
+- **Molecules are lit:** spheres bright toward the light and dark at the far limb with a glint, bond rods colored half by each atom, a little perspective, and the shadow each nearer atom casts where it touches the next, which is what makes two spheres read as touching.
+
+### Motion with mass
+- **Springs instead of fixed curves:** the element card slides in, the table rescales, and lab tabs move on a damped spring that overshoots slightly and settles (browsers without `linear()` easing fall back to the old curve).
+- **The atom has inertia:** the camera on the website and in the chamber is a damped spring toward where your hand put it, stepped by each frame's own length so it feels the same at any frame rate; letting go while moving flings it on; the chamber's zoom glides to where the wheel sent it instead of jumping.
+- **The quark you pull has mass:** your hand holds it with a stiff spring while the string pulls back with the constant force of the linear potential, so it lags the pointer, overshoots when you stop, and shivers as the string nears breaking. A particle dragged into the Build lab follows on a spring and leans into its motion.
+- Reduced motion keeps every one of these still, as before.
+- On a phone the element numbers on the table are a point larger.
+- In the chamber, the tip in the stage's corner steps aside while you pull a quark, so the quark's own label is never under it.
+- The app screenshots on the website are retaken from this version.
+
+### Smoother scrolling
+- **The website and the app no longer stutter while you scroll.** The pictures used to resize their canvases almost every frame as they adjusted their own sharpness; now they change in a few fixed steps, at most twice a second, and step down quickly on a slow machine.
+- Each frame reads the page's layout before it writes anything, writes a style only when it changes, and hides any full-screen layer with nothing on it. In the app, scrolling an element's card no longer lays out the page every frame, and the table and sky stand still while the labs cover them.
+- On phones, the scenery is as tall as the largest screen, so the browser's toolbar sliding in and out no longer resizes it mid-scroll.
+- **The website does less drawing.** The electron cloud is redrawn at half rate while the view holds still, the sky does the same once it settles, the quark field switches off below the scenes that use it, and an empty overlay is hidden instead of cleared. In a software renderer, the light scene went from 125 to 48 ms a frame, the nucleus from 89 to 42, and the labs from 37 to 17.
+
+### Calmer to look at
+- **The element card has five tabs** (Overview, Electrons, Nucleus, Origin, Future) instead of one long scroll. The tab you are reading stays open from element to element, and the Origins and Frontier lenses turn the card to Origin and Future.
+- **The labs have five tabs** (Build, Explore, Predict, Experiment, You), with the labs inside Explore and Experiment on a rail beneath. The challenges in Build fold away with the next one always in view, and the atom's links sit with its name.
+- **The website's first screen** keeps one filled button in the bar, drops the tiny compound under every square (the readout and card still have it), and lines up two quiet ways in under the table. On a phone the title, sentence, and readout are shorter, so the table comes into view sooner.
+- **The app's top bar** keeps only Find, Today, Labs, the theme, and Open the chamber; the lenses moved under the title, as on the website.
+
+### Nothing covers anything
+- **The table's rows are evenly spaced** at every window size. The title, the lenses, and the element readout now fit the gap over the transition metals, stepping down to a compact layout in a smaller window, and a short laptop window scales the whole table so its top never slides under the bar.
+- **What a lens means is written under the table**, next to its key, so the words over the table stay put when you switch lenses.
+- **Missions moved into the top bar** (on a phone, under the table) instead of floating over the page, and the section guide on the right steps aside at the end of the page.
+- On a phone, a section whose text is taller than the screen now scrolls like a page instead of pinning, so none of it is cut off.
+- **In the app's chamber**, the readouts over the picture no longer cross in a smaller window, the sources line sits in the table's card instead of over its last row, and the picture keeps room to work in a short window.
+- Every square on the app's table shows a clear focus ring when you move through it with the keyboard, as do the website's lens buttons, and the lenses, particle buttons, and text links in the labs respond when you point at them.
+
+### New in the labs
+- **A molecule** (in Build): add atoms, and real molecules snap into their measured 3D shapes, with molar mass, bond angle, lone pairs, bond polarity, and whether the whole molecule is polar. Water, carbon dioxide, methane, ammonia, boron trifluoride, hydrogen chloride, hydrogen, oxygen, nitrogen, and table salt, which is shown as the crystal of ions it is.
+- **Compare** (in Explore): two elements side by side on thirteen properties, with a paragraph that reads the pair, including the cases that break the usual pattern. Every card has a **Compare it** button.
+- **Trends** (in Explore): color the table by electronegativity, ionization energy, atomic radius, Slater's effective charge, density, melting or boiling point, mass, or crustal abundance, and graph any row or column.
+- **Nuclides** (in Explore): the chart of the nuclides, colored by stability and decay mode, with the magic numbers marked and a close-up of the neighborhood you pick. Measured where Atom has measurements, and labeled as the liquid-drop model's estimate everywhere else.
+- New data, cited: first ionization energies from the NIST Atomic Spectra Database, Pauling electronegativities, and molecular geometries from the NIST CCCBDB. The app's self-test now checks the chart against the Build lab for every nucleus and measures each molecule's angle off its own drawing.
+
+### Fixes
+- Polonium is listed as a post-transition metal, not an actinide.
+- The app's web copy no longer squeezes the table to nothing in a narrow window; the card covers it instead.
+
 ## [1.2.0] - 2026-10-26
 
 More to do in the labs, a way for teachers to share them, and a round of fixes from an independent review of every sentence and calculation.

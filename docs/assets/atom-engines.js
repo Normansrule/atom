@@ -63,7 +63,7 @@ var AtomGL = (function(){
     "precision highp float;",
     "out vec4 o;",
     "uniform vec4 uRect;uniform float uPx;uniform vec3 uEx,uEy,uEz,uOff;uniform vec2 uC;",
-    "uniform float uExt,uNorm,uGamma,uAlpha,uA1,uA2,uPh1,uPh2;",
+    "uniform float uExt,uNorm,uGamma,uAlpha,uA1,uA2,uPh1,uPh2,uJit;",
     "uniform int uMode,uL,uM,uL2,uM2,uSteps,uLight,uHue,uTwo;",
     "uniform sampler2D uTab,uTab2;uniform vec3 uPos,uNeg,uPosInk,uNegInk;",
     "float Y(vec3 u,int l,int m){float x=u.x,y=u.y,z=u.z;",
@@ -83,7 +83,12 @@ var AtomGL = (function(){
     " if(m==2) return 1.445305721320277*z*(x*x-y*y);",
     " return 0.5900435899266435*x*(x*x-3.*y*y);}",
     "vec2 tc(float r){return vec2(sqrt(clamp(r/uExt,0.,1.))*(1023./1024.)+0.5/1024.,0.5);}",
-    "float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}",
+    /* the ray's starting offset: interleaved gradient noise (Jimenez 2014), a
+       closed-form pattern whose error is spread evenly across neighboring
+       pixels like blue noise, so banding goes without the grain of white
+       noise; uJit walks it along the golden ratio each frame, so frames
+       accumulated over a still view sample different depths */
+    "float ign(vec2 p){return fract(52.9829189*fract(0.06711056*p.x+0.00583715*p.y));}",
     "vec3 wheel(float h){vec3 w=0.5+0.5*cos(h+vec3(0.,2.0943951,4.1887902));return clamp((w-0.5)*1.55+0.5,0.,1.);}",
     "void main(){",
     " vec2 fc=gl_FragCoord.xy-uRect.xy; if(fc.x<0.||fc.y<0.||fc.x>uRect.z||fc.y>uRect.w) discard;",
@@ -96,7 +101,7 @@ var AtomGL = (function(){
     "  vec3 oo=s.x*uEx+s.y*uEy+uOff, d=uEz;",
     "  float bb=dot(oo,d), cc=dot(oo,oo)-uExt*uExt, disc=bb*bb-cc;",
     "  if(disc<=0.) discard;",
-    "  float sq=sqrt(disc), t0=-bb-sq, t1=-bb+sq, dt=(t1-t0)/float(uSteps), j=hash(gl_FragCoord.xy);",
+    "  float sq=sqrt(disc), t0=-bb-sq, t1=-bb+sq, dt=(t1-t0)/float(uSteps), j=fract(ign(gl_FragCoord.xy)+uJit);",
     "  float I=0.,pr=0.,pim=0.,ineg=0.;",
     "  float c1=cos(uPh1),s1=sin(uPh1),c2=cos(uPh2),s2=sin(uPh2);",
     "  for(int i=0;i<256;i++){ if(i>=uSteps) break;",
@@ -108,16 +113,40 @@ var AtomGL = (function(){
     "   float mg=sqrt(dd)+1e-20; pr+=de*re/mg; pim+=de*im/mg;",
     "   if(p1<0.) ineg+=de; }",
     "  if(I<=0.) discard;",
-    "  t=pow(min(1.,I*uNorm),uGamma); hue=atan(pim,pr); coh=clamp(length(vec2(pr,pim))/I,0.,1.); f=ineg/I;",
+    /* a filmic shoulder: the old min(1, L)^g clipped every lobe's core to
+       one flat value; 1-exp(-L) keeps rising, so the core still has shape */
+    "  float L=I*uNorm; t=pow(1.-exp(-1.45*L),uGamma*1.1); hue=atan(pim,pr); coh=clamp(length(vec2(pr,pim))/I,0.,1.); f=ineg/I;",
     " }",
     " if(t<0.002) discard;",
     " vec3 col, ink;",
     " if(uHue==1){ vec3 w=wheel(hue); col=mix(vec3(0.85),w,0.2+0.8*coh); ink=mix(vec3(0.22),w*0.48,0.25+0.75*coh); }",
     " else { col=mix(uPos,uNeg,f); ink=mix(uPosInk,uNegInk,f); }",
     " if(uLight==1){ float a=(1.-exp(-3.0*t))*0.96*uAlpha; o=vec4(ink*a,a); }",
-    " else { vec3 c=col*t+vec3(0.20)*t*t; float a=min(1.,t*1.35)*uAlpha; o=vec4(min(c,vec3(1.))*uAlpha,a); }",
+    /* the brightest cores desaturate toward white, as film and AgX do,
+       instead of clipping one channel at a time */
+    " else { vec3 c=col*t+vec3(0.20)*t*t; float lum=dot(c,vec3(0.2126,0.7152,0.0722)); c=mix(c,vec3(lum),0.45*smoothstep(0.75,1.25,lum));",
+    "  float a=min(1.,t*1.35)*uAlpha; o=vec4(min(c,vec3(1.))*uAlpha,a); }",
     "}"
   ].join("\n");
+
+  /* the resolve pass: the accumulation buffer, copied to the canvas as is */
+  var FS_COPY = "#version 300 es\nprecision highp float;out vec4 o;uniform sampler2D uAcc;uniform vec2 uSize;void main(){o=texture(uAcc,gl_FragCoord.xy/uSize);}";
+
+  /* Quality tier, from the GPU's own name. No table is shipped and nothing is
+     fetched: software renderers and low-power parts start low, discrete and
+     Apple parts start high, everything else in the middle. The frame-time
+     governor then moves within the tier. tier(info) is also exported, so a
+     host can decide what else to switch on (bloom, living fields). */
+  function tierOf(info){
+    var s=String(info||"").toLowerCase();
+    if(/swiftshader|llvmpipe|softpipe|microsoft basic|mesa offscreen|angle \(google/.test(s)) return "low";
+    if(/mali-[gt][0-9]|adreno [1-5][0-9][0-9]|powervr|intel.*(hd|uhd) ?graphics ?[0-9]?[0-9]?[0-9]?[0-9]?\b/.test(s) && !/iris|arc/.test(s)) return "low";
+    if(/apple|nvidia|geforce|radeon|rx [0-9]|arc\b|iris xe|m[1-9] (pro|max|ultra)/.test(s)) return "high";
+    return "medium";
+  }
+  var TIERS={ low:{steps:48, steps2:64, budget:0.55, accum:16, fx:false},
+              medium:{steps:72, steps2:96, budget:0.85, accum:12, fx:true},
+              high:{steps:96, steps2:128, budget:1.0, accum:8, fx:true} };
 
   function compile(gl, type, src){
     var s=gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
@@ -167,8 +196,12 @@ var AtomGL = (function(){
                                          preserveDrawingBuffer:!!keep, powerPreference:"high-performance"}); }
     catch(e){ gl=null; }
     if(!gl || typeof gl.createShader!=="function" || typeof gl.createProgram!=="function") return null;
-    var api={ ok:false, lost:false, ms:16, scale:1, info:"", cur:null, ext:1 };
-    var prog, loc={}, vao, clouds=[];
+    var api={ ok:false, lost:false, ms:16, scale:1, info:"", cur:null, ext:1, tier:"medium", q:TIERS.medium, frame:0 };
+    var prog, loc={}, vao, clouds=[], progC, locC={};
+    /* the accumulation buffer: a still view converges over several frames,
+       each marched with a different ray offset, to a picture smoother than
+       any one frame; a moving view resets it. Hosts turn it on per draw. */
+    var ACC={fbo:null,tex:null,w:0,h:0,n:0,key:"",fmt:null};
 
     function makeTex(){ var t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
@@ -181,9 +214,15 @@ var AtomGL = (function(){
       prog=gl.createProgram(); gl.attachShader(prog,vs); gl.attachShader(prog,fs);
       gl.bindAttribLocation(prog,0,"p"); gl.linkProgram(prog);
       if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog)||"link");
-      ["uRect","uPx","uEx","uEy","uEz","uOff","uC","uExt","uNorm","uGamma","uAlpha","uA1","uA2","uPh1","uPh2",
+      ["uRect","uPx","uEx","uEy","uEz","uOff","uC","uExt","uNorm","uGamma","uAlpha","uA1","uA2","uPh1","uPh2","uJit",
        "uMode","uL","uM","uL2","uM2","uSteps","uLight","uHue","uTwo","uTab","uTab2","uPos","uNeg","uPosInk","uNegInk"
       ].forEach(function(k){ loc[k]=gl.getUniformLocation(prog,k); });
+      var fsc=compile(gl, gl.FRAGMENT_SHADER, FS_COPY), vs2=compile(gl, gl.VERTEX_SHADER, VS);
+      progC=gl.createProgram(); gl.attachShader(progC,vs2); gl.attachShader(progC,fsc);
+      gl.bindAttribLocation(progC,0,"p"); gl.linkProgram(progC);
+      if(!gl.getProgramParameter(progC, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(progC)||"link");
+      locC.uAcc=gl.getUniformLocation(progC,"uAcc"); locC.uSize=gl.getUniformLocation(progC,"uSize");
+      ACC.fmt=gl.getExtension("EXT_color_buffer_float")?gl.RGBA16F:gl.RGBA8; ACC.fbo=null; ACC.tex=null; ACC.w=ACC.h=0; ACC.n=0; ACC.key="";
       vao=gl.createVertexArray(); gl.bindVertexArray(vao);
       var vbo=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vbo);
       gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
@@ -192,6 +231,22 @@ var AtomGL = (function(){
       api.ok=true;
       var dbg=gl.getExtension("WEBGL_debug_renderer_info");
       api.info=String(gl.getParameter(dbg?dbg.UNMASKED_RENDERER_WEBGL:gl.RENDERER));
+      api.tier=tierOf(api.info); api.q=TIERS[api.tier];
+    }
+    function accBuf(){
+      if(ACC.fbo&&ACC.w===bufW&&ACC.h===bufH) return true;
+      if(!ACC.fbo){ ACC.fbo=gl.createFramebuffer(); ACC.tex=gl.createTexture(); }
+      gl.bindTexture(gl.TEXTURE_2D,ACC.tex);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D,0,ACC.fmt,bufW,bufH,0,gl.RGBA,ACC.fmt===gl.RGBA8?gl.UNSIGNED_BYTE:gl.HALF_FLOAT,null);
+      gl.bindFramebuffer(gl.FRAMEBUFFER,ACC.fbo);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,ACC.tex,0);
+      var ok=gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE;
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+      ACC.w=bufW; ACC.h=bufH; ACC.n=0; ACC.key="";
+      if(!ok){ gl.deleteFramebuffer(ACC.fbo); gl.deleteTexture(ACC.tex); ACC.fbo=null; ACC.tex=null; }
+      return ok;
     }
     try{ init(); }catch(err){ api.error=String(err&&err.message||err); return null; }
     canvas.addEventListener("webglcontextlost", function(e){ e.preventDefault(); api.lost=true; api.ok=false;
@@ -265,7 +320,7 @@ var AtomGL = (function(){
       var sc=Math.min(dpr, Math.sqrt((budget||650000)/Math.max(1,w*h)));
       sc=Math.max(0.35, sc*api.scale);
       bufW=Math.max(2,Math.round(w*sc)); bufH=Math.max(2,Math.round(h*sc)); bufS=bufW/w;
-      if(canvas.width!==bufW||canvas.height!==bufH){ canvas.width=bufW; canvas.height=bufH; }
+      if(canvas.width!==bufW||canvas.height!==bufH){ canvas.width=bufW; canvas.height=bufH; ACC.key=""; }
       gl.viewport(0,0,bufW,bufH);
       return bufS;
     };
@@ -285,12 +340,33 @@ var AtomGL = (function(){
        cam.rect             [x,y,w,h] in CSS px from the top-left (gallery use; no clear)
        cam.time             seconds of display time; the phase turns at E_n
        cam.hue              1: color = complex phase (shells: distance); 0: two-tone sign
-       cam.alpha, cam.light, cam.pos/neg/posInk/negInk  the look           */
+       cam.alpha, cam.light, cam.pos/neg/posInk/negInk  the look
+       cam.accum            true: average over frames while the view holds
+                            still (single-cloud use only), so fewer steps a
+                            frame give a smoother picture; the return value
+                            is the number of frames accumulated so far   */
     api.draw=function(cam){
       var c=cam.cloud||api.cur;
       if(!api.ok||api.lost||!c) return false;
-      if(!cam.rect){ api.size(cam.w,cam.h,cam.dpr,cam.budget); api.clear(); }
-      if(cam.alpha<=0.004) return true;
+      api.frame++;
+      var accum=!!cam.accum&&!cam.rect;
+      if(!cam.rect){ api.size(cam.w,cam.h,cam.dpr,cam.budget); if(!accum) api.clear(); }
+      if(cam.alpha<=0.004){ if(accum){ api.clear(); ACC.key=""; } return true; }
+      var key="", acc=0;
+      if(accum){
+        if(!accBuf()) accum=false;
+        else {
+          key=[c===api.cur?"cur":clouds.indexOf(c),cam.yaw.toFixed(5),cam.pitch.toFixed(5),cam.fov.toPrecision(6),
+               cam.off[0].toPrecision(5),cam.off[1].toPrecision(5),cam.off[2].toPrecision(5),cam.alpha.toFixed(3),
+               cam.light?1:0,cam.hue===0?0:1,cam.steps|0].join(",");
+          if(key!==ACC.key){ ACC.key=key; ACC.n=0; }
+          /* the mean of the first frames, then a running average with the
+             same weight, so the slow turn of the phase still shows (with a
+             lag of cap frames) and the noise stays averaged away */
+          var cap=Math.max(1,cam.accumMax||api.q.accum);
+          acc=1/(Math.min(ACC.n,cap-1)+1); ACC.n++;
+        }
+      }
       var rw=cam.rect?cam.rect[2]:cam.w, rh=cam.rect?cam.rect[3]:cam.h;
       var rx=cam.rect?cam.rect[0]:0, ry=cam.rect?cam.rect[1]:0;
       var X=rx*bufS, Yb=(bufH/bufS-ry-rh)*bufS, Wr=rw*bufS, Hr=rh*bufS;
@@ -313,11 +389,25 @@ var AtomGL = (function(){
       gl.uniform1f(loc.uA1,c.a1||1); gl.uniform1f(loc.uA2,c.a2||0); gl.uniform1f(loc.uPh1,ph1); gl.uniform1f(loc.uPh2,ph2);
       gl.uniform1i(loc.uMode,c.mode); gl.uniform1i(loc.uL,c.l); gl.uniform1i(loc.uM,c.m);
       gl.uniform1i(loc.uL2,c.l2||0); gl.uniform1i(loc.uM2,c.m2||0); gl.uniform1i(loc.uTwo,c.tab2?1:0);
-      gl.uniform1i(loc.uSteps, Math.round(cam.steps||(c.l>=2||c.tab2?120:96)));
+      gl.uniform1i(loc.uSteps, Math.round(cam.steps||(c.l>=2||c.tab2?api.q.steps2:api.q.steps)));
+      /* a different ray offset each frame only matters while frames accumulate */
+      gl.uniform1f(loc.uJit, accum?(api.frame*0.61803398875)%1:0);
       gl.uniform1i(loc.uLight, cam.light?1:0); gl.uniform1i(loc.uHue, cam.hue===0?0:1);
       gl.uniform3fv(loc.uPos,cam.pos); gl.uniform3fv(loc.uNeg,cam.neg);
       gl.uniform3fv(loc.uPosInk,cam.posInk); gl.uniform3fv(loc.uNegInk,cam.negInk);
-      gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+      gl.enable(gl.BLEND);
+      if(accum){
+        /* into the accumulation buffer: new = mix(old, this frame, 1/n), the
+           running mean of premultiplied color, which is the right average */
+        gl.bindFramebuffer(gl.FRAMEBUFFER,ACC.fbo); gl.viewport(0,0,bufW,bufH);
+        if(ACC.n===1){ gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT); }
+        gl.blendColor(0,0,0,acc); gl.blendFunc(gl.CONSTANT_ALPHA,gl.ONE_MINUS_CONSTANT_ALPHA);
+        gl.drawArrays(gl.TRIANGLES,0,3);
+        gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+        blit();
+        return ACC.n;
+      }
+      gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
       /* a rectangle is scissored, not just discarded in the shader: the
          triangle covers the whole canvas, and without this every square of
          the periodic table would shade every pixel of it */
@@ -326,11 +416,35 @@ var AtomGL = (function(){
       if(cam.rect) gl.disable(gl.SCISSOR_TEST);
       return true;
     };
-    /* frame-time governor: the GPU work is the fragment count, so when a
-       frame takes too long the buffer shrinks, and it grows back slowly */
+    function blit(){
+      gl.viewport(0,0,bufW,bufH); gl.disable(gl.BLEND);
+      gl.useProgram(progC); gl.bindVertexArray(vao);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,ACC.tex); gl.uniform1i(locC.uAcc,0); gl.uniform2f(locC.uSize,bufW,bufH);
+      gl.drawArrays(gl.TRIANGLES,0,3);
+      gl.enable(gl.BLEND);
+    }
+    /* forget the accumulated frames (a host that changed something the key
+       does not see, such as the theme, calls this) */
+    api.reset=function(){ ACC.key=""; ACC.n=0; };
+    /* a host can override the tier (a Quality control, a saved choice);
+       "auto" returns to the one read from the GPU's name */
+    api.setTier=function(name){ api.tier=TIERS[name]?name:tierOf(api.info); api.q=TIERS[api.tier]; api.reset(); return api.tier; };
+    /* frame-time governor: the GPU work is the fragment count, so when frames
+       run long the buffer steps down a size, and it steps back up only after a
+       long run of quick frames. It moves in a few fixed steps, at most once
+       every 30 frames: each change resizes the canvas, and a canvas resized
+       every frame (as a smooth governor does) is itself the stutter. */
+    /* a decision every 30 frames or every half second, whichever comes
+       first, so a slow machine (two frames a second) steps down within a
+       second instead of waiting 30 slow frames; very slow frames step twice */
+    var GOV={lv:0,n:0,sum:0,fast:0}, GLV=[1,0.84,0.7,0.58];
     api.govern=function(frameMs){
-      if(frameMs>24 && api.scale>0.55) api.scale*=0.92;
-      else if(frameMs<14 && api.scale<1) api.scale=Math.min(1,api.scale*1.02);
+      GOV.n++; GOV.sum+=Math.min(frameMs,250); if(GOV.n<30&&GOV.sum<500) return;
+      var avg=GOV.sum/GOV.n; GOV.n=0; GOV.sum=0;
+      if(avg>24&&GOV.lv<GLV.length-1){ GOV.lv=Math.min(GLV.length-1,GOV.lv+(avg>60?2:1)); GOV.fast=0; }
+      else if(avg<15){ if(++GOV.fast>=4&&GOV.lv>0){ GOV.lv--; GOV.fast=0; } }
+      else GOV.fast=0;
+      api.scale=GLV[GOV.lv];
     };
     return api;
   }
@@ -347,7 +461,44 @@ var AtomGL = (function(){
     }
     return worst;
   }
-  return { create:create, Yc:Yc, selfCheck:selfCheck };
+  return { create:create, Yc:Yc, selfCheck:selfCheck, tier:tierOf, tiers:TIERS };
+})();
+
+/* AtomColor: the color of a wavelength, from the eye's own curves rather
+   than the usual piecewise straight lines. The CIE 1931 color-matching
+   functions are taken as the analytic multi-lobe fit of Wyman, Sloan, and
+   Shirley (2013), converted to linear sRGB with the D65 matrix, clipped into
+   the sRGB gamut (a pure spectral color keeps its hue and loses only the
+   saturation a screen cannot show), scaled to full brightness so every line
+   reads as a line, and dimmed toward the ends of the visible range, where
+   the eye's response falls away. */
+var AtomColor = (function(){
+  "use strict";
+  function g(l,mu,s1,s2){ var t=(l-mu)/(l<mu?s1:s2); return Math.exp(-0.5*t*t); }
+  function xyz(l){
+    return [1.056*g(l,599.8,37.9,31.0)+0.362*g(l,442.0,16.0,26.7)-0.065*g(l,501.1,20.4,26.2),
+            0.821*g(l,568.8,46.9,40.5)+0.286*g(l,530.9,16.3,31.1),
+            1.217*g(l,437.0,11.8,36.0)+0.681*g(l,459.0,26.0,13.8)];
+  }
+  function lin(l){
+    /* past 680 nm and short of 405 nm the locus no longer changes hue, only
+       brightness, and the fit's tails are not to be trusted there */
+    var c=xyz(Math.max(405,Math.min(680,l))), X=c[0], Y=c[1], Z=c[2];
+    var r=3.2406*X-1.5372*Y-0.4986*Z, gg=-0.9689*X+1.8758*Y+0.0415*Z, b=0.0557*X-0.2040*Y+1.0570*Z;
+    /* a spectral color lies outside the sRGB triangle: the channel the
+       screen would need to drive negative is clipped, which keeps the hue */
+    r=Math.max(0,r); gg=Math.max(0,gg); b=Math.max(0,b);
+    var mx=Math.max(r,gg,b,1e-6);
+    return [r/mx,gg/mx,b/mx];
+  }
+  function srgb(v){ v=Math.max(0,Math.min(1,v)); return v<=0.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-0.055; }
+  /* 0..1 sRGB components, with the end fade */
+  function rgb(l){
+    var c=lin(l), f=l<420?0.35+0.65*(l-380)/40:(l>700?Math.max(0.3,0.35+0.65*(780-l)/80):1);
+    return [srgb(c[0]*f),srgb(c[1]*f),srgb(c[2]*f)];
+  }
+  function css(l){ var c=rgb(l); return "rgb("+Math.round(255*c[0])+","+Math.round(255*c[1])+","+Math.round(255*c[2])+")"; }
+  return { xyz:xyz, linear:lin, rgb:rgb, css:css };
 })();
 
 var AtomQCD = (function(){

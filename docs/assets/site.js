@@ -43,6 +43,7 @@ var TH={
 };
 var theme=root.getAttribute("data-theme")==="light"?"light":"dark", T=TH[theme];
 function setTheme(t){
+  if(GA) GA.reset(); if(GB) GB.reset();
   theme=t; T=TH[t]; root.setAttribute("data-theme",t);
   try{ localStorage.setItem("atom.site.theme",t); }catch(e){}
   var b=D.getElementById("themeBtn");
@@ -63,10 +64,16 @@ var cA=D.getElementById("glA"), cB=D.getElementById("glB"), cF=D.getElementById(
 var ctx=cO.getContext("2d");
 var GA=null, GB=null, FIELD=null, PT=null, WORLD=null, MS=null, LABS=null, WLIGHT=null;
 var cW=D.getElementById("world"), WL={cos:1,lit:0,vac:0}, labsVisible=false;
+var sceneEl=D.querySelector(".scene"), sized="";
+function viewH(){ return (sceneEl&&sceneEl.clientHeight)||window.innerHeight; }
 function resize(){
-  W=window.innerWidth; H=window.innerHeight; DPR=Math.min(window.devicePixelRatio||1, mqSmall.matches?1.5:2);
+  /* a phone fires resize as its toolbar slides while you scroll; the scene
+     does not change size then (it is 100lvh tall), so neither does anything here */
+  var nW=window.innerWidth, nH=viewH(), nD=Math.min(window.devicePixelRatio||1, mqSmall.matches?1.5:2), key=nW+"x"+nH+"@"+nD;
+  SECT=null; fitPins(); if(key===sized) return; sized=key;
+  W=nW; H=nH; DPR=nD;
   cO.width=Math.round(W*DPR); cO.height=Math.round(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
-  placeSlot(); fitTable();
+  placeSlot(); fitFront();
   drawSpectrum(); drawLadder(); drawRadial(true); drawBinding(true);
 }
 /* where the scene is centered: right of the words on a wide screen, in the
@@ -141,10 +148,10 @@ function buildPicker(){
     var n=c[0], l=c[1], k=c[2], isV=(n===ELV.n&&l===ELV.l);
     list.push(orbOf(n,l,isV?ELV.m:0,zRad(SEL,n,l),l>0&&k===2*(2*l+1)));
   });
-  box.innerHTML="";
+  box.innerHTML=""; orbKey="";
   list.forEach(function(o){ var b=D.createElement("button"); b.type="button"; b.innerHTML=o.n+ORB_L[o.l];
     b.setAttribute("aria-pressed","false"); b._o=o;
-    b.addEventListener("click",function(){ userOrb=o; userStep=cloudStep;
+    b.addEventListener("click",function(){ userOrb=o; userStep=Math.max(0,cloudStep);
       if(active!=="cloud"){ var c=D.getElementById("cloud"); window.scrollTo({top:c.offsetTop+H*0.1, behavior:CALM?"auto":"smooth"}); userStep=0; } });
     box.appendChild(b); });
 }
@@ -172,8 +179,9 @@ function showCloud(o){
   if(!back){ front.h=handle(front.g,o); return; }
   back.h=handle(back.g,o);
   var t=front; front=back; back=t;
-  front.c.style.opacity="1"; back.c.style.opacity="0";
+  front.c.style.opacity="1"; back.c.style.opacity="0"; swapAt=performance.now();
 }
+var swapAt=0;
 
 /* ------------------------------------------------------------------ sparkle: sampled measurements */
 var SAMPLES={};
@@ -197,7 +205,7 @@ function samples(o){
 /* ------------------------------------------------------------------ the gluon field */
 var FS=[
 "#version 300 es","precision highp float;","out vec4 o;",
-"uniform vec2 uC;uniform float uK,uT,uW,uTube,uVac;uniform int uN,uLight;",
+"uniform vec2 uC;uniform float uK,uT,uW,uTube,uVac;uniform int uN,uLight,uQ;",
 "uniform vec2 uA[6];uniform vec2 uB[6];uniform vec3 uCol[6];uniform vec3 uTubeCol;",
 "float h(vec3 p){p=fract(p*0.3183099+.1);p*=17.0;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}",
 "float n3(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);",
@@ -214,7 +222,10 @@ var FS=[
 /* each leg carries its quark's color charge, fading to neutral at the junction */
 " vec3 tc=mix(uTubeCol,qc,smoothstep(0.15,0.95,tt));",
 /* the vacuum's fluctuating glue, suppressed inside the tube, in every color charge */
-" float v=fbm(vec3(p*3.6,uT*.10)), v2=fbm(vec3(p*1.1+7.,uT*.06));",
+/* flow: on the faster tiers the glue is carried round by the curl of a
+   slow coarse noise, so it swirls and tears instead of only flickering */
+" vec2 pf=p; if(uQ>0){ vec3 s0=vec3(p*.55,uT*.03); float e=.05; float gx=n3(s0+vec3(e,0.,0.))-n3(s0-vec3(e,0.,0.)), gy=n3(s0+vec3(0.,e,0.))-n3(s0-vec3(0.,e,0.)); pf+=vec2(gy,-gx)*2.2; }",
+" float v=fbm(vec3(pf*3.6,uT*.10)), v2=fbm(vec3(pf*1.1+7.,uT*.06));",
 " float vac=smoothstep(.58,.97,v)*uVac*0.85*(1.-min(1.,tube*1.5));",
 " vec3 vc=wheel(v2*9.+uT*.2);",
 " float a=clamp(tube*uTube*.85+core*uTube*.4+vac*.8,0.,1.);",
@@ -235,7 +246,8 @@ function makeField(canvas){
     gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS)); gl.bindAttribLocation(pr,0,"p"); gl.linkProgram(pr);
     if(!gl.getProgramParameter(pr,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
   }catch(err){ return null; }
-  var L={}; ["uC","uK","uT","uW","uTube","uVac","uN","uLight","uA","uB","uCol","uTubeCol"].forEach(function(k){ L[k]=gl.getUniformLocation(pr,k); });
+  var L={}; ["uC","uK","uT","uW","uTube","uVac","uN","uLight","uA","uB","uCol","uTubeCol","uQ"].forEach(function(k){ L[k]=gl.getUniformLocation(pr,k); });
+  function QI(){ return (GA&&GA.tier)?{low:0,medium:1,high:2}[GA.tier]:1; }
   var vao=gl.createVertexArray(); gl.bindVertexArray(vao);
   var vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb);
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
@@ -255,17 +267,22 @@ function makeField(canvas){
       gl.uniform2fv(L.uA,A); gl.uniform2fv(L.uB,B); gl.uniform3fv(L.uCol,C); gl.uniform1i(L.uN,n);
       gl.uniform2f(L.uC,o.cx*s,(H-o.cy)*s); gl.uniform1f(L.uK,o.k*s); gl.uniform1f(L.uT,o.t);
       gl.uniform1f(L.uW,o.w); gl.uniform1f(L.uTube,o.tube*o.alpha); gl.uniform1f(L.uVac,o.vac*o.alpha);
-      gl.uniform1i(L.uLight,theme==="light"?1:0); gl.uniform3fv(L.uTubeCol,T.tube);
+      gl.uniform1i(L.uLight,theme==="light"?1:0); gl.uniform3fv(L.uTubeCol,T.tube); gl.uniform1i(L.uQ,CALM?0:QI());
       gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA); gl.drawArrays(gl.TRIANGLES,0,3);
     },
     clear:function(){ gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT); },
-    govern:function(ms){ if(ms>26&&scale>0.5) scale*=0.92; else if(ms<14&&scale<1) scale=Math.min(1,scale*1.02); }
+    /* fixed steps, at most once every 30 frames: each change resizes the
+       buffer, and a buffer resized every frame is a stutter of its own */
+    govern:(function(){ var lv=0, n=0, sum=0, fast=0, LV=[1,0.8,0.62,0.5];
+      return function(ms){ n++; sum+=Math.min(ms,250); if(n<30&&sum<500) return; var avg=sum/n; n=0; sum=0;
+        if(avg>26&&lv<LV.length-1){ lv=Math.min(LV.length-1,lv+(avg>60?2:1)); fast=0; } else if(avg<15){ if(++fast>=4&&lv>0){ lv--; fast=0; } } else fast=0;
+        scale=LV[lv]; }; })()
   };
 }
 
 /* ------------------------------------------------------------------ the proton and the pull */
 var Q=AtomQCD.C;
-var PULL={on:false,idx:0,q:[0,0],v:[0,0],drag:false,hold:0,broken:null,pairs:0,S:null,restL:0,flav:["u","u","d"]};
+var PULL={on:false,idx:0,q:[0,0],v:[0,0],drag:false,hold:0,broken:null,pairs:0,S:null,restL:0,flav:["u","u","d"],hand:null,lastT:0};
 function restQuarks(t){
   var o=[], j, rm=CALM?0:1;
   for(j=0;j<3;j++){ var a=Math.PI/2+j*2.0944+rm*0.25*Math.sin(t*0.31), r=0.40+rm*0.035*Math.sin(t*2.7+j*2.1);
@@ -282,6 +299,20 @@ function stepPull(now){
   var qs=quarks(now/1000); PULL.S=qs.S;
   if(qs.S.legs[PULL.idx]>Q.rBreak){ snap(now,qs); return; }
   if(PULL.hold>0){ PULL.hold--; return; }
+  if(PULL.drag&&PULL.hand&&!CALM){
+    /* the quark has mass: the hand holds it with a stiff spring while the
+       string pulls it back toward the junction with the constant force a
+       linear potential gives (plus the short-range Coulomb term), so it lags
+       the pointer, overshoots a little when the hand stops, and shivers as
+       the string nears breaking */
+    var dtp=Math.min(2,(now-(PULL.lastT||now))/16.7); PULL.lastT=now;
+    var J=qs.S.J, gx=J[0]-PULL.q[0], gy=J[1]-PULL.q[1], gl=Math.hypot(gx,gy)||1e-6, leg=qs.S.legs[PULL.idx]||gl;
+    var fs=0.014+0.004/Math.max(0.08,leg*leg), kh=0.26, ax=kh*(PULL.hand[0]-PULL.q[0])+fs*gx/gl, ay=kh*(PULL.hand[1]-PULL.q[1])+fs*gy/gl;
+    PULL.v[0]=(PULL.v[0]+ax*dtp)*Math.pow(0.62,dtp); PULL.v[1]=(PULL.v[1]+ay*dtp)*Math.pow(0.62,dtp);
+    var sh=Math.max(0,leg/Q.rBreak-0.7)*0.012;   /* the shiver, only near the break */
+    PULL.q[0]+=PULL.v[0]*dtp+(Math.random()-0.5)*sh; PULL.q[1]+=PULL.v[1]*dtp+(Math.random()-0.5)*sh;
+    return;
+  }
   if(!PULL.drag){
     var rest=restQuarks(now/1000)[PULL.idx];
     PULL.v[0]=PULL.v[0]*0.74+(rest[0]-PULL.q[0])*0.12; PULL.v[1]=PULL.v[1]*0.74+(rest[1]-PULL.q[1])*0.12;
@@ -502,9 +533,12 @@ function drawRadial(force, o){
     ys.forEach(function(q,i){ var x=X(q[0]), y=h-18-(q[1]/pkAll)*(h-30); if(i===0) g.moveTo(x,y); else g.lineTo(x,y); });
     g.stroke();
   });
-  g.fillStyle=T.ink2; g.font="500 13px Archivo, sans-serif"; g.textAlign="left";
-  g.fillText(shells?"P(r) for each subshell, distance on a square-root scale":"P(r) = r²R(r)², how far from the nucleus", 0, h-2);
-  g.textAlign="right"; g.fillText(fmt(rmax*52.92,0)+" pm", w, h-2);
+  g.fillStyle=T.ink2; g.font="500 13px Archivo, sans-serif";
+  /* the caption and the scale's end never share a line they can't both fit on */
+  var cap=shells?"P(r) for each subshell, distance on a square-root scale":"P(r) = r²R(r)², how far from the nucleus", end=fmt(rmax*52.92,0)+" pm";
+  if(g.measureText(cap).width+g.measureText(end).width+16>w) cap=shells?"P(r) per subshell, √ distance":"P(r) = r²R(r)²";
+  g.textAlign="left"; g.fillText(cap, 0, h-2);
+  g.textAlign="right"; g.fillText(end, w, h-2);
 }
 var bind=D.getElementById("bindingCurve"), bindReveal=CALM?1:0;
 function drawBinding(force){
@@ -565,27 +599,48 @@ var Sound=(function(){
 
 /* ------------------------------------------------------------------ scroll -> depth */
 var sections=[].slice.call(D.querySelectorAll("[data-scene]")), active="table", prog=0;
+/* where each section sits on the page, read once and again only when the
+   page's layout changes, so a frame needs scrollY and nothing from layout */
+var SECT=null;
+/* a pinned section whose plate is taller than the window scrolls normally
+   instead (a phone, a short laptop window): pinned, it would hang over the
+   section above it and cover its controls */
+var pinPlates=[].slice.call(D.querySelectorAll("section.pin:not(.ptsec)")).map(function(sec){ return [sec, sec.querySelector(".sticky > .plate, .sticky > .pull-copy")]; }).filter(function(x){ return x[1]; });
+function fitPins(){ var lim=(sceneEl?sceneEl.clientHeight:window.innerHeight)-80, changed=false;
+  pinPlates.forEach(function(x){ var tall=x[1].offsetHeight>lim; if(x[0].classList.contains("unpinned")!==tall){ x[0].classList.toggle("unpinned",tall); changed=true; } });
+  if(changed) SECT=null; }
+function sectMap(){ var y=window.scrollY; SECT=sections.map(function(s){ var r=s.getBoundingClientRect();
+  return {el:s, top:r.top+y, h:r.height, pin:s.classList.contains("pin")&&!s.classList.contains("unpinned"), scene:s.getAttribute("data-scene")}; }); }
 function measure(){
-  var mid=H*0.5, best=null;
-  sections.forEach(function(s){ var r=s.getBoundingClientRect(); if(r.top<=mid&&r.bottom>mid) best=s; });
-  if(!best){ var last=sections[sections.length-1].getBoundingClientRect(); if(last.bottom<=mid){ active="end"; prog=1; return; } best=sections[0]; }
-  active=best.getAttribute("data-scene");
-  var r=best.getBoundingClientRect(), span=Math.max(1,r.height-H);
-  prog=best.classList.contains("pin") ? Math.min(1,Math.max(0,-r.top/span)) : Math.min(1,Math.max(0,(H-r.top)/(r.height+H)));
+  if(!SECT) sectMap();
+  var y=window.scrollY, mid=H*0.5, best=null;
+  SECT.forEach(function(s){ var t=s.top-y; if(t<=mid&&t+s.h>mid) best=s; });
+  if(!best){ var lst=SECT[SECT.length-1]; if(lst.top-y+lst.h<=mid){ active="end"; prog=1; return; } best=SECT[0]; }
+  active=best.scene;
+  var top=best.top-y, span=Math.max(1,best.h-H);
+  prog=best.pin ? Math.min(1,Math.max(0,-top/span)) : Math.min(1,Math.max(0,(H-top)/(best.h+H)));
 }
+if(window.ResizeObserver){ var sectRO=new ResizeObserver(function(){ SECT=null; }); sectRO.observe(D.querySelector("main")||D.body);
+  var pinRO=new ResizeObserver(function(){ fitPins(); }); pinPlates.forEach(function(x){ pinRO.observe(x[1]); }); }
 var gaugeLinks=[].slice.call(D.querySelectorAll(".gauge a")), gaugeMap={table:"top",cloud:"cloud",light:"light",empty:"empty",nucleus:"nucleus",proton:"proton",pull:"pull",edge:"edge"};
 function markGauge(){ var k=gaugeMap[active]||"edge"; gaugeLinks.forEach(function(a){ a.classList.toggle("on",a.getAttribute("data-depth")===k); }); }
 
 /* ------------------------------------------------------------------ pointer: turn the atom, pull the quark */
-var cam={yaw:-0.6,pitch:0.42,ty:-0.6,tp:0.42,vy:0,vp:0,drag:null};
+var cam={yaw:-0.6,pitch:0.42,ty:-0.6,tp:0.42,vy:0,vp:0,drag:null,dy0:0,dp0:0};
 function hit(n){ return D.querySelector('.hit[data-hit="'+n+'"]'); }
 (function(){
   var h=hit("cloud"); if(!h) return;
-  h.addEventListener("pointerdown",function(e){ cam.drag={x:e.clientX,y:e.clientY,yaw:cam.ty,pitch:cam.tp}; h.setPointerCapture(e.pointerId); h.classList.add("dragging"); });
+  h.addEventListener("pointerdown",function(e){ cam.drag={x:e.clientX,y:e.clientY,yaw:cam.ty,pitch:cam.tp,lx:e.clientX,ly:e.clientY,lt:e.timeStamp,fx:0,fy:0}; h.setPointerCapture(e.pointerId); h.classList.add("dragging"); });
   h.addEventListener("pointermove",function(e){
-    if(cam.drag){ cam.ty=cam.drag.yaw+(e.clientX-cam.drag.x)*0.008; cam.tp=Math.max(-1.4,Math.min(1.4,cam.drag.pitch+(e.clientY-cam.drag.y)*0.008)); }
+    if(cam.drag){ var d=cam.drag, dt=Math.max(1,e.timeStamp-d.lt);
+      cam.ty=d.yaw+(e.clientX-d.x)*0.008; cam.tp=Math.max(-1.4,Math.min(1.4,d.pitch+(e.clientY-d.y)*0.008));
+      /* the pointer's speed, smoothed, for the fling on release */
+      d.fx=d.fx*0.6+((e.clientX-d.lx)/dt)*0.4; d.fy=d.fy*0.6+((e.clientY-d.ly)/dt)*0.4; d.lx=e.clientX; d.ly=e.clientY; d.lt=e.timeStamp; }
   });
-  var up=function(){ cam.drag=null; h.classList.remove("dragging"); };
+  /* letting go with the pointer moving flings the atom: the target runs on
+     by the speed of the hand, and the spring brings it to rest */
+  var up=function(e){ var d=cam.drag; if(d&&!CALM&&e&&e.timeStamp-d.lt<80){ cam.ty+=d.fx*0.008*180; cam.tp=Math.max(-1.4,Math.min(1.4,cam.tp+d.fy*0.008*180)); }
+    cam.drag=null; h.classList.remove("dragging"); };
   h.addEventListener("pointerup",up); h.addEventListener("pointercancel",up);
 })();
 var hp=hit("pull");
@@ -600,14 +655,15 @@ if(hp){
   hp.addEventListener("pointerdown",function(e){
     if(PULL.broken) return; var j=nearestQuark(e.clientX,e.clientY); if(j<0) return;
     if(!PULL.on){ PULL.restL=quarks(performance.now()/1000).S.L; }
-    PULL.on=true; PULL.drag=true; PULL.idx=j; PULL.hold=0; PULL.v=[0,0]; PULL.q=P2F(e.clientX,e.clientY);
+    PULL.on=true; PULL.drag=true; PULL.idx=j; PULL.hold=0; PULL.v=[0,0]; PULL.hand=P2F(e.clientX,e.clientY); PULL.lastT=performance.now();
+    if(CALM) PULL.q=PULL.hand.slice(); else PULL.q=restQuarks(performance.now()/1000)[j].slice();
     hp.setPointerCapture(e.pointerId); hp.classList.add("dragging"); D.getElementById("pullHint").style.opacity="0";
   });
   hp.addEventListener("pointermove",function(e){
-    if(PULL.drag){ PULL.q=P2F(e.clientX,e.clientY); return; }
+    if(PULL.drag){ PULL.hand=P2F(e.clientX,e.clientY); if(CALM) PULL.q=PULL.hand.slice(); return; }
     hp.classList.toggle("over", nearestQuark(e.clientX,e.clientY)>=0);
   });
-  var upP=function(){ if(PULL.drag){ PULL.drag=false; hp.classList.remove("dragging"); } };
+  var upP=function(){ if(PULL.drag){ PULL.drag=false; PULL.hand=null; hp.classList.remove("dragging"); } };
   hp.addEventListener("pointerup",upP); hp.addEventListener("pointercancel",upP);
 }
 D.getElementById("pullOut").addEventListener("click",function(){
@@ -633,6 +689,7 @@ D.getElementById("soundBtn").addEventListener("click",function(){
 /* ------------------------------------------------------------------ the table, its readout and its card */
 var stage=D.getElementById("ptStage"), slot=D.getElementById("ptSlot"), read=D.getElementById("ptRead");
 var sheet=D.getElementById("sheet"), sheetBody=D.getElementById("sheetBody"), ptsec=D.getElementById("top");
+PTable.wireDetail(sheetBody);
 var CAT_LIGHT={ak:"#8f1d14",ae:"#7a3a00",tm:"#5c4500",pt:"#1d5e2c",ml:"#0b5560",nm:"#09467a",hl:"#3c3a9a",ng:"#5b2a8a",ln:"#84134d",an:"#8a1c33",un:"#3f4743"};
 function catColor(c){ return theme==="light"?CAT_LIGHT[c]:CAT[c][1]; }
 function readout(z){
@@ -662,11 +719,14 @@ function setLens(lens, filter){
   if(!PT) return;
   PT.setLens(lens, filter);
   [].forEach.call(D.querySelectorAll("button[data-lens]"),function(b){ b.setAttribute("aria-pressed",b.getAttribute("data-lens")===lens?"true":"false"); });
-  var lg=D.getElementById("lensLegend"), h='', stm=D.querySelector("#ptSlot .statement");
-  if(stm){ if(!stm._base) stm._base=stm.textContent; stm.textContent=lens==="shapes"?stm._base:LENS_HELP[lens]; }
+  var lt={origin:"origin",frontier:"future"}[lens];
+  if(lt){ var tb=sheetBody.querySelector('[data-pdt="'+lt+'"]'); if(tb&&!sheet.hidden) tb.click(); else PTable.detailTab(lt); }
+  /* what a lens means goes under the table with its key, so the words over
+     the table, and the table itself, stay put when you change lenses */
+  var lg=D.getElementById("lensLegend"), h=lens==="shapes"?'':'<p class="lens-help">'+LENS_HELP[lens]+'</p>';
   if(lens==="origin") h+='<div class="lens-keys">'+Object.keys(ORIGIN_KINDS).map(function(k){ return '<button type="button" data-filter="'+k+'" aria-pressed="'+(filter===k)+'" style="--kc:var(--o-'+k+')">'+ORIGIN_KINDS[k].name+'</button>'; }).join('')+'</div>';
   if(lens==="frontier") h+='<div class="lens-keys">'+Object.keys(TECH_KINDS).map(function(k){ return '<button type="button" data-filter="'+k+'" aria-pressed="'+(filter===k)+'" style="--kc:var(--t-'+k+')">'+TECH_KINDS[k].name+'</button>'; }).join('')+'</div>';
-  lg.innerHTML=lens==="shapes"?"":h; root.classList.toggle("lens-on",lens==="origin"||lens==="frontier"); readout(PT.hover||SEL);
+  lg.innerHTML=lens==="shapes"?"":h; root.classList.toggle("lens-on",lens!=="shapes"); readout(PT.hover||SEL); fitTable();
   if(MS) MS.signal("lens:"+lens+(filter?":"+filter:""));
 }
 function openSheet(z){
@@ -715,13 +775,61 @@ function placeSlot(){
   if(mqSmall.matches){ if(slot.parentNode!==stage.parentNode) stage.parentNode.insertBefore(slot, stage); }
   else if(slot.parentNode!==PT.grid) PT.grid.appendChild(slot);
 }
-/* the table shrinks to the left when the card opens, so nothing is hidden */
-function fitTable(){
-  if(!PT||mqSmall.matches){ if(stage) stage.style.transform=""; return; }
-  if(!ptsec.classList.contains("sheet-open")){ stage.style.transform=""; return; }
-  var sw=Math.min(520,W*0.42), avail=W-sw-48, tw=PT.el.offsetWidth, s=Math.min(1,avail/tw), left=PT.el.getBoundingClientRect().left;
-  stage.style.transformOrigin="0 50%"; stage.style.transform="translateX("+(24-stage.offsetLeft)+"px) scale("+s.toFixed(4)+")";
+/* the slot over the transition metals holds the title, the lenses and the
+   readout. It is held to the three rows it spans, so it never spreads the
+   table's rows apart, and it gets the fullest arrangement whose words fit:
+   fit1 drops the loading note, fit2 sets the sentence smaller and wider,
+   fit3 drops the sentence, fit4 puts the title beside the element's name
+   with the lenses under both, fit5 makes all three smaller */
+function fitSlot(){
+  if(!PT) return;
+  var k, cl=slot.classList;
+  for(k=1;k<=5;k++) cl.remove("fit"+k);
+  if(mqSmall.matches){ slot.style.maxHeight=""; return; }
+  var t=PT.el.querySelector(".pt-el"), room=3*t.offsetHeight+8;
+  slot.style.maxHeight=room+"px";
+  for(k=0;k<=5;k++){
+    if(k) cl.add("fit"+k);
+    if(slotNeed(k>=4)<=room && (k>=4||read.offsetWidth>=220)) break;
+  }
 }
+/* how tall the slot's words are, from offsets so a scaled or zoomed table
+   measures the same; a lens line can add two lines to the readout later */
+function slotNeed(compact){
+  var y0=slot.offsetTop, b=0, kids=slot.querySelectorAll(".pt-intro > *, .ptread, .pt-status");
+  for(var i=0;i<kids.length;i++){ var e=kids[i]; if(!e.offsetHeight) continue;
+    b=Math.max(b, e.offsetTop+e.offsetHeight-y0+(e===read&&!compact&&!read.querySelector(".ptr-lens")?40:0)); }
+  return b+8;
+}
+/* the table always fits the window: its width is set in CSS from the
+   window's height, and a window shorter still scales it down (with what is
+   under it) instead of letting its top slide under the bar; an open card
+   scales it to the space left beside the card */
+function fitTable(){
+  if(!stage) return;
+  var foot=D.getElementById("ptFoot"), lg=D.getElementById("lensLegend"), sh=1, i, need;
+  stage.style.transform=""; stage.style.marginBottom=""; if(foot) foot.style.width=""; if(lg) lg.style.width="";
+  if(!PT||mqSmall.matches) return;
+  /* what is under the table narrows with it and so can wrap taller: settle in a few passes */
+  for(i=0;i<3;i++){
+    need=0;   /* what is under the table keeps its size; only the table scales */
+    if(foot&&foot.offsetHeight) need+=foot.offsetHeight+14;
+    if(lg&&lg.offsetHeight) need+=lg.offsetHeight+14;
+    var s1=Math.max(0.5,Math.min(1,(H-80-20-need)/stage.offsetHeight));
+    if(Math.abs(s1-sh)<0.005&&i) break;
+    sh=s1; if(sh>=0.995) break;
+    if(lg) lg.style.width=(stage.offsetWidth*sh).toFixed(1)+"px";
+    if(foot) foot.style.width=(stage.offsetWidth*sh).toFixed(1)+"px";
+  }
+  if(sh>=0.995){ if(foot) foot.style.width=""; if(lg) lg.style.width=""; }
+  if(ptsec.classList.contains("sheet-open")){
+    var sw=Math.min(520,W*0.42), avail=W-sw-48, tw=PT.el.offsetWidth, s=Math.min(1,avail/tw,sh);
+    stage.style.transformOrigin="0 50%"; stage.style.transform="translateX("+(24-stage.offsetLeft)+"px) scale("+s.toFixed(4)+")"; return; }
+  if(sh>=0.995) return;
+  stage.style.transformOrigin="50% 0"; stage.style.transform="scale("+sh.toFixed(4)+")";
+  stage.style.marginBottom=(-(1-sh)*stage.offsetHeight).toFixed(1)+"px";
+}
+function fitFront(){ if(stage) stage.style.transform=""; fitSlot(); fitTable(); }
 
 /* ------------------------------------------------------------------ drawing the overlay */
 function plateLabel(txt,x,y,col){
@@ -755,8 +863,14 @@ function drawNucleus(cx,cy,kpx,alpha,t){
   /* the strong force, as a glow where nucleons touch */
   if(r>8){ ctx.globalAlpha=alpha*0.4; ctx.strokeStyle=hexA(T.acc,0.45); ctx.lineWidth=r*0.32; ctx.beginPath();
     N.pairs.forEach(function(pq){ var a=pts[pq[0]], b=pts[pq[1]]; ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); }); ctx.stroke(); ctx.globalAlpha=1; }
-  var order=pts.slice().sort(function(a,b){ return a.z-b.z; });
-  order.forEach(function(o){ ball(o.x,o.y,r,o.p?T.pF[0]:T.nF[0],o.p?T.pF[1]:T.nF[1],alpha); });
+  /* a soft halo behind the whole nucleus (the glow a bright thing has on
+     film), then the nucleons back to front, the far ones shaded darker so
+     the ball reads as a ball and not a flat pile of discs */
+  if(r>3&&theme!=="light"){ var RR=N.R*kpx*1.9+r*2, hg=ctx.createRadialGradient(cx,cy,RR*0.25,cx,cy,RR);
+    hg.addColorStop(0,hexA(T.acc,0.22*alpha)); hg.addColorStop(1,hexA(T.acc,0)); ctx.fillStyle=hg; ctx.beginPath(); ctx.arc(cx,cy,RR,0,6.2832); ctx.fill(); }
+  var order=pts.slice().sort(function(a,b){ return a.z-b.z; }), zr=N.R||1;
+  order.forEach(function(o){ ball(o.x,o.y,r,o.p?T.pF[0]:T.nF[0],o.p?T.pF[1]:T.nF[1],alpha);
+    if(r>3){ var sh=Math.max(0,Math.min(0.55,0.3-0.3*o.z/zr)); if(sh>0.02){ ctx.globalAlpha=alpha*sh; ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(o.x,o.y,r,0,6.2832); ctx.fill(); ctx.globalAlpha=1; } } });
 }
 function drawSea(cx,cy,k,alpha,t){
   var rN=0.84075*k;
@@ -820,34 +934,57 @@ function drawWorld(now, dt){
   if(!WORLD) return;
   var tg=WTARGET[active]||WTARGET.end, k=CALM?1:Math.min(1,dt/420);
   if(active==="empty"){ tg=[0, 1-smooth(0.35,0.95,prog), smooth(0.35,0.95,prog)*0.7]; }
+  var moving=Math.abs(tg[0]-WL.cos)+Math.abs(tg[1]-WL.lit)+Math.abs(tg[2]-WL.vac)>0.02;
   WL.cos+=(tg[0]-WL.cos)*k; WL.lit+=(tg[1]-WL.lit)*k; WL.vac+=(tg[2]-WL.vac)*k;
-  var c=center(), ev=c, r=radius(), quiet=null, tile=PT&&PT.tiles[SEL];
-  if(active==="table"&&tile){ var tr=tile.getBoundingClientRect(); ev=[tr.left+tr.width/2, tr.top+tr.height/2]; r=Math.max(160,tr.width*3.2);
-    if(!mqSmall.matches&&slot.parentNode===PT.grid){ var sr=slot.getBoundingClientRect(); quiet=[sr.left-20,sr.top-20,sr.right+20,sr.bottom+20]; } }
+  /* the sky drifts slowly: once it has settled it is drawn every other frame,
+     which halves its cost and can't be seen; a change of scene, a birth, the
+     zoom, or a scroll draws every frame */
+  var busy=moving||scrolled||(WORLD.evT0&&now-WORLD.evT0<6000)||(active==="table"&&prog>0.01);
+  WORLD.govern(dt);
+  if(!busy&&!CALM&&(frames&1)) return;
+  if(CALM&&!busy&&worldDrawn&&frames%30) return;
+  worldDrawn=true;
+  var c=center(), ev=c, r=radius(), quiet=null;
+  if(active==="table"&&RD.tile){ var tr=RD.tile; ev=[tr.left+tr.width/2, tr.top+tr.height/2]; r=Math.max(160,tr.width*3.2);
+    if(RD.slot){ var sr=RD.slot; quiet=[sr.left-20,sr.top-20,sr.right+20,sr.bottom+20]; } }
   WORLD.draw({w:W,h:H,t:CALM?20:now/1000,now:now,cos:WL.cos,lit:WL.lit,vac:WL.vac,mix:ORIGIN[SEL-1],evx:ev[0],evy:ev[1],r:r,
     cx:c[0],cy:c[1],quiet:quiet,light:theme==="light",calm:CALM,small:mqSmall.matches});
-  WORLD.govern(dt);
 }
+var worldDrawn=false, scrolled=false, lastY=-1, cloudKey="", ovUsed=true;
 
 /* ------------------------------------------------------------------ the frame */
-var last=performance.now(), frames=0, cloudStep=0, zoomRect=null, statusDone=false;
+var last=performance.now(), frames=0, cloudStep=-1, zoomRect=null, statusDone=false;
+/* the frame reads everything it needs from layout first (RD), before it
+   writes anything, so no write forces the browser to lay the page out twice;
+   and it writes a style only when the value changes (put) */
+var RD={tile:null,slot:null,ox:0,oy:0}, PUT=new Map();
+function put(el,prop,v){ var m=PUT.get(el); if(!m){ m={}; PUT.set(el,m); } if(m[prop]===v) return; m[prop]=v; el.style[prop]=v; }
+var ptFootEl=null, orbKey="", stepEls=null, pickEls=null;
 var ORDER_H=[orbOf(1,0,0,1),orbOf(3,1,0,1),orbOf(3,2,-2,1),"shine"];
 function frame(now){
   var dt=now-last; last=now; frames++;
-  var was=active; measure(); if(frames%6===0) markGauge(); tint(active);
-  if(was!==active||frames===1){ root.classList.toggle("at-table",active==="table"); root.classList.toggle("at-bench",active==="bench"); if(MS&&was!==active) MS.signal("depth:"+active); }
+  var was=active; measure();
+  var sy0=window.scrollY; scrolled=sy0!==lastY; lastY=sy0;
+  RD.tile=null; RD.slot=null;
+  if(active==="table"&&PT){ var tl=PT.tiles[SEL]; if(tl){ RD.tile=tl.getBoundingClientRect(); RD.ox=tl.offsetLeft+tl.offsetWidth/2; RD.oy=tl.offsetTop+tl.offsetHeight/2; RD.tw=tl.offsetWidth; RD.th=tl.offsetHeight; }
+    if(!mqSmall.matches&&slot.parentNode===PT.grid) RD.slot=slot.getBoundingClientRect(); }
+  if(frames%6===0) markGauge(); tint(active);
+  if(was!==active||frames===1){ root.classList.toggle("at-table",active==="table"); root.classList.toggle("at-bench",active==="bench"); root.classList.toggle("at-end",active==="end"); if(MS&&was!==active) MS.signal("depth:"+active); }
   drawWorld(now, dt);
   if(LABS && labsVisible) LABS.frame(now);
   stepPull(now); stepEmit(now);
   var t=now/1000;
   if(PT){ PT.hidden=(active!=="table"); PT.frame(now);
     if(!statusDone){ var nb=PT.built(); set("ptStatus", !PT.gl?"WebGL 2 is off in this browser, so each square shows its family color instead of its cloud":(nb<118?"Computing ψ for element "+nb+" of 118":"All 118 clouds computed live on your graphics card"));
-      if(nb>=118) statusDone=true; } }
+      if(nb>=118){ statusDone=true; setTimeout(function(){ var ps=D.getElementById("ptStatus"); if(ps) ps.classList.add("done"); }, 4000); } } }
 
   /* the camera: a damped spring toward its target, so a flick keeps going */
-  if(!cam.drag && !CALM && (active==="cloud"||active==="light")) cam.ty+=0.0018;
-  cam.vy=cam.vy*0.80+(cam.ty-cam.yaw)*0.06; cam.vp=cam.vp*0.80+(cam.tp-cam.pitch)*0.06;
-  cam.yaw+=cam.vy; cam.pitch+=cam.vp;
+  if(!cam.drag && !CALM && (active==="cloud"||active==="light")) cam.ty+=0.0018*(dt/16.7);
+  /* a damped spring, stepped by the frame's own length, so it settles the
+     same way at 30, 60, or 120 frames a second */
+  var kS=Math.min(2,dt/16.7), decay=Math.pow(0.80,kS);
+  cam.vy=cam.vy*decay+(cam.ty-cam.yaw)*0.06*kS; cam.vp=cam.vp*decay+(cam.tp-cam.pitch)*0.06*kS;
+  cam.yaw+=cam.vy*kS; cam.pitch+=cam.vp*kS;
   if(CALM){ cam.yaw=cam.ty; cam.pitch=cam.tp; }
 
   var c=center(), cloudA=0, fieldA=0, fov=3e-10, orb=null, nucA=0, protA=0, pullA=0, vac=0, tube=0, tight=0.60, sparkle=false, fixFov=0;
@@ -855,28 +992,32 @@ function frame(now){
     case "table":
       /* the zoom: the square you picked grows to fill the screen, and the live
          cloud takes over from it at the same place, size and angle */
-      var z=(CALM||mqSmall.matches)?0:smooth(0.04,0.85,prog), tile=PT&&PT.tiles[SEL];
-      if(z>0.001 && tile){
-        var ox=tile.offsetLeft+tile.offsetWidth/2, oy=tile.offsetTop+tile.offsetHeight/2, s=1+z*z*14;
+      var z=(CALM||mqSmall.matches)?0:smooth(0.04,0.85,prog);
+      if(z>0.001 && RD.tile){
+        /* the table scales about the square's own center, so the center stays
+           where it was read and only its size changes */
+        var s=1+z*z*14;
         if(sheet.classList.contains("open")) closeSheet(false);
-        PT.el.style.transformOrigin=ox+"px "+oy+"px"; PT.el.style.transform="scale("+s.toFixed(4)+")";
-        PT.el.style.opacity=(1-smooth(0.26,0.6,prog)).toFixed(3);
-        PT.el.classList.add("zooming"); PT.focus={z:SEL,k:smooth(0.08,0.42,prog)};
-        var tr=tile.getBoundingClientRect(), tc=[tr.left+tr.width/2, tr.top+tr.height/2], k2=smooth(0.55,1,prog);
+        put(PT.el,"transformOrigin",RD.ox+"px "+RD.oy+"px"); put(PT.el,"transform","scale("+s.toFixed(4)+")");
+        put(PT.el,"opacity",(1-smooth(0.26,0.6,prog)).toFixed(3));
+        if(!PT.el.classList.contains("zooming")) PT.el.classList.add("zooming"); PT.focus={z:SEL,k:smooth(0.08,0.42,prog)};
+        var tr=RD.tile, tc=[tr.left+tr.width/2, tr.top+tr.height/2], k2=smooth(0.55,1,prog);
         c=[lerp(tc[0],c[0],k2), lerp(tc[1],c[1],k2)];
         orb=valOrb(); cloudA=smooth(0.14,0.46,prog); tight=0.74; sparkle=prog>0.7;
         cam.ty=cam.yaw=SEL*0.37+t*0.16; cam.tp=cam.pitch=0.42; cam.vy=cam.vp=0;
-        zoomRect=Math.min(tr.width,tr.height)*1.06;
-      } else if(PT && PT.el.style.transform){ PT.el.style.transform=""; PT.el.style.opacity=""; PT.el.classList.remove("zooming"); PT.focus=null; PT.redraw(); zoomRect=null; }
-      D.getElementById("ptFoot").style.opacity=(1-smooth(0.02,0.2,prog)).toFixed(3);
-      slot.style.opacity=(1-smooth(0.02,0.25,prog)).toFixed(3);
+        zoomRect=Math.min(RD.tw,RD.th)*s*1.06;
+      } else if(PT && PT.el.style.transform){ put(PT.el,"transform",""); put(PT.el,"opacity",""); PT.el.classList.remove("zooming"); PT.focus=null; PT.redraw(); zoomRect=null; }
+      if(!ptFootEl) ptFootEl=D.getElementById("ptFoot");
+      put(ptFootEl,"opacity",(1-smooth(0.02,0.2,prog)).toFixed(2));
+      put(slot,"opacity",(1-smooth(0.02,0.25,prog)).toFixed(2));
       break;
     case "cloud":
-      cloudStep=Math.min(3,Math.floor(prog*4));
-      if(userStep!==cloudStep) userOrb=null;
+      var cs=Math.min(3,Math.floor(prog*4));
+      if(userStep!==cs) userOrb=null;
+      if(cs!==cloudStep){ cloudStep=cs; if(!stepEls) stepEls=[].slice.call(D.querySelectorAll("#cloud .step")); stepEls.forEach(function(s,i){ s.classList.toggle("on",i===cloudStep); }); }
       orb=userOrb||(SEL===1?ORDER_H[cloudStep]:(cloudStep<3?valOrb():"s"+SEL)); cloudA=1; sparkle=(typeof orb!=="string"); tight=(typeof orb==="string"&&orb!=="shine")?0.5:0.74;
-      [].slice.call(D.querySelectorAll("#cloud .step")).forEach(function(s,i){ s.classList.toggle("on",i===cloudStep); });
-      [].slice.call(D.querySelectorAll("#orbPicker button")).forEach(function(b){ var o=b._o; b.setAttribute("aria-pressed", typeof orb!=="string"&&o.n===orb.n&&o.l===orb.l&&Math.abs(o.Z-orb.Z)<1e-6?"true":"false"); });
+      var ok_=keyOf(orb);
+      if(ok_!==orbKey){ orbKey=ok_; [].slice.call(D.querySelectorAll("#orbPicker button")).forEach(function(b){ var o=b._o; b.setAttribute("aria-pressed", typeof orb!=="string"&&o.n===orb.n&&o.l===orb.l&&Math.abs(o.Z-orb.Z)<1e-6?"true":"false"); }); }
       var txt;
       if(orb==="shine") txt="2p<sub>z</sub> and 1s at once: the cloud sloshes at 2.47 × 10¹⁵ Hz, slowed for you";
       else if(typeof orb==="string") txt="All "+SEL+" electrons, "+configStr(SEL).replace(/([spdf])(\d+)/g,"$1<sup>$2</sup>")+" · drag the stage to turn it";
@@ -905,7 +1046,7 @@ function frame(now){
     case "proton": fov=1.5e-15; protA=1; tube=0.7; fieldA=1; vac=0.45; break;
     case "pull": fov=1.4e-15; pullA=1; fieldA=1; tube=1; vac=0.6; break;
     case "edge": fieldA=1; vac=1; tube=0; break;
-    default: fieldA=0.35; vac=0.6; break;
+    default: break;   /* the labs, the tour list, and the downloads: the sky alone, nothing else to draw */
   }
   if(CALM && active==="light"){
     if(LMODE==="lines" && !Object.keys(LIT).length){ ELINES.forEach(function(p,i){ LIT[i]=1; }); drawSpectrum(); }
@@ -920,18 +1061,38 @@ function frame(now){
     if(active==="table" && zoomRect) fv=Math.max(fv, hh.ext*0.70*a0*(Math.min(W,H)/2)/(zoomRect/2));
     var camGL={cloud:hh,yaw:cam.yaw,pitch:cam.pitch,fov:fv,a0:a0,w:W,h:H,dpr:Math.min(DPR,1.5),alpha:cloudA,light:theme==="light",
       time:CALM?1.5:t,hue:1,pos:T.gl.pos,neg:T.gl.neg,posInk:T.gl.posInk,negInk:T.gl.negInk,
-      budget:mqSmall.matches?300000:640000,steps:mqSmall.matches?72:110};
+      /* the tier sets the steps and the buffer; frames average while the
+         view holds still, so fewer steps a frame still give a smooth cloud.
+         With reduced motion a frame is drawn only on a change, so it takes
+         the full step count and no averaging */
+      budget:(mqSmall.matches?300000:560000)*front.g.q.budget,steps:CALM?front.g.q.steps2:(mqSmall.matches?front.g.q.steps:0),accum:!CALM};
     /* the scene sits off the middle of the window: offset the focus so the
        nucleus projects onto the scene's center */
     var kpx=(Math.min(W,H)/2)/fv, dxm=(c[0]-W/2)/kpx, dym=-(c[1]-H/2)/kpx;
     var cy_=Math.cos(cam.yaw), sy_=Math.sin(cam.yaw), cp_=Math.cos(cam.pitch), sp_=Math.sin(cam.pitch);
     var ex=[cy_,0,-sy_], ey=[-sp_*sy_,cp_,-sp_*cy_];
     camGL.off=[-(dxm*ex[0]+dym*ey[0]), -(dxm*ex[1]+dym*ey[1]), -(dxm*ex[2]+dym*ey[2])];
-    if(cloudA>0.01){ front.g.draw(camGL); front.g.govern(dt); } else if(frames%4===0) front.g.clear();
+    /* the cloud is the costliest thing on the page. When nothing about the view
+       has changed (no scroll, no drag, no zoom) only its phase turns, slowly,
+       so it is drawn every other frame; with reduced motion, only on a change */
+    var ck=[fv.toPrecision(4),c[0].toFixed(1),c[1].toFixed(1),cloudA.toFixed(2),W,H,theme,curKey].join("|"),
+      still=ck===cloudKey&&!scrolled&&!cam.drag&&!(active==="table"&&zoomRect), turned=Math.abs(cam.yaw-cam.dy0)+Math.abs(cam.pitch-cam.dp0)>1e-4;
+    cloudKey=ck;
+    /* the slow automatic turn and the phase are drawn at half rate; a scroll, a
+       drag, the zoom, or a new orbital draws at once */
+    if(cloudA>0.01){ if(!still||!front.drawn||(CALM?turned:!(frames&1))){ front.g.draw(camGL); front.drawn=true; cam.dy0=cam.yaw; cam.dp0=cam.pitch; } front.g.govern(dt); }
+    else { front.drawn=false; if(frames%4===0) front.g.clear(); }
     if(back && back.c.style.opacity==="0" && frames%30===0) back.g.clear();
   }
-  /* the overlay */
-  ctx.clearRect(0,0,W,H);
+  /* a canvas with nothing on it is still a full-screen layer to composite:
+     hide the field when it is unused and the back cloud once its fade ends */
+  if(FIELD) put(cF,"visibility",fieldA>0.01?"visible":"hidden");
+  if(front){ put(front.c,"visibility","visible"); if(back) put(back.c,"visibility",now-swapAt>650?"hidden":"visible"); }
+  /* the overlay: cleared and composited only while something is on it
+     (sparkle, a nucleus, quarks, a flash, a photon) */
+  var ovNeed=(sparkle&&cloudA>0.05)||nucA>0.01||protA>0.01||pullA>0.01||(PULL.broken&&now-flash<500)||(EM&&EM.phase>=1&&active==="light");
+  if(ovNeed||ovUsed){ ctx.clearRect(0,0,W,H); }
+  ovUsed=ovNeed; put(cO,"visibility",ovNeed?"visible":"hidden");
   if(sparkle && cloudA>0.05 && front && front.h) drawSparkle(orb, (active==="table"&&zoomRect)?Math.max(front.h.ext*a0*tight, front.h.ext*0.70*a0*(Math.min(W,H)/2)/(zoomRect/2)):front.h.ext*a0*tight, c, cloudA*(active==="table"?smooth(0.7,0.95,prog):1));
   if(nucA>0.01){
     var kfm=(Math.min(W,H)/2)/fov*1e-15;
@@ -976,7 +1137,7 @@ function missionGo(a){
   if(a.pick){ var z=a.pick; if(z!==SEL) setElement(z); if(PT){ PT.select(z); readout(z); }
     if(active!=="table") window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); if(MS) MS.signal("pick:"+z); }
   if(a.lens) { if(active!=="table") window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setLens(a.lens, a.filter||""); }
-  if(a.card){ var zc=a.card; if(zc!==SEL) setElement(zc); if(PT) PT.select(zc); window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setTimeout(function(){ openSheet(zc); }, CALM?0:500); }
+  if(a.card){ var zc=a.card; if(a.tab) PTable.detailTab(a.tab); if(zc!==SEL) setElement(zc); if(PT) PT.select(zc); window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setTimeout(function(){ openSheet(zc); }, CALM?0:500); }
   if(a.depth){ var sec=D.getElementById(a.depth); if(sec){ var y=sec.getBoundingClientRect().top+window.scrollY+(sec.classList.contains("pin")?H*0.2:0); window.scrollTo({top:y,behavior:CALM?"auto":"smooth"}); } }
   if(a.sim && LABS){ goLabs("bench"); var SIMS=LABS.sims();
     if(SIMS){ SIMS.show(a.sim); if(a.react){ var HOST=D.getElementById("labsHost"), rb=HOST.querySelector('[data-r="'+a.react+'"]'); if(rb) rb.click();
@@ -997,10 +1158,28 @@ function pickDownload(){
   me.parentNode.insertBefore(me,me.parentNode.firstChild);
 }
 
+/* the picture-quality control under the downloads: Auto reads the tier
+   from the graphics card's name; a choice is kept on this device and
+   applied to the clouds, the sky, and the field */
+function initQuality(){
+  var sel=D.getElementById("siteQual"), note=D.getElementById("siteQualNote"); if(!sel) return;
+  var saved=null; try{ saved=localStorage.getItem("atom.site.quality"); }catch(e){}
+  if(saved&&/^(low|medium|high)$/.test(saved)) sel.value=saved;
+  function apply(){
+    var v=sel.value, t=v;
+    if(GA) t=GA.setTier(v); if(GB) GB.setTier(v); if(WORLD&&WORLD.setTier) WORLD.setTier(v);
+    try{ if(v==="auto") localStorage.removeItem("atom.site.quality"); else localStorage.setItem("atom.site.quality",v); }catch(e){}
+    var card=String(GA&&GA.info||"").replace(/^ANGLE \((.*)\)$/,"$1"), parts=card.split(",").map(function(x){ return x.trim(); });
+    var gpu=parts.length>=2?parts[1].replace(/^.*?:\s*/,""):parts[0]; if(/swiftshader|llvmpipe/i.test(card)) gpu="a software renderer"; gpu=gpu.replace(/\s*\(.*$/,"").slice(0,48);
+    note.textContent=GA?((v==="auto"?"Auto chose "+t:"Set to "+t)+(gpu?" for "+gpu:"")+"."):"WebGL is off here, so this has no effect.";
+    note.title=GA&&GA.info?GA.info:"";
+  }
+  sel.addEventListener("change",apply); apply();
+}
 /* ------------------------------------------------------------------ boot */
 function boot(){
   pickDownload();
-  W=window.innerWidth; H=window.innerHeight;
+  W=window.innerWidth; H=viewH();
   var q=/[?&]el=([A-Za-z]{1,3})/.exec(location.search), z0=26;
   if(q){ for(var i=0;i<118;i++) if(ELEMENTS[i][1].toLowerCase()===q[1].toLowerCase()) z0=i+1; }
   SEL=z0; EL=ELEMENTS[z0-1];
@@ -1012,6 +1191,7 @@ function boot(){
   setElement(z0,true); readout(z0);
   resize();
   window.addEventListener("resize",resize);
+  if(D.fonts&&D.fonts.ready) D.fonts.ready.then(fitFront);
   if(mqSmall.addEventListener) mqSmall.addEventListener("change",resize);
   window.addEventListener("scroll",function(){ if(active==="light"&&frames%2===0) drawSpectrum(); },{passive:true});
   setTheme(theme);
@@ -1025,6 +1205,7 @@ function boot(){
     if(GA){ front={g:GA,c:cA}; if(GB){ back={g:GB,c:cB}; cB.style.opacity="0"; } }
     else D.querySelector(".scene").classList.add("nogl");
     if(front) showCloud(valOrb());
+    initQuality();
     requestAnimationFrame(frame);
   });
   if(CALM){ bindReveal=1; }
@@ -1059,7 +1240,8 @@ function boot(){
   today();
   /* missions */
   var md=D.getElementById("missions");
-  if(md) MS=Missions.create({host:md, go:missionGo, onStart:function(){ if(LABS) LABS.resync(); }});
+  if(md) MS=Missions.create({host:md, go:missionGo, onStart:function(){ if(LABS) LABS.resync(); },
+    toggles:[D.getElementById("msBarBtn"),D.getElementById("msFootBtn")].filter(Boolean)});
   /* a shared atom or challenge (#build=6-8-6, #challenge=A1...) opens in the labs */
   function shared(){ var sp=AtomLabs.fromHash(location.hash); if(sp&&LABS){ goLabs(); LABS.open(sp); } }
   window.addEventListener("hashchange",shared); setTimeout(shared,300);
