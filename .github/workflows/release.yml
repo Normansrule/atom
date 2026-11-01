@@ -27,7 +27,7 @@ jobs:
   mac:
     name: macOS
     needs: check
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 40
     env:
       HAS_CERT: ${{ secrets.MACOS_CERT_P12 != '' }}
