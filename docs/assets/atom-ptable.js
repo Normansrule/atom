@@ -1186,6 +1186,11 @@ var Missions=(function(){
                 typing, or dragging, and see which element, isotope, and ion
                 you made and what its nucleus does; or fill an element's
                 orbital boxes by hand and check them against three rules.
+     The math   ten steps through the element you pick, from Coulomb's law
+                to quarks: the classical picture, why it fails, Bohr, waves,
+                Schrödinger's orbitals, shielding, relativity, the nucleus,
+                and the strong force, each worked through with that element's
+                numbers, animated, with a question to try.
      Predict    a question, your answer, then the reason. Questions you miss
                 come back on a widening schedule (spaced repetition). A
                 teacher can make a challenge: a fixed set of questions that
@@ -1751,6 +1756,74 @@ var AtomLabs=(function(){
     return keys;
   }
 
+  /* ------------------------------------------------------------ the math: pure helpers */
+  /* The physics behind the Math tab, outside the labs' mount so the labs'
+   self-test can check it: constants, hydrogen-like levels and orbitals,
+   Slater's shielding term by term, and MathML builders. */
+  var MK={a0:52.9177210544, Ry:13.605693122990, alpha:7.2973525643e-3, mec2:0.51099895069, hc:1239.841984, ke2:1.43996448,
+    c:299792458, re:2.8179403205e-15, me:9.1093837139e-31, e:1.602176634e-19, kC:8.9875517862e9, G:6.67430e-11, mpkg:1.67262192595e-27,
+    mp:938.27208943, mn:939.56542194, u:931.49410372, mpi:139.57039, hbarc:197.3269804, h:6.62607015e-34, mu:2.16, md:4.67, r0:1.2, rp:0.84075};
+  /* ---- MathML, written by hand: small helpers keep it legible */
+  function mi(s){ return '<mi>'+s+'</mi>'; } function mn_(s){ return '<mn>'+s+'</mn>'; } function mo(s){ return '<mo>'+s+'</mo>'; }
+  function mrow(){ return '<mrow>'+[].slice.call(arguments).join('')+'</mrow>'; }
+  function mfrac(a,b){ return '<mfrac><mrow>'+a+'</mrow><mrow>'+b+'</mrow></mfrac>'; }
+  function msup(a,b){ return '<msup><mrow>'+a+'</mrow><mrow>'+b+'</mrow></msup>'; }
+  function msub(a,b){ return '<msub><mrow>'+a+'</mrow><mrow>'+b+'</mrow></msub>'; }
+  function msubsup(a,b,c){ return '<msubsup><mrow>'+a+'</mrow><mrow>'+b+'</mrow><mrow>'+c+'</mrow></msubsup>'; }
+  function msqrt(a){ return '<msqrt>'+a+'</msqrt>'; }
+  function MM(x){ return '<math display="block">'+x+'</math>'; }
+  var Zeff_=msub(mi("Z"),mi("eff")), hbar_=mi("ℏ"), eq_=mo("="), pi_=mi("π");
+  /* ---- element numbers */
+  function outerN(z){ var n=0; configOf(z).forEach(function(x){ if(x[0]>n) n=x[0]; }); return n; }
+  function outerSub(z){ var c=configOf(z), b=null; c.forEach(function(x){ if(x[1]<=1&&(!b||x[0]>b[0]||(x[0]===b[0]&&x[1]>b[1]))) b=x; }); return b||c[c.length-1]; }
+  function ionName(z){ if(z===1) return "hydrogen"; return el(z)[1]+supNum(z-1)+"⁺"; }
+  function ionWords(z){ return z===1?"hydrogen, with its one electron":lc(z)+" with all but one electron stripped away ("+ionName(z)+")"; }
+  function nucMass(z){ if(z<=3) return HY[z].m; return commonA(z)*MK.u; }
+  function redF(z){ return 1/(1+MK.mec2/nucMass(z)); }
+  function bohrE(z,n){ return -MK.Ry*z*z*redF(z)/(n*n); }
+  function bohrLine(z,nu,nl){ var E=MK.Ry*z*z*redF(z)*(1/(nl*nl)-1/(nu*nu)); return {E:E, w:MK.hc/E}; }
+  function lightWord(w){ return w<10?"X-rays":(w<380?"ultraviolet":(w<=750?"visible "+(w<450?"violet":w<495?"blue":w<570?"green":w<590?"yellow":w<620?"orange":"red"):(w<1e6?"infrared":"radio"))); }
+  function timeWords(s){ var u=[[1e-15,"femtoseconds"],[1e-12,"picoseconds"],[1e-9,"nanoseconds"],[1e-6,"microseconds"],[1e-3,"milliseconds"],[1,"seconds"]], k=u[0];
+    u.forEach(function(x){ if(s>=x[0]) k=x; }); return fmt(s/k[0],s/k[0]<10?2:1)+" "+k[1]; }
+  /* Slater's shielding for one electron, term by term. It must sum to what
+     zEff() returns, and the labs' self-test checks that for every element. */
+  function slaterParts(z,n,l){
+    var g=slaterGroups(z), gi=-1, target=(l<=1)?(n+"sp"):(n+LET[l]), isSP=l<=1, parts=[];
+    g.forEach(function(o,i){ if(o.key===target) gi=i; });
+    if(gi<0) return {S:0, Zeff:z, parts:[]};
+    g.forEach(function(o,i){ var c=o.count, f=0, cnt=c, name=o.l<=1?(o.n===1?"1s":o.n+"s and "+o.n+"p"):o.n+LET[o.l];
+      if(i===gi){ cnt=c-1; f=(n===1&&l===0)?0.30:0.35; name="the other "+name+" electrons"; }
+      else if(isSP){ if(o.n===n) f=0.35; else if(o.n===n-1) f=0.85; else if(o.n<n-1) f=1.00; }
+      else if(i<gi) f=1.00;
+      if(cnt>0&&f>0) parts.push({name:name, cnt:cnt, f:f, s:cnt*f}); });
+    var S=parts.reduce(function(a,p){ return a+p.s; },0);
+    return {S:S, Zeff:Math.max(1,z-S), parts:parts};
+  }
+  /* hydrogen-like orbitals: exact radial functions and real angular parts */
+  function lag(k,a,x){ if(k===0) return 1; var L0=1, L1=1+a-x; for(var i=1;i<k;i++){ var L2=((2*i+1+a-x)*L1-(i+a)*L0)/(i+1); L0=L1; L1=L2; } return L1; }
+  function fac(n){ var f=1; for(var i=2;i<=n;i++) f*=i; return f; }
+  function radial(n,l,zr,r){ /* r in units of a0 */ var rho=2*zr*r/n, N=Math.sqrt(Math.pow(2*zr/n,3)*fac(n-l-1)/(2*n*fac(n+l)));
+    return N*Math.exp(-rho/2)*Math.pow(rho,l)*lag(n-l-1,2*l+1,rho); }
+  function legendre(l,m,x){ m=Math.abs(m); var pmm=1, s=Math.sqrt(Math.max(0,1-x*x)), f=1, i;
+    for(i=1;i<=m;i++){ pmm*=-f*s; f+=2; } if(l===m) return pmm;
+    var pm1=x*(2*m+1)*pmm; if(l===m+1) return pm1; var pll=0;
+    for(i=m+2;i<=l;i++){ pll=(x*(2*i-1)*pm1-(i+m-1)*pmm)/(i-m); pmm=pm1; pm1=pll; } return pll; }
+  function angular(l,m,th,ph){ var P=legendre(l,m,Math.cos(th)); return m===0?P:(m>0?P*Math.cos(m*ph):P*Math.sin(-m*ph)); }
+  var OLET="spdfgh";
+  function orbName(n,l,m){ var nm2=n+OLET[l]; if(l===1) return nm2+["y","z","x"][m+1]; if(l===2) return nm2+["xy","yz","z²","xz","x²−y²"][m+2]; return nm2+(m?" (m = "+m+")":""); }
+  function extentA0(n,l,zr){ var rmax=1, pmax=0, i, r, p, last=1;
+    for(i=1;i<=600;i++){ r=i*(4*n*n+8)/(600*zr); p=r*r*Math.pow(radial(n,l,zr,r),2); if(p>pmax) pmax=p; }
+    for(i=1;i<=600;i++){ r=i*(4*n*n+8)/(600*zr); p=r*r*Math.pow(radial(n,l,zr,r),2); if(p>pmax*0.004) last=r; }
+    return last*1.08; }
+
+  function mspace(){ return '<mspace width="0.6em"></mspace>'; }
+  function mtext(s){ return '<mtext>'+esc(s)+'</mtext>'; }
+  /* the orbital one shell up and one step of l up, same m: it is dipole-
+   allowed from this one, and close enough in size to show the sloshing */
+function mixPartner(n,l,m){ if(n<5) return [n+1,l+1,m]; if(l===0) return [n-1,1,0]; var l2=l-1; return [n-1,l2,Math.max(-l2,Math.min(l2,m))]; }
+function sig(x,d){ if(!x) return 0; var e=Math.floor(Math.log10(Math.abs(x)))-d+1, p=Math.pow(10,e); return Math.round(x/p)*p; }
+function subNum(n){ return String(n).split("").map(function(c){ return "₀₁₂₃₄₅₆₇₈₉".charAt(+c); }).join(""); }
+
   /* ------------------------------------------------------------ sharing */
   /* links point at the website when the page itself isn't on the web (the
      desktop apps), so a link someone sends always opens for the person who gets it */
@@ -1782,12 +1855,12 @@ var AtomLabs=(function(){
   }
 
   /* ------------------------------------------------------------ the labs */
-  /* five tabs, each a verb; Explore and Experiment hold more than one lab, on
-     a rail under the tabs. A lab is still named by its own id everywhere
-     (show("hear"), the "lab:hear" event), whichever tab holds it. */
-  var GROUPS=[["build","Build",["build"]],["explore","Explore",["compare","trends","nuclides","hear"]],["predict","Predict",["predict"]],
+  /* six tabs; Explore and Experiment hold more than one lab, on a rail under
+     the tabs. A lab is still named by its own id everywhere (show("hear"),
+     the "lab:hear" event), whichever tab holds it. */
+  var GROUPS=[["build","Build",["build"]],["explore","Explore",["compare","trends","nuclides","hear"]],["math","The math",["math"]],["predict","Predict",["predict"]],
     ["experiment","Experiment",["calc","bench"]],["you","You",["you"]]];
-  var PANE_NAME={compare:"Compare",trends:"Trends",nuclides:"Nuclides",hear:"Hear",calc:"Calculate",bench:"Workbench"};
+  var PANE_NAME={math:"The math",compare:"Compare",trends:"Trends",nuclides:"Nuclides",hear:"Hear",calc:"Calculate",bench:"Workbench"};
   var TABS=[]; GROUPS.forEach(function(g){ g[2].forEach(function(p){ TABS.push([p,PANE_NAME[p]||g[1],g[0]]); }); });
   function groupOf(p){ for(var i=0;i<GROUPS.length;i++) if(GROUPS[i][0]===p||GROUPS[i][2].indexOf(p)>=0) return GROUPS[i]; return null; }
   var GOALS=[
@@ -2628,6 +2701,468 @@ var AtomLabs=(function(){
       setBag("H2O"); renderMol();
     }
 
+    /* ======================================================== The math */
+    /* Ten steps through the atom you pick, from the outside in, each with the
+       classical picture or the quantum one, the equations, the numbers for
+       that element worked through, a picture that moves, and a question to
+       try. Every number is computed here from Atom's own data (Slater's rules,
+       the measured ionization energies, the liquid-drop model the rest of the
+       app uses); the constants are CODATA 2022, the same set the rest of Atom uses. Equations are MathML, so they
+       read as math, scale with the text, and can be spoken. */
+    var MA={z:0, follow:true, ch:0, r:0, nu:3, nl:2, waves:3, on:2, ol:1, om:0, mix:false, sub:"", zr:0, nn:-1, qr:1.0, nucleon:"p", play:true, t0:0};
+    function mz(){ return MA.z||Z||1; }
+    function rAtom(z){ var r=radOf(z); if(r) return r; var n=outerN(z), ns=NSTAR[n]||n; return Math.round(MK.a0*ns*ns/zeffOf(z)); }
+    /* ---- the ten steps */
+    var MCH=[
+      {id:"pull", kind:"Classical", short:"The pull"},
+      {id:"orbit", kind:"Classical", short:"An orbit"},
+      {id:"collapse", kind:"Classical", short:"The crisis"},
+      {id:"bohr", kind:"Quantum", short:"Bohr's rule"},
+      {id:"waves", kind:"Quantum", short:"Matter waves"},
+      {id:"cloud", kind:"Quantum", short:"Schrödinger"},
+      {id:"many", kind:"Quantum", short:"Many electrons"},
+      {id:"rel", kind:"Relativity", short:"Relativity"},
+      {id:"nucleus", kind:"Nuclear", short:"The nucleus"},
+      {id:"quarks", kind:"Particle", short:"Quarks"}
+    ];
+    function mathNums(){
+      var z=mz(), o={z:z};
+      var zf=zeffOf(z), r=MA.r||rAtom(z), rm=r*1e-12;
+      o.zf=zf; o.r=r; o.F=MK.kC*zf*MK.e*MK.e/(rm*rm); o.U=-MK.ke2*zf/(r/1000);
+      o.Fg=MK.G*MK.me*MK.mpkg/(rm*rm);
+      o.v=Math.sqrt(MK.kC*zf*MK.e*MK.e/(MK.me*rm)); o.T=2*Math.PI*rm/o.v; o.Eo=o.U/2;
+      var ie=IE1[z-1]; o.ie=ie; o.rmatch=ie?MK.ke2*zf/(2*ie)*1000:null;
+      o.tc=Math.pow(rm,3)/(4*zf*MK.re*MK.re*MK.c);
+      o.acc=MK.kC*zf*MK.e*MK.e/(MK.me*rm*rm); o.P=2/3*MK.kC*MK.e*MK.e*o.acc*o.acc/Math.pow(MK.c,3);
+      var nu=MA.nu, nl=MA.nl; o.rn=function(n){ return n*n*MK.a0/z; }; o.En=function(n){ return bohrE(z,n); };
+      o.line=bohrLine(z,nu,nl); o.v1c=z*MK.alpha;
+      o.lam=function(n){ return 2*Math.PI*o.rn(n)/n; };
+      o.sub=MA.sub||((function(b){ return b[0]+","+b[1]; })(outerSub(z)));
+      var sp=o.sub.split(","); o.sn=+sp[0]; o.sl=+sp[1]; o.sl_=slaterParts(z,o.sn,o.sl);
+      o.nstar=NSTAR[o.sn]||o.sn; o.ieEst=MK.Ry*Math.pow(o.sl_.Zeff/o.nstar,2);
+      var zr=MA.zr||z; o.zr=zr; o.za=zr*MK.alpha; o.gam=o.za<1?1/Math.sqrt(1-o.za*o.za):Infinity;
+      o.eB=-MK.Ry*zr*zr; o.eD=o.za<1?MK.mec2*1e6*(Math.sqrt(1-o.za*o.za)-1):null;
+      var N=MA.nn>=0?MA.nn:commonA(z)-z, A=z+N; o.N=N; o.A=A; o.R=MK.r0*Math.pow(A,1/3);
+      o.vol=SEMF.aV*A; o.surf=-SEMF.aS*Math.pow(A,2/3); o.coul=-SEMF.aC*z*(z-1)/Math.pow(A,1/3); o.asym=-SEMF.aA*(A-2*z)*(A-2*z)/A;
+      o.pair=(z%2===0&&N%2===0)?SEMF.aP/Math.sqrt(A):((z%2===1&&N%2===1)?-SEMF.aP/Math.sqrt(A):0);
+      o.B=bindingSEMF(z,A); o.BA=o.B/A; o.dm=o.B/MK.u; o.M=z*MK.mp+N*MK.mn-o.B;
+      o.barrier=MK.ke2*z/(o.R+MK.rp); o.ratio=rAtom(z)*1000/o.R;
+      o.ups=2*z+N; o.downs=z+2*N; o.qm=o.ups*MK.mu+o.downs*MK.md; o.qfrac=o.qm/o.M;
+      o.lamY=MK.hbarc/MK.mpi; o.Vc=MK.ke2/MA.qr;
+      return o;
+    }
+    function nf(x,d){ return fmt(x,d); }
+    function sciT(x,d){ return sci(x,d||3); }
+    /* what each step says, shows and asks; returns {title,q,idea,eqs:[[mathml,plugged]],facts:[[dt,dd]],check:{q,a,tol,unit,why},limit,alt} */
+    function mathText(id,o){
+      var z=o.z, E=lc(z), Ecap=nm(z);
+      if(id==="pull"){
+        var F2=o.F/4;
+        return {title:"How hard the nucleus pulls on "+E+"'s outer electron", q:"If the electron were a tiny charged ball and nothing else, how strong is the pull?",
+          idea:cap(E)+"'s nucleus carries "+z+" positive charge"+(z>1?"s":"")+", but its outer electron doesn't feel all of them: the electrons in the inner shells sit between and cancel part of it. Slater's rules estimate what is left, the effective charge. Then it is Coulomb's law, the same law that makes a balloon stick to a wall.",
+          eqs:[[MM(mi("F")+eq_+mfrac(mi("k")+mo("⁢")+msub(mi("q"),mn_(1))+mo("⁢")+msub(mi("q"),mn_(2)),msup(mi("r"),mn_(2)))),"Coulomb's law: the pull grows with both charges and falls with the square of the distance."],
+            [MM(Zeff_+eq_+mi("Z")+mo("−")+mi("S")+eq_+mn_(z)+mo("−")+mn_(nf(z-o.zf,2))+eq_+mn_(nf(o.zf,2))),"The charge the outer electron feels, after the inner electrons shield S of it."],
+            [MM(mi("F")+eq_+mfrac(mi("k")+mo("⁢")+Zeff_+mo("⁢")+msup(mi("e"),mn_(2)),msup(mi("r"),mn_(2)))),"= (8.988 × 10⁹ N·m²/C²) × "+nf(o.zf,2)+" × (1.602 × 10⁻¹⁹ C)² ÷ ("+sciT(o.r*1e-12,3)+" m)² = "+nf(o.F*1e9,2)+" nanonewtons"],
+            [MM(mi("U")+eq_+mo("−")+mfrac(mi("k")+mo("⁢")+Zeff_+mo("⁢")+msup(mi("e"),mn_(2)),mi("r"))),"= −1.440 eV·nm × "+nf(o.zf,2)+" ÷ "+nf(o.r/1000,4)+" nm = "+nf(o.U,2)+" eV, the energy it would take to pull it free if this picture were right"]],
+          facts:[["Effective charge",nf(o.zf,2)],["Distance",nf(o.r,0)+" pm"],["Pull",nf(o.F*1e9,2)+" nN"],["Electric against gravity",sciT(o.F/o.Fg,2)+" times stronger"]],
+          check:{q:"Move the electron to twice this distance. What is the pull now, in nanonewtons?", a:F2*1e9, tol:0.03, unit:"nN",
+            why:"Double the distance and the pull falls to a quarter, because of the r² below the line: "+nf(o.F*1e9,2)+" ÷ 4 = "+nf(F2*1e9,2)+" nN."},
+          limit:"An electron is not a tiny ball sitting at one distance; the cloud spreads over a range. This step uses "+E+"'s measured atomic radius as the distance.",
+          alt:"The nucleus of "+E+" with the outer electron "+nf(o.r,0)+" picometers away and an arrow for the pull."};
+      }
+      if(id==="orbit"){
+        var v4=o.v/2;
+        return {title:"If the electron orbited like a planet", q:"What speed would keep it in a circle, the way gravity keeps the Moon?",
+          idea:"Set the electric pull equal to what a circle needs, m v²/r, just as you would for a satellite. The answer is fast: hundreds or thousands of kilometers a second, going around a few thousand trillion times a second.",
+          eqs:[[MM(mfrac(mi("m")+mo("⁢")+msup(mi("v"),mn_(2)),mi("r"))+eq_+mfrac(mi("k")+mo("⁢")+Zeff_+mo("⁢")+msup(mi("e"),mn_(2)),msup(mi("r"),mn_(2)))),"The pull supplies exactly the force a circle needs."],
+            [MM(mi("v")+eq_+msqrt(mfrac(mi("k")+mo("⁢")+Zeff_+mo("⁢")+msup(mi("e"),mn_(2)),mi("m")+mo("⁢")+mi("r")))),"= "+nf(o.v/1000,0)+" km/s, which is "+nf(o.v/MK.c*100,2)+" percent of the speed of light"],
+            [MM(mi("T")+eq_+mfrac(mn_(2)+pi_+mo("⁢")+mi("r"),mi("v"))),"= "+sciT(o.T,3)+" s for one lap, or "+sciT(1/o.T,3)+" laps a second"],
+            [MM(mi("E")+eq_+mfrac(mi("U"),mn_(2))+eq_+mo("−")+mfrac(mi("k")+mo("⁢")+Zeff_+mo("⁢")+msup(mi("e"),mn_(2)),mn_(2)+mi("r"))),"= "+nf(o.Eo,2)+" eV. "+(o.ie?"The measured energy to remove the electron is "+nf(o.ie,2)+" eV; a classical orbit would match it at r = "+nf(o.rmatch,0)+" pm.":"")]],
+          facts:[["Speed",nf(o.v/1000,0)+" km/s"],["Laps a second",sciT(1/o.T,3)],["Orbit energy",nf(o.Eo,2)+" eV"],["Measured energy to remove it",o.ie?nf(o.ie,2)+" eV":"not measured"]],
+          check:{q:"Put the orbit four times farther out. What speed keeps it circling, in km/s?", a:v4/1000, tol:0.03, unit:"km/s",
+            why:"v goes as 1/√r, so four times the distance halves the speed: "+nf(o.v/1000,0)+" ÷ 2 = "+nf(v4/1000,0)+" km/s."},
+          limit:"Nothing in this picture says which orbits are allowed, so it can't explain why every "+E+" atom is the same size. The next step shows it is worse than that.",
+          alt:"An electron circling "+E+"'s nucleus, slowed down about ten thousand trillion times so you can see it."};
+      }
+      if(id==="collapse"){
+        return {title:"Why the planet picture can't be right", q:"A charge moving in a circle is accelerating, and accelerating charges give off light. How long would the orbit last?",
+          idea:"Every radio antenna works because accelerated charges radiate. An orbiting electron would radiate too, lose energy, and spiral into the nucleus. Work out how fast, and atoms would not last the blink of an eye. They last billions of years, so something in classical physics has to give.",
+          eqs:[[MM(mi("P")+eq_+mfrac(mn_(2)+mo("⁢")+mi("k")+mo("⁢")+msup(mi("e"),mn_(2))+mo("⁢")+msup(mi("a"),mn_(2)),mn_(3)+mo("⁢")+msup(mi("c"),mn_(3)))),"Larmor's formula: the power an accelerated charge radiates. At the start that is "+sciT(o.P,3)+" watts, from one electron."],
+            [MM(mfrac(mi("dE"),mi("dt"))+eq_+mo("−")+mi("P")+mo("⇒")+mfrac(mi("dr"),mi("dt"))+eq_+mo("−")+mfrac(mn_(4)+mo("⁢")+Zeff_+mo("⁢")+msubsup(mi("r"),mi("e"),mn_(2))+mo("⁢")+mi("c"),mn_(3)+mo("⁢")+msup(mi("r"),mn_(2)))),"Losing energy means falling inward, faster and faster (rₑ is the classical electron radius, 2.818 × 10⁻¹⁵ m)."],
+            [MM(mi("t")+eq_+mfrac(msubsup(mi("r"),mn_(0),mn_(3)),mn_(4)+mo("⁢")+Zeff_+mo("⁢")+msubsup(mi("r"),mi("e"),mn_(2))+mo("⁢")+mi("c"))),"= ("+sciT(o.r*1e-12,3)+" m)³ ÷ (4 × "+nf(o.zf,2)+" × (2.818 × 10⁻¹⁵ m)² × 2.998 × 10⁸ m/s) = "+timeWords(o.tc)]],
+          facts:[["Starting distance",nf(o.r,0)+" pm"],["Time to fall in",timeWords(o.tc)],["Light given off at the start",sciT(o.P,3)+" W"],["How long real atoms last","billions of years"]],
+          check:{q:"Start the orbit at twice the distance. How long would the fall take, in picoseconds?", a:o.tc*8*1e12, tol:0.03, unit:"ps",
+            why:"The time goes as r³, so twice the distance takes 2³ = 8 times as long: "+timeWords(o.tc)+" × 8 = "+timeWords(o.tc*8)+"."},
+          limit:"This is the crisis physicists faced around 1911, after Rutherford found the nucleus. Classical physics predicts collapse; real atoms are stable. The rest of this tab is how that was fixed.",
+          alt:"The electron spiraling into "+E+"'s nucleus as it radiates, the whole fall stretched to a few seconds."};
+      }
+      if(id==="bohr"){
+        var nu2=Math.min(8,MA.nu+1), L2=bohrLine(z,nu2,MA.nl);
+        return {title:"Bohr's rule: only some orbits are allowed", q:"What if the electron's angular momentum can only come in whole steps of ℏ?",
+          idea:"In 1913 Niels Bohr simply declared it: the orbit's angular momentum must be a whole number times ℏ, and an electron in an allowed orbit does not radiate. Light comes out only when it jumps down from one orbit to another. The rule is exact for one electron, so this step uses "+ionWords(z)+".",
+          eqs:[[MM(mi("m")+mo("⁢")+mi("v")+mo("⁢")+mi("r")+eq_+mi("n")+mo("⁢")+hbar_+mo(",")+mspace()+mi("n")+eq_+mn_(1)+mo(",")+mn_(2)+mo(",")+mn_(3)+mo("…")),"The one new rule. Combine it with the circular orbit from step 2."],
+            [MM(msub(mi("r"),mi("n"))+eq_+mfrac(msup(mi("n"),mn_(2))+mo("⁢")+msub(mi("a"),mn_(0)),mi("Z"))),"r₁ = "+nf(o.rn(1),3)+" pm; r"+subNum(MA.nu)+" = "+nf(o.rn(MA.nu),2)+" pm (a₀ = 52.918 pm, the Bohr radius)"],
+            [MM(msub(mi("E"),mi("n"))+eq_+mo("−")+mfrac(mn_("13.606 eV")+mo("⁢")+msup(mi("Z"),mn_(2)),msup(mi("n"),mn_(2)))),"E₁ = "+nf(o.En(1),z>9?0:2)+" eV; E"+subNum(MA.nu)+" = "+nf(o.En(MA.nu),2)+" eV; E"+subNum(MA.nl)+" = "+nf(o.En(MA.nl),2)+" eV (with the small correction for the nucleus recoiling)"],
+            [MM(mi("λ")+eq_+mfrac(mi("h")+mo("⁢")+mi("c"),msub(mi("E"),mi("upper"))+mo("−")+msub(mi("E"),mi("lower")))),"= 1239.84 eV·nm ÷ "+nf(o.line.E,3)+" eV = "+nf(o.line.w,o.line.w<10?4:2)+" nm, "+lightWord(o.line.w)]],
+          facts:[["Atom",cap(ionName(z))],["Innermost orbit",nf(o.rn(1),3)+" pm"],["Jump "+MA.nu+" → "+MA.nl,nf(o.line.w,o.line.w<10?4:2)+" nm"],["Speed in orbit 1",nf(o.v1c*100,2)+"% of light"]],
+          check:{q:"What wavelength comes out when the electron falls from "+nu2+" to "+MA.nl+", in nanometers?", a:L2.w, tol:0.01, unit:"nm",
+            why:"ΔE = 13.606 eV × "+z+"² × (1/"+MA.nl+"² − 1/"+nu2+"²) × "+nf(redF(z),6)+" = "+nf(L2.E,3)+" eV, and λ = 1239.84 ÷ that = "+nf(L2.w,L2.w<10?4:2)+" nm."},
+          limit:"Bohr's rule gets one-electron atoms right and fails for everything else, and it can't say why the rule holds. Step 5 gives the reason; step 7 deals with many electrons.",
+          alt:"The allowed orbits of "+ionName(z)+", with the electron jumping from orbit "+MA.nu+" to orbit "+MA.nl+" and giving off light."};
+      }
+      if(id==="waves"){
+        var l2=o.lam(2), n_=Math.round(MA.waves), frac=Math.abs(MA.waves-n_);
+        return {title:"The electron as a wave", q:"Why would only whole steps of ℏ be allowed?",
+          idea:"Louis de Broglie's answer, in 1924: an electron is also a wave, with wavelength λ = h/p. A wave running around a loop only survives if it meets itself in step, so a whole number of wavelengths must fit around the orbit. That is Bohr's rule, explained. Slide the number of waves and watch what happens when it isn't whole.",
+          eqs:[[MM(mi("λ")+eq_+mfrac(mi("h"),mi("p"))+eq_+mfrac(mi("h"),mi("m")+mo("⁢")+mi("v"))),"de Broglie's relation: every particle has a wavelength."],
+            [MM(mn_(2)+pi_+mo("⁢")+mi("r")+eq_+mi("n")+mo("⁢")+mi("λ")+mo("⇔")+mi("m")+mo("⁢")+mi("v")+mo("⁢")+mi("r")+eq_+mi("n")+mo("⁢")+hbar_),"Fitting n waves around the loop is the same statement as Bohr's rule."],
+            [MM(msub(mi("λ"),mi("n"))+eq_+mfrac(mn_(2)+pi_+mo("⁢")+msub(mi("r"),mi("n")),mi("n"))),"For "+ionName(z)+": λ₁ = "+nf(o.lam(1),2)+" pm, λ"+subNum(n_)+" = "+nf(o.lam(n_),2)+" pm"]],
+          facts:[["Waves around the loop",nf(MA.waves,2)],["Closes on itself?",frac<0.02?"Yes: it reinforces":"No: it cancels itself"],["Wavelength in orbit 1",nf(o.lam(1),2)+" pm"],["Electron's momentum",sciT(MK.h/(o.lam(1)*1e-12),3)+" kg·m/s"]],
+          check:{q:"What is the electron's wavelength in orbit 2 of "+ionName(z)+", in picometers?", a:l2, tol:0.02, unit:"pm",
+            why:"λ₂ = 2π r₂ / 2 = π × "+nf(o.rn(2),3)+" pm = "+nf(l2,2)+" pm."},
+          limit:"A wave on a circle is still a picture. The full wave equation, next, gives clouds rather than rings.",
+          alt:nf(MA.waves,2)+" wavelengths around an orbit; "+(frac<0.02?"the wave meets itself in step.":"the ends don't meet, so the wave cancels itself.")};
+      }
+      if(id==="cloud"){
+        var n=MA.on, l=MA.ol, m=MA.om, rm=MK.a0/(2*z)*(3*n*n-l*(l+1)), nodes=n-l-1, Eb=bohrE(z,n), pb=mixPartner(n,l,m), L=bohrLine(z,Math.max(n,pb[0]),Math.min(n,pb[0])), pair=orbName(n,l,m)+" and "+orbName(pb[0],pb[1],pb[2]);
+        return {title:"Schrödinger's equation: the electron as a cloud", q:"What shape does the electron's wave take in three dimensions?",
+          idea:"Erwin Schrödinger wrote the equation the wave obeys, in 1926. Its solutions for "+ionWords(z)+" are the orbitals: clouds whose brightness is the chance of finding the electron there. Two colors mark where the wave is positive and negative. A single orbital is still: the cloud doesn't move. Turn on the mix and the electron is in two orbitals at once, so the cloud sloshes back and forth; that sloshing charge is what gives off light.",
+          eqs:[[MM(mo("−")+mfrac(msup(hbar_,mn_(2)),mn_(2)+mi("m"))+msup(mo("∇"),mn_(2))+mi("ψ")+mo("−")+mfrac(mi("k")+mo("⁢")+mi("Z")+mo("⁢")+msup(mi("e"),mn_(2)),mi("r"))+mi("ψ")+eq_+mi("E")+mo("⁢")+mi("ψ")),"Kinetic energy plus the nucleus's pull, acting on the wave ψ, gives back the energy times ψ."],
+            [MM(mi("ψ")+eq_+msub(mi("R"),mrow(mi("n"),mi("l")))+mo("(")+mi("r")+mo(")")+mo("⁢")+msub(mi("Y"),mrow(mi("l"),mi("m")))+mo("(")+mi("θ")+mo(",")+mi("φ")+mo(")")),"The solutions split into a part that depends on distance and a part that depends on direction. n = "+n+", l = "+l+", m = "+m+": the "+orbName(n,l,m)+" orbital."],
+            [MM(mo("⟨")+mi("r")+mo("⟩")+eq_+mfrac(msub(mi("a"),mn_(0)),mn_(2)+mi("Z"))+mo("[")+mn_(3)+msup(mi("n"),mn_(2))+mo("−")+mi("l")+mo("(")+mi("l")+mo("+")+mn_(1)+mo(")")+mo("]")),"= "+nf(rm,rm<10?3:2)+" pm on average. It has "+words(nodes)+" spherical node"+(nodes===1?"":"s")+" (n − l − 1) and "+words(l)+" flat or conical one"+(l===1?"":"s")+" (l)."],
+            [MM(mi("f")+eq_+mfrac(msub(mi("E"),mi("upper"))+mo("−")+msub(mi("E"),mi("lower")),mi("h"))),"Mixing "+pair+" (one shell apart, one step of l apart), the cloud sloshes "+sciT(L.E/4.135667696e-15,3)+" times a second, exactly the frequency of the light this jump gives off: "+nf(L.w,L.w<10?4:2)+" nm, "+lightWord(L.w)+"."]],
+          facts:[["Orbital",orbName(n,l,m)],["Energy",nf(Eb,z>9?1:3)+" eV"],["Average distance",nf(rm,rm<10?3:2)+" pm"],["Nodes",(nodes+l)+" ("+nodes+" spherical, "+l+" angular)"]],
+          check:{q:"How many spherical nodes does a "+(n+1)+OLET[Math.min(l,n)]+" orbital have?", a:(n+1)-Math.min(l,n)-1, tol:0, unit:"",
+            why:"Spherical (radial) nodes number n − l − 1 = "+(n+1)+" − "+Math.min(l,n)+" − 1 = "+((n+1)-Math.min(l,n)-1)+"."},
+          limit:"Exact for one electron. For more than one, the electrons repel each other and no exact solution exists; step 7 shows the standard estimate.",
+          alt:"A slice through the "+orbName(n,l,m)+" orbital of "+ionName(z)+(MA.mix?", mixed with another orbital so the cloud sloshes back and forth.":".")};
+      }
+      if(id==="many"){
+        var sl=o.sl_, sub=o.sn+OLET[o.sl], err=o.ie?(o.ieEst-o.ie)/o.ie*100:null;
+        return {title:"Many electrons: who shields whom", q:"How does a real, neutral "+E+" atom hold its electrons?",
+          idea:"With "+z+" electron"+(z>1?"s":"")+", each one is pulled by the nucleus and pushed by all the others, and no exact formula exists. The standard shortcut: fill the orbitals in order (Pauli lets two share each), then let each electron feel the nucleus minus the electrons that shield it. Slater's rules put numbers on the shielding: inner electrons hide almost all of a proton each, electrons in the same shell only about a third.",
+          eqs:[[MM(mtext(configStr(z).replace(/([spdf])(\d+)/g,function(m0,a,b){ return a+supNum(b); }))),"How "+E+"'s electrons fill the shells, lowest energy first."],
+            [MM(mi("S")+eq_+mo("∑")+mi("count")+mo("×")+mi("share")+eq_+mn_(nf(sl.S,2))),sl.parts.length?sl.parts.map(function(p){ return p.cnt+" × "+nf(p.f,2)+" ("+p.name+")"; }).join(" + ")+" = "+nf(sl.S,2):"Nothing to shield it: it is the only electron."],
+            [MM(Zeff_+eq_+mi("Z")+mo("−")+mi("S")+eq_+mn_(nf(sl.Zeff,2))),"A "+sub+" electron in "+E+" feels about "+nf(sl.Zeff,2)+" of the nucleus's "+z+" charges."],
+            [MM(mi("E")+mo("≈")+mo("−")+mn_("13.606 eV")+mo("⁢")+msup(mrow(mo("("),mfrac(Zeff_,msup(mi("n"),mo("*"))),mo(")")),mn_(2))),"= 13.606 × ("+nf(sl.Zeff,2)+" ÷ "+nf(o.nstar,1)+")² = "+nf(o.ieEst,2)+" eV to remove it"+(o.ie&&sub===((function(b){ return b[0]+OLET[b[1]]; })(outerSub(z)))?"; measured: "+nf(o.ie,2)+" eV ("+(err>=0?"+":"−")+nf(Math.abs(err),0)+"%)":"")+". n* is Slater's effective n."]],
+          facts:[["Electron",sub],["Shielding S",nf(sl.S,2)],["Charge it feels",nf(sl.Zeff,2)+" of "+z],["Estimate to remove it",nf(o.ieEst,2)+" eV"]],
+          check:{q:"How much of the nucleus's charge is shielded from a "+sub+" electron (S)?", a:sl.S, tol:0.005, unit:"",
+            why:"S = Z − Zeff = "+z+" − "+nf(sl.Zeff,2)+" = "+nf(sl.S,2)+", the sum of the shares shown."},
+          limit:"Slater's rules are a rule of thumb from 1930: estimates within 20 to 50 percent are normal. Modern calculations (Hartree–Fock and beyond) solve for all the electrons together.",
+          alt:cap(E)+"'s electrons in their shells, with the "+sub+" electrons highlighted and the inner electrons shielding the nucleus."};
+      }
+      if(id==="rel"){
+        var zh=0.5/MK.alpha;
+        return {title:"Near a heavy nucleus, relativity matters", q:"How fast is the innermost electron going, and what does that change?",
+          idea:"In Bohr's picture the innermost electron moves at Z × α times the speed of light, where α ≈ 1/137 is the fine-structure constant. For light atoms that is slow. For heavy ones it is a large fraction of light speed: the electron gets heavier, its orbit pulls in, and the outer s orbits follow. That is why gold is yellow and mercury is a liquid. Slide Z to see where the simple formula breaks.",
+          eqs:[[MM(mfrac(mi("v"),mi("c"))+mo("≈")+mi("Z")+mo("⁢")+mi("α")+mo(",")+mspace()+mi("α")+eq_+mfrac(msup(mi("e"),mn_(2)),mn_(4)+pi_+msub(mi("ε"),mn_(0))+hbar_+mi("c"))+mo("≈")+mfrac(mn_(1),mn_("137.036"))),"For Z = "+o.zr+": v/c ≈ "+nf(o.za,3)],
+            [MM(mi("γ")+eq_+mfrac(mn_(1),msqrt(mn_(1)+mo("−")+msup(mrow(mi("Z"),mi("α")),mn_(2))))),o.za<1?"γ = "+nf(o.gam,3)+": the electron is "+nf((o.gam-1)*100,1)+"% heavier, and its orbit about "+nf((1-1/o.gam)*100,1)+"% smaller":"Zα ≥ 1: the square root fails"],
+            [MM(msub(mi("E"),mi("1s"))+eq_+mi("m")+msup(mi("c"),mn_(2))+mo("(")+msqrt(mn_(1)+mo("−")+msup(mrow(mi("Z"),mi("α")),mn_(2)))+mo("−")+mn_(1)+mo(")")),o.eD!=null?"Dirac's exact one-electron energy: "+nf(o.eD,0)+" eV, against Bohr's "+nf(o.eB,0)+" eV ("+nf((o.eD/o.eB-1)*100,1)+"% deeper)":"Undefined past Z = 137 for a point nucleus. Real nuclei have size, which pushes the limit to about Z = 170."]],
+          facts:[["Z",String(o.zr)],["Innermost speed",nf(o.za*100,1)+"% of light"],["Heavier by",o.za<1?nf((o.gam-1)*100,1)+"%":"—"],["Orbit smaller by",o.za<1?nf((1-1/o.gam)*100,1)+"%":"—"]],
+          check:{q:"At what Z does the innermost electron reach half the speed of light (v/c = Zα = 0.5)?", a:zh, tol:0.008, unit:"",
+            why:"Z = 0.5 ÷ α = 0.5 × 137.036 = "+nf(zh,1)+", so around element 68 or 69, erbium and thulium."},
+          limit:"These are one-electron estimates for the innermost electron. Real heavy atoms need the Dirac equation for all their electrons together.",
+          alt:"The innermost electron's orbit for Z = "+o.zr+", drawn smaller than the dashed nonrelativistic orbit by the relativistic contraction."};
+      }
+      if(id==="nucleus"){
+        var A=o.A, st=nuclide(z,A);
+        return {title:"The nucleus: tiny, dense, and held together", q:"How big is "+isoName(z,A)+"'s nucleus, and what holds it together?",
+          idea:"Nuclei are made of protons and neutrons packed like drops of liquid, so the volume grows with the number of nucleons, A. The liquid-drop model counts the glue: every nucleon bonds to its neighbors, the ones on the surface have fewer neighbors, the protons push each other apart, and nature prefers equal numbers of protons and neutrons, in pairs. The total, the binding energy, is mass that disappeared when the nucleus formed: E = mc².",
+          eqs:[[MM(mi("R")+eq_+msub(mi("r"),mn_(0))+mo("⁢")+msup(mi("A"),mfrac(mn_(1),mn_(3)))),"= 1.2 fm × "+A+"^⅓ = "+nf(o.R,2)+" fm. The atom is about "+nf(sig(o.ratio,2),0)+" times wider."],
+            [MM(mi("B")+eq_+msub(mi("a"),mi("V"))+mi("A")+mo("−")+msub(mi("a"),mi("S"))+msup(mi("A"),mfrac(mn_(2),mn_(3)))+mo("−")+msub(mi("a"),mi("C"))+mfrac(mi("Z")+mo("(")+mi("Z")+mo("−")+mn_(1)+mo(")"),msup(mi("A"),mfrac(mn_(1),mn_(3))))+mo("−")+msub(mi("a"),mi("A"))+mfrac(msup(mrow(mo("("),mi("A"),mo("−"),mn_(2),mi("Z"),mo(")")),mn_(2)),mi("A"))+mo("±")+mi("δ")),
+              "= "+nf(o.vol,0)+" − "+nf(-o.surf,0)+" − "+nf(-o.coul,0)+" − "+nf(-o.asym,1)+(o.pair?(o.pair>0?" + ":" − ")+nf(Math.abs(o.pair),2):" + 0")+" = "+nf(o.B,1)+" MeV, or "+nf(o.BA,3)+" MeV per nucleon"],
+            [MM(mi("Δ")+mi("m")+eq_+mfrac(mi("B"),msup(mi("c"),mn_(2)))),"= "+nf(o.B,1)+" MeV ÷ 931.494 MeV per u = "+nf(o.dm,4)+" u missing: the nucleus weighs that much less than its parts"],
+            [MM(msub(mi("V"),mi("barrier"))+eq_+mfrac(mi("k")+mo("⁢")+mi("Z")+mo("⁢")+msup(mi("e"),mn_(2)),mi("R")+mo("+")+msub(mi("r"),mi("p")))),"= 1.440 MeV·fm × "+z+" ÷ ("+nf(o.R,2)+" + 0.84) fm = "+nf(o.barrier,2)+" MeV for a proton to touch it"]],
+          facts:[["Nucleus",cap(isoName(z,A))+": "+st.title.toLowerCase()],["Radius",nf(o.R,2)+" fm"],["Binding energy",nf(o.B,1)+" MeV"],["Per nucleon",nf(o.BA,3)+" MeV"]],
+          check:{q:"A nucleus with eight times as many nucleons: what is its radius, in femtometers?", a:2*o.R, tol:0.02, unit:"fm",
+            why:"R goes as A^⅓, and 8^⅓ = 2, so the radius doubles: 2 × "+nf(o.R,2)+" = "+nf(2*o.R,2)+" fm."},
+          limit:"The liquid-drop model misses the magic numbers (2, 8, 20, 28, 50, 82, 126), where nuclei are extra stable. Its coefficients here are Rohlf's (1994), the same ones Atom uses everywhere.",
+          alt:cap(isoName(z,A))+": "+z+" protons and "+o.N+" neutrons packed together, with the five pieces of its binding energy as bars."};
+      }
+      /* quarks */
+      var V1=MK.ke2/1.0;
+      return {title:"Inside the nucleons: quarks and the strong force", q:"What holds protons together when their charges push them apart?",
+        idea:"Two protons touching repel with millions of electron-volts. Something stronger and very short-ranged must hold them: the strong force. Yukawa's 1935 idea gives its range from the mass of the particle that carries it, the pion. Look deeper and each proton and neutron is three quarks bound by gluons, and almost all of their mass is that binding energy, not the quarks themselves.",
+        eqs:[[MM(msub(mi("V"),mi("C"))+eq_+mfrac(mi("k")+mo("⁢")+msup(mi("e"),mn_(2)),mi("r"))),"= 1.440 MeV·fm ÷ "+nf(MA.qr,2)+" fm = "+nf(o.Vc,2)+" MeV pushing two protons apart"],
+          [MM(mi("λ")+eq_+mfrac(hbar_,msub(mi("m"),mi("π"))+mo("⁢")+mi("c"))+eq_+mfrac(mn_("197.33 MeV·fm"),mn_("139.57 MeV"))),"= "+nf(o.lamY,3)+" fm: the strong force fades within about this distance, like e^(−r/λ)/r"],
+          [MM(mi("p")+eq_+mi("u")+mi("u")+mi("d")+mo(":")+mfrac(mn_(2),mn_(3))+mo("+")+mfrac(mn_(2),mn_(3))+mo("−")+mfrac(mn_(1),mn_(3))+eq_+mn_(1)+mo(",")+mspace()+mi("n")+eq_+mi("u")+mi("d")+mi("d")+mo(":")+mn_(0)),"The charges of the quarks add up to the proton's and neutron's."],
+          [MM(mfrac(mrow(mi("quark"),mspace(),mi("masses")),mrow(mi("nucleus"),mspace(),mi("mass")))+eq_+mfrac(mn_(o.ups+" × 2.16 + "+o.downs+" × 4.67 MeV"),mn_(nf(o.M,0)+" MeV"))),"= "+nf(o.qfrac*100,2)+"%: the rest of "+isoName(z,o.A)+"'s mass is the energy of the quarks and gluons moving inside, E = mc²"]],
+        facts:[["Up quarks",String(o.ups)],["Down quarks",String(o.downs)],["Quark rest mass",nf(o.qm,0)+" MeV"],["Share of the mass",nf(o.qfrac*100,2)+"%"]],
+        check:{q:"How many down quarks are in "+isoName(z,o.A)+"'s nucleus?", a:o.downs, tol:0, unit:"",
+          why:"Each proton has one down quark and each neutron two: "+z+" + 2 × "+o.N+" = "+o.downs+"."},
+        limit:"Quark masses are the running masses from the Particle Data Group (about 2.2 and 4.7 MeV) and are only known to a few percent. The strong-force curve shows its shape and range, not a fitted strength.",
+        alt:"A "+(MA.nucleon==="p"?"proton":"neutron")+" as three quarks joined by gluons, and the electric and strong forces between two protons "+nf(MA.qr,2)+" femtometers apart."};
+    }
+
+    /* ---- controls each step offers */
+    function mathCtl(id,o){
+      var z=o.z, h='';
+      function rng(key,label,min,max,step,val,out){ return '<label class="lb-mslider"><span>'+label+' <output data-mo="'+key+'">'+out+'</output></span><input type="range" data-mv="'+key+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'"></label>'; }
+      function sel(key,label,opts,val){ return '<label class="lb-field">'+label+'<select data-mv="'+key+'">'+opts.map(function(x){ return '<option value="'+x[0]+'"'+(String(x[0])===String(val)?' selected':'')+'>'+esc(x[1])+'</option>'; }).join('')+'</select></label>'; }
+      if(id==="pull"||id==="orbit"||id==="collapse") h=rng("r","Distance from the nucleus",5,400,1,Math.round(o.r),nf(o.r,0)+" pm")+'<button type="button" class="lb-btn sm ghost" data-mx="r0">Back to '+esc(lc(z))+'\'s radius</button>';
+      else if(id==="bohr"){ var ns=[]; for(var i=1;i<=8;i++) ns.push([i,"n = "+i]); h='<div class="lb-row">'+sel("nu","Jump from",ns.slice(1),MA.nu)+sel("nl","down to",ns.slice(0,MA.nu-1),MA.nl)+'</div>'; }
+      else if(id==="waves") h=rng("waves","Waves around the loop",1,6,0.05,MA.waves,nf(MA.waves,2))+'<div class="lb-chips" role="group" aria-label="Snap to a whole number">'+[1,2,3,4,5].map(function(k){ return '<button type="button" data-mw="'+k+'">'+k+'</button>'; }).join('')+'</div>';
+      else if(id==="cloud"){ var nO=[],lO=[],mO=[],k;
+        for(k=1;k<=5;k++) nO.push([k,"n = "+k]); for(k=0;k<MA.on;k++) lO.push([k,"l = "+k+" ("+OLET[k]+")"]); for(k=-MA.ol;k<=MA.ol;k++) mO.push([k,"m = "+k]);
+        h='<div class="lb-row">'+sel("on","Shell",nO,MA.on)+sel("ol","Shape",lO,MA.ol)+sel("om","Tilt",mO,MA.om)+'</div>'+
+          '<div class="lb-row"><button type="button" class="lb-btn sm'+(MA.mix?' go':'')+'" data-mx="mix" aria-pressed="'+(MA.mix?"true":"false")+'">'+(MA.mix?"Mixing with "+(function(b){ return orbName(b[0],b[1],b[2]); })(mixPartner(MA.on,MA.ol,MA.om)):"Mix with the next orbital up")+'</button>'+
+          '<div class="lb-chips" role="group" aria-label="Orbitals to try">'+[["1,0,0","1s"],["2,1,0","2pz"],["3,2,0","3dz²"],["3,2,2","3dx²−y²"],["4,3,0","4fz³"]].map(function(x){ return '<button type="button" data-mo3="'+x[0]+'">'+x[1]+'</button>'; }).join('')+'</div></div>'; }
+      else if(id==="many"){ var cfg=configOf(z), seen={};
+        h='<div class="lb-chips" role="group" aria-label="Pick an electron">'+cfg.filter(function(x){ var k2=x[0]+","+x[1]; if(seen[k2]) return false; seen[k2]=1; return true; }).map(function(x){ var k2=x[0]+","+x[1];
+          return '<button type="button" data-msub="'+k2+'" aria-pressed="'+(k2===o.sub?"true":"false")+'">'+x[0]+OLET[x[1]]+' <span>'+x[2]+' e⁻</span></button>'; }).join('')+'</div>'; }
+      else if(id==="rel") h=rng("zr","Nuclear charge Z",1,140,1,o.zr,String(o.zr))+'<button type="button" class="lb-btn sm ghost" data-mx="zr0">Back to '+esc(lc(z))+'</button>';
+      else if(id==="nucleus"){ var lo=Math.max(0,Math.round(o.N*0.6)-2), hi=Math.round(o.N*1.4)+4; h=rng("nn","Neutrons",lo,hi,1,o.N,o.N+" ("+isoName(z,o.A)+")")+'<button type="button" class="lb-btn sm ghost" data-mx="nn0">Back to '+esc(isoName(z,commonA(z)))+'</button>'; }
+      else h=rng("qr","Distance between two protons",0.5,4,0.05,MA.qr,nf(MA.qr,2)+" fm")+'<div class="lb-row">'+sel("nucleon","Look inside a",[["p","proton"],["n","neutron"]],MA.nucleon)+'</div>';
+      return h+'<button type="button" class="lb-btn sm ghost" data-mx="play" aria-pressed="'+(MA.play?"true":"false")+'">'+(MA.play?"Pause":"Play")+'</button>';
+    }
+
+    function mathRender(full){
+      var P=pane("math"); if(!P||!built.math) return;
+      var o=mathNums(), ch=MCH[MA.ch], t=mathText(ch.id,o), z=o.z;
+      var inp=P.querySelector("[data-mz]"); if(inp&&D.activeElement!==inp){ inp.value=nm(z); inp.removeAttribute("aria-invalid"); }
+      P.querySelector(".lb-mtile").innerHTML=tile(z,true);
+      var zn=P.querySelector(".lb-mzname"); if(zn) zn.textContent=lc(z);
+      [].forEach.call(P.querySelectorAll("[data-mch]"),function(b,i){ if(i===MA.ch) b.setAttribute("aria-current","step"); else b.removeAttribute("aria-current"); });
+      P.querySelector(".lb-mkind").textContent="Step "+(MA.ch+1)+" of "+MCH.length+" · "+ch.kind;
+      P.querySelector(".lb-mkind").setAttribute("data-kind",ch.kind.toLowerCase());
+      P.querySelector(".lb-mtitle").textContent=t.title;
+      P.querySelector(".lb-mq").textContent=t.q;
+      P.querySelector(".lb-midea").textContent=t.idea;
+      P.querySelector(".lb-meqs").innerHTML=t.eqs.map(function(e){ return '<li><div class="lb-mwide">'+e[0]+'</div><p>'+esc(e[1])+'</p></li>'; }).join('');
+      /* an equation wider than the column scrolls sideways; then it must be
+         reachable from the keyboard, so it becomes a focusable region */
+      requestAnimationFrame(function(){ [].forEach.call(P.querySelectorAll(".lb-mwide"),function(x){ var over=x.scrollWidth>x.clientWidth+2;
+        if(over){ x.tabIndex=0; x.setAttribute("role","region"); x.setAttribute("aria-label","Equation (scrolls sideways)"); } else { x.removeAttribute("tabindex"); x.removeAttribute("role"); x.removeAttribute("aria-label"); } }); });
+      P.querySelector(".lb-mfacts").innerHTML=t.facts.map(function(f){ return '<div><dt>'+esc(f[0])+'</dt><dd>'+esc(f[1])+'</dd></div>'; }).join('');
+      P.querySelector(".lb-mlimit").textContent=t.limit;
+      P.querySelector("[data-c='math']").setAttribute("aria-label",t.alt);
+      var cq=P.querySelector(".lb-mcq"); if(full||cq.getAttribute("data-q")!==t.check.q){ cq.textContent=t.check.q; cq.setAttribute("data-q",t.check.q); P.querySelector(".lb-mfb").textContent=""; P.querySelector("[data-mans]").value=""; }
+      P.querySelector(".lb-munit").textContent=t.check.unit;
+      MA.check=t.check;
+      if(full) P.querySelector(".lb-mctl").innerHTML=mathCtl(ch.id,o);
+      else { [].forEach.call(P.querySelectorAll("[data-mo]"),function(x){ var k=x.getAttribute("data-mo");
+        x.textContent=k==="r"?nf(o.r,0)+" pm":k==="waves"?nf(MA.waves,2):k==="zr"?String(o.zr):k==="nn"?o.N+" ("+isoName(z,o.A)+")":k==="qr"?nf(MA.qr,2)+" fm":x.textContent; }); }
+      P.querySelector("[data-mnav='-1']").disabled=MA.ch===0;
+      var nx=P.querySelector("[data-mnav='1']"); nx.textContent=MA.ch===MCH.length-1?"Back to step 1":"Next: "+MCH[MA.ch+1].short;
+      dirty=true;
+    }
+    function mathGo(i){ MA.ch=Math.max(0,Math.min(MCH.length-1,i)); MA.t0=0; mathRender(true); ev("math:"+MCH[MA.ch].id); }
+    function mathSetZ(z){ if(!z) return; MA.z=z; MA.r=0; MA.sub=""; MA.zr=0; MA.nn=-1; mathRender(true); }
+    BUILD.math=function(P){
+      MA.z=MA.z||Z||1;
+      P.innerHTML=elDatalist()+'<div class="lb-math">'+
+        '<div class="lb-mtop"><div class="lb-mpick"><span class="lb-mtile" aria-hidden="true"></span><label class="lb-field">Element<input class="lb-input" data-mz list="'+dlId+'" autocomplete="off" spellcheck="false"></label></div>'+
+        '<ol class="lb-msteps" aria-label="Steps">'+MCH.map(function(c,i){ return '<li><button type="button" data-mch="'+i+'" data-kind="'+c.kind.toLowerCase()+'"><b>'+(i+1)+'</b> <span>'+esc(c.short)+'</span></button></li>'; }).join('')+'</ol></div>'+
+        '<div class="lb-cols lb-mcols"><div class="lb-mleft"><div class="lb-stagewrap lb-mstage"><canvas class="lb-cv" data-c="math" role="img" aria-label=""></canvas></div>'+
+        '<div class="lb-mctl"></div></div>'+
+        '<div class="lb-mright"><p class="lb-mkind"></p><h3 class="lb-mtitle"></h3><p class="lb-mq"></p><p class="lb-say lb-midea"></p>'+
+        '<h4 class="lb-h">The math, with '+'<span class="lb-mzname"></span>'+'\'s numbers</h4><ol class="lb-meqs"></ol>'+
+        '<dl class="lb-facts lb-mfacts"></dl>'+
+        '<section class="lb-mcheck" aria-label="Try it"><h4 class="lb-h">Try it</h4><p class="lb-mcq"></p>'+
+        '<form class="lb-qform lb-mform"><input class="lb-input" type="number" step="any" inputmode="decimal" data-mans aria-label="Your answer"><span class="lb-munit"></span>'+
+        '<button type="submit" class="lb-btn go">Check</button><button type="button" class="lb-btn ghost" data-mshow>Show me</button></form><p class="lb-mfb" aria-live="polite"></p></section>'+
+        '<p class="lb-note lb-mlimit"></p>'+
+        '<div class="lb-row lb-mnav"><button type="button" class="lb-btn" data-mnav="-1">Previous step</button><button type="button" class="lb-btn go" data-mnav="1">Next</button></div></div></div></div>';
+      var zi=P.querySelector("[data-mz]");
+      function setZ(){ var z=zOf(zi.value); if(!z){ if(zi.value.trim()) zi.setAttribute("aria-invalid","true"); return; } MA.follow=false; mathSetZ(z); ev("math:z:"+z); }
+      zi.addEventListener("change",setZ);
+      zi.addEventListener("keydown",function(e){ zi.removeAttribute("aria-invalid"); if(e.key==="Enter"){ e.preventDefault(); setZ(); } });
+      P.addEventListener("input",function(e){ var r=e.target.closest("input[data-mv]"); if(!r) return; var k=r.getAttribute("data-mv"), v=+r.value;
+        if(k==="r") MA.r=v; else if(k==="waves") MA.waves=v; else if(k==="zr") MA.zr=v; else if(k==="nn") MA.nn=v; else if(k==="qr") MA.qr=v;
+        mathRender(false); });
+      P.addEventListener("change",function(e){ var s=e.target.closest("select[data-mv]"); if(!s) return; var k=s.getAttribute("data-mv"), v=s.value;
+        if(k==="nu"){ MA.nu=+v; if(MA.nl>=MA.nu) MA.nl=MA.nu-1; } else if(k==="nl") MA.nl=+v;
+        else if(k==="on"){ MA.on=+v; if(MA.ol>=MA.on) MA.ol=MA.on-1; if(Math.abs(MA.om)>MA.ol) MA.om=0; MA.cache=null; }
+        else if(k==="ol"){ MA.ol=+v; if(Math.abs(MA.om)>MA.ol) MA.om=0; MA.cache=null; } else if(k==="om"){ MA.om=+v; MA.cache=null; }
+        else if(k==="nucleon") MA.nucleon=v;
+        mathRender(true); var again=pane("math").querySelector('select[data-mv="'+k+'"]'); if(again) again.focus(); });
+      P.addEventListener("click",function(e){
+        var c=e.target.closest("[data-mch]"), nv=e.target.closest("[data-mnav]"), x=e.target.closest("[data-mx]"), w=e.target.closest("[data-mw]"), o3=e.target.closest("[data-mo3]"), sb=e.target.closest("[data-msub]"), sh=e.target.closest("[data-mshow]");
+        if(c){ mathGo(+c.getAttribute("data-mch")); return; }
+        if(nv){ var dn=+nv.getAttribute("data-mnav"); mathGo(dn>0&&MA.ch===MCH.length-1?0:MA.ch+dn); var tgt=pane("math").querySelector(".lb-mright"); if(tgt) try{ tgt.scrollIntoView({block:"nearest",behavior:opt.calm?"auto":"smooth"}); }catch(er){} return; }
+        if(w){ MA.waves=+w.getAttribute("data-mw"); var rr=pane("math").querySelector('input[data-mv="waves"]'); if(rr) rr.value=MA.waves; mathRender(false); return; }
+        if(o3){ var p=o3.getAttribute("data-mo3").split(","); MA.on=+p[0]; MA.ol=+p[1]; MA.om=+p[2]; MA.cache=null; mathRender(true); return; }
+        if(sb){ MA.sub=sb.getAttribute("data-msub"); mathRender(true); var b2=pane("math").querySelector('[data-msub="'+MA.sub+'"]'); if(b2) b2.focus(); return; }
+        if(sh){ var ck=MA.check; pane("math").querySelector(".lb-mfb").innerHTML='<b>Answer: '+esc(ckAns(ck))+'.</b> '+esc(ck.why); return; }
+        if(x){ var k=x.getAttribute("data-mx");
+          if(k==="r0") MA.r=0; else if(k==="zr0") MA.zr=0; else if(k==="nn0") MA.nn=-1;
+          else if(k==="mix") MA.mix=!MA.mix; else if(k==="play") MA.play=!MA.play;
+          mathRender(true); var b3=pane("math").querySelector('[data-mx="'+k+'"]'); if(b3) b3.focus(); }
+      });
+      P.querySelector(".lb-mform").addEventListener("submit",function(e){ e.preventDefault(); var ck=MA.check, a=P.querySelector("[data-mans]"), v=parseFloat(String(a.value).replace(/,/g,"")), fb=P.querySelector(".lb-mfb");
+        if(!isFinite(v)){ fb.textContent="Type a number first."; a.focus(); return; }
+        var ok=ck.tol===0?Math.abs(v-ck.a)<0.5:Math.abs(v-ck.a)<=Math.abs(ck.a)*ck.tol;
+        fb.innerHTML=(ok?'<b class="lb-ok">Right.</b> ':'<b class="lb-err">Not quite.</b> ')+esc(ok?ck.why:"Try again, or press Show me.");
+        ev("math:check:"+MCH[MA.ch].id+":"+(ok?"right":"wrong")); });
+      mathRender(true);
+    };
+    function ckAns(ck){ var a=ck.a; return (ck.tol===0?String(Math.round(a)):(Math.abs(a)>=100?nf(a,0):(Math.abs(a)>=10?nf(a,1):nf(a,Math.abs(a)>=1?2:3))))+(ck.unit?" "+ck.unit:""); }
+    REFRESH.math=function(){ var P=pane("math"); if(P){ var s=P.querySelector(".lb-mzname"); if(s) s.textContent=lc(mz()); } mathRender(false); };
+
+    /* ---- the pictures */
+    function arrow(g,x0,y0,x1,y1,c,wd){ var a=Math.atan2(y1-y0,x1-x0), hl=Math.min(12,Math.hypot(x1-x0,y1-y0)*0.4);
+      g.strokeStyle=c; g.fillStyle=c; g.lineWidth=wd||2; g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.stroke();
+      g.beginPath(); g.moveTo(x1,y1); g.lineTo(x1-hl*Math.cos(a-0.4),y1-hl*Math.sin(a-0.4)); g.lineTo(x1-hl*Math.cos(a+0.4),y1-hl*Math.sin(a+0.4)); g.closePath(); g.fill(); }
+    function nucleusDot(g,x,y,r,z,T){ var t="+"+z; r=Math.max(r,7+4*t.length); g.fillStyle=col("p"); g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill();
+      var fs=Math.max(10,Math.min(15,(2*r-4)/(0.62*t.length))); g.fillStyle=T.plate; g.font="700 "+fs.toFixed(1)+"px Archivo, sans-serif"; g.textAlign="center"; g.fillText(t,x,y+fs*0.36); g.font="500 14px Archivo, sans-serif"; }
+    function eDot(g,x,y,r){ g.fillStyle=col("e"); g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); }
+    function drawMath(now){
+      var c=host.querySelector('[data-c="math"]'); if(!c||!c.offsetParent) return false;
+      var f=fit(c), g=f.g, w=f.w, h=f.h, T=th(), o=mathNums(), id=MCH[MA.ch].id, z=o.z, cx=w/2, cy=h/2, R=Math.min(w,h)/2-28;
+      if(!MA.t0) MA.t0=now; var t=MA.play&&!opt.calm?(now-MA.t0)/1000:0;
+      g.clearRect(0,0,w,h); g.font="500 14px Archivo, sans-serif"; g.textAlign="center";
+      var anim=MA.play&&!opt.calm, k;
+      if(id==="pull"||id==="orbit"||id==="collapse"){
+        var rr=Math.max(4,Math.min(1,o.r/400)*R), ang=id==="pull"?-0.6:t*1.4, ex, ey;
+        /* inner electrons as a soft shield around the nucleus */
+        if(z>1){ var sg=g.createRadialGradient(cx,cy,0,cx,cy,Math.max(10,rr*0.75)); sg.addColorStop(0,"rgba(120,160,220,0.30)"); sg.addColorStop(1,"rgba(120,160,220,0)"); g.fillStyle=sg; g.beginPath(); g.arc(cx,cy,Math.max(10,rr*0.75),0,6.2832); g.fill(); }
+        if(id==="collapse"){
+          var T0=4.5, ph=(t%(T0+1.2))/T0, fr=Math.min(1,ph), rt=rr*Math.cbrt(Math.max(0,1-fr)), th2=0, steps=240, i;
+          g.strokeStyle=T.ink3; g.lineWidth=1; g.globalAlpha=0.6; g.beginPath();
+          for(i=0;i<=steps;i++){ var q=i/steps*fr, r2=rr*Math.cbrt(Math.max(0,1-q)); th2=q*28+q*q*40; var px=cx+r2*Math.cos(th2), py=cy+r2*Math.sin(th2); if(i) g.lineTo(px,py); else g.moveTo(px,py); }
+          g.stroke(); g.globalAlpha=1; ex=cx+rt*Math.cos(th2); ey=cy+rt*Math.sin(th2);
+          if(fr<1){ g.setLineDash([3,4]); g.lineWidth=1; for(k=1;k<=3;k++){ var rw=((t*60+k*30)%90); g.strokeStyle=col("math")||col("e"); g.globalAlpha=Math.max(0,0.45-rw/200); g.beginPath(); g.arc(ex,ey,rw,0,6.2832); g.stroke(); } g.setLineDash([]); g.globalAlpha=1; }
+          nucleusDot(g,cx,cy,13,z,T); eDot(g,ex,ey,6);
+          g.fillStyle=T.ink2; label(g,fr>=1?"Collapsed after "+timeWords(o.tc):"Elapsed: "+timeWords(o.tc*fr),cx,h-14,T);
+          return anim;
+        }
+        g.strokeStyle=T.ink3; g.setLineDash([4,5]); g.lineWidth=1; g.beginPath(); g.arc(cx,cy,rr,0,6.2832); g.stroke(); g.setLineDash([]);
+        ex=cx+rr*Math.cos(ang); ey=cy+rr*Math.sin(ang);
+        nucleusDot(g,cx,cy,13,z,T); eDot(g,ex,ey,7);
+        var al=Math.max(18,Math.min(rr-20,14*Math.log10(o.F*1e12+1)+8)), ux=(cx-ex)/rr, uy=(cy-ey)/rr;
+        arrow(g,ex+ux*10,ey+uy*10,ex+ux*(10+al),ey+uy*(10+al),col("math")||T.ink,2.5);
+        if(id==="orbit"){ var tx=-Math.sin(ang), ty=Math.cos(ang); arrow(g,ex+tx*10,ey+ty*10,ex+tx*46,ey+ty*46,col("e"),2); g.fillStyle=T.ink2; label(g,"v = "+nf(o.v/1000,0)+" km/s",ex+tx*58,ey+ty*58+5,T); label(g,"Slowed about "+sciT(1/o.T/0.22,1)+" times",cx,h-14,T); }
+        else { g.fillStyle=T.ink2; label(g,"F = "+nf(o.F*1e9,2)+" nN",cx,cy-rr-12>20?cy-rr-12:h-14,T); }
+        g.strokeStyle=T.ink3; g.lineWidth=1; g.beginPath(); g.moveTo(cx,cy+16); g.lineTo(cx,cy+rr); g.stroke();
+        g.fillStyle=T.ink2; label(g,"r = "+nf(o.r,0)+" pm",cx,Math.min(h-36,cy+rr+22),T);
+        return id==="orbit"&&anim;
+      }
+      if(id==="bohr"){
+        var nmax=Math.max(MA.nu,4), sc=R/(nmax*nmax), pr=1.2, cyc=t%pr, jumping=cyc<0.5;
+        for(k=1;k<=nmax;k++){ var rk=k*k*sc; g.strokeStyle=(k===MA.nu||k===MA.nl)?(col("math")||T.ink):T.ink3; g.lineWidth=(k===MA.nu||k===MA.nl)?2:1; g.beginPath(); g.arc(cx,cy,Math.max(3,rk),0,6.2832); g.stroke();
+          if(rk>20){ g.fillStyle=T.ink2; label(g,"n = "+k,cx+rk*Math.cos(0.5)+18,cy+rk*Math.sin(0.5)+6,T); } }
+        nucleusDot(g,cx,cy,9,z,T);
+        var fromR=MA.nu*MA.nu*sc, toR=MA.nl*MA.nl*sc, prog=jumping?Math.min(1,cyc/0.35):1, rNow=fromR+(toR-fromR)*(anim?prog:1), a0=-0.9;
+        eDot(g,cx+rNow*Math.cos(a0),cy+rNow*Math.sin(a0),6);
+        if(!anim||cyc>0.3){ var pc=o.line.w>=380&&o.line.w<=750?wlRGB(o.line.w):T.ink2, ph0=anim?(cyc-0.3)*220:120, sx=cx+toR*Math.cos(a0), sy=cy+toR*Math.sin(a0);
+          g.strokeStyle=pc; g.lineWidth=2.5; g.beginPath();
+          for(k=0;k<=60;k++){ var d=ph0*k/60, yy=Math.sin(d/6)*6, px2=sx+d*0.92, py2=sy-d*0.38+yy; if(k) g.lineTo(px2,py2); else g.moveTo(px2,py2); } g.stroke();
+          g.fillStyle=T.ink2; label(g,nf(o.line.w,o.line.w<10?3:1)+" nm, "+lightWord(o.line.w),cx,h-14,T); }
+        return anim;
+      }
+      if(id==="waves"){
+        var Rw=R*0.62, amp=Math.min(26,R*0.12), kk=MA.waves, i2, N2=360;
+        g.strokeStyle=T.ink3; g.setLineDash([4,5]); g.lineWidth=1; g.beginPath(); g.arc(cx,cy,Rw,0,6.2832); g.stroke(); g.setLineDash([]);
+        nucleusDot(g,cx,cy,9,z,T);
+        var good=Math.abs(kk-Math.round(kk))<0.02;
+        g.strokeStyle=good?(col("e")):(col("bad")||T.ink); g.lineWidth=2.5; g.beginPath();
+        for(i2=0;i2<=N2;i2++){ var th3=i2/N2*6.2832, rr3=Rw+amp*Math.sin(kk*th3-(good?t*2:0))*(good?Math.cos(t*2.2):1); var px3=cx+rr3*Math.cos(th3-1.5708), py3=cy+rr3*Math.sin(th3-1.5708); if(i2) g.lineTo(px3,py3); else g.moveTo(px3,py3); }
+        g.stroke();
+        if(!good){ var endR=Rw+amp*Math.sin(kk*6.2832); g.fillStyle=col("bad")||T.ink; g.beginPath(); g.arc(cx,cy-endR,5,0,6.2832); g.fill(); g.beginPath(); g.arc(cx,cy-Rw,5,0,6.2832); g.fill(); }
+        g.fillStyle=T.ink2; label(g,good?"A whole number of waves: it meets itself in step and survives":"Not whole: the ends don't meet, and it cancels itself out",cx,h-14,T);
+        return anim&&good;
+      }
+      if(id==="cloud") return mathCloud(g,w,h,T,o,t,anim);
+      if(id==="many"){
+        var cfg=configOf(z), shells=shellsFrom(cfg), ns2=shells.length, gap=(R-20)/Math.max(ns2,1), sn=o.sn;
+        for(k=0;k<ns2;k++){ var rk2=24+gap*(k+0.7), cnt=shells[k], hl=(k+1)===sn;
+          g.strokeStyle=hl?(col("math")||T.ink):T.ink3; g.lineWidth=hl?2:1; g.beginPath(); g.arc(cx,cy,rk2,0,6.2832); g.stroke();
+          var spin=anim?t*0.5/(k+1):0, sub=configOf(z).filter(function(x){ return x[0]===k+1; }), idx=0;
+          sub.forEach(function(x){ for(var j=0;j<x[2];j++){ var a2=spin+idx/cnt*6.2832; idx++; var hit=(x[0]+","+x[1])===o.sub;
+            g.globalAlpha=hit?1:0.55; eDot(g,cx+rk2*Math.cos(a2),cy+rk2*Math.sin(a2),hit?5:3.2); } }); g.globalAlpha=1; }
+        nucleusDot(g,cx,cy,14,z,T);
+        g.fillStyle=T.ink2; label(g,"The "+sn+OLET[o.sl]+" electrons feel about "+nf(o.sl_.Zeff,2)+" of "+z+" charges",cx,h-14,T);
+        return anim;
+      }
+      if(id==="rel"){
+        var x0=48, x1=w-20, y0=24, y1=h*0.52, X=function(Zv){ return x0+(x1-x0)*(Zv-1)/139; }, Y=function(v){ return y1-(y1-y0)*v; };
+        g.strokeStyle=T.ink3; g.lineWidth=1; g.beginPath(); g.moveTo(x0,y0); g.lineTo(x0,y1); g.lineTo(x1,y1); g.stroke();
+        g.strokeStyle=col("math")||T.ink; g.lineWidth=2; g.beginPath(); for(k=1;k<=140;k++){ var vv=Math.min(1,k*MK.alpha); if(k===1) g.moveTo(X(k),Y(vv)); else g.lineTo(X(k),Y(vv)); } g.stroke();
+        g.setLineDash([4,4]); g.strokeStyle=col("bad")||T.ink2; g.beginPath(); g.moveTo(X(137),y0); g.lineTo(X(137),y1); g.stroke(); g.setLineDash([]);
+        g.fillStyle=T.ink2; g.textAlign="left"; label(g,"v/c of the innermost electron",x0+6,y0+12,T,"left"); label(g,"Z = 137",X(137)-56,y1-8,T,"left"); g.textAlign="center";
+        [1,79,118].forEach(function(zz){ if(zz<=118){ g.fillStyle=T.ink3; g.beginPath(); g.arc(X(zz),Y(zz*MK.alpha),3,0,6.2832); g.fill(); } });
+        g.fillStyle=col("e"); g.beginPath(); g.arc(X(o.zr),Y(Math.min(1,o.za)),6,0,6.2832); g.fill();
+        /* the orbit, contracted */
+        var oc=cx, oy=h*0.78, Rn=Math.min(h*0.17,(w-40)/5), Rr=o.za<1?Rn/o.gam:Rn*0.2, sp=anim?t*(1+o.za*4):0;
+        g.strokeStyle=T.ink3; g.setLineDash([4,5]); g.beginPath(); g.arc(oc,oy,Rn,0,6.2832); g.stroke(); g.setLineDash([]);
+        g.strokeStyle=col("e"); g.lineWidth=2; g.beginPath(); g.arc(oc,oy,Rr,0,6.2832); g.stroke();
+        nucleusDot(g,oc,oy,8,o.zr,T); eDot(g,oc+Rr*Math.cos(sp),oy+Rr*Math.sin(sp),5);
+        g.fillStyle=T.ink2; label(g,o.za<1?"Orbit "+nf((1-1/o.gam)*100,1)+"% smaller than without relativity":"Zα ≥ 1: no solution for a point nucleus",oc,h-10,T);
+        return anim;
+      }
+      if(id==="nucleus") return mathNucleus(g,w,h,T,o,t,anim);
+      return mathQuarks(g,w,h,T,o,t,anim);
+    }
+    function mathCloud(g,w,h,T,o,t,anim){
+      var z=o.z, n=MA.on, l=MA.ol, m=MA.om, mix=MA.mix, b=mixPartner(n,l,m), S=Math.min(w,h)-40, N=120, key=[z,n,l,m,mix].join("|");
+      var ext=Math.max(extentA0(n,l,1),mix?extentA0(b[0],b[1],1):0); /* in a0/Z */
+      if(!MA.cache||MA.cache.key!==key){
+        var ph0=m<0?Math.PI/(2*Math.abs(m)):0, A1=new Float32Array(N*N), A2=new Float32Array(N*N), mx=0, i, j;
+        for(j=0;j<N;j++) for(i=0;i<N;i++){ var x=(i/(N-1)*2-1)*ext, y=(1-j/(N-1)*2)*ext, r=Math.hypot(x,y)||1e-6, th=Math.acos(Math.max(-1,Math.min(1,y/r))), ph=x>=0?ph0:ph0+Math.PI;
+          var v1=radial(n,l,1,r)*angular(l,m,th,ph); A1[j*N+i]=v1; if(mix){ var v2=radial(b[0],b[1],1,r)*angular(b[1],b[2],th,ph); A2[j*N+i]=v2; } }
+        for(i=0;i<N*N;i++){ var d0=mix?Math.max(A1[i]*A1[i],A2[i]*A2[i])+Math.abs(A1[i]*A2[i]):A1[i]*A1[i]; if(d0>mx) mx=d0; }
+        var oc=D.createElement("canvas"); oc.width=N; oc.height=N;
+        MA.cache={key:key, A1:A1, A2:A2, mx:mx||1, img:oc.getContext("2d").createImageData(N,N), cv:oc};
+      }
+      var C=MA.cache, P1=hexRGB(col("e")), P2=hexRGB(col("p")), cs=mix?Math.cos(t*2.4):0, data=C.img.data;
+      for(var q=0;q<N*N;q++){ var a=C.A1[q], psi=mix?(a+C.A2[q]*1)/Math.SQRT2:a, dens=mix?(a*a+C.A2[q]*C.A2[q]+2*a*C.A2[q]*cs)/2:a*a;
+        var s=Math.pow(Math.max(0,dens/C.mx),0.45), cc=psi>=0?P1:P2; data[q*4]=cc[0]; data[q*4+1]=cc[1]; data[q*4+2]=cc[2]; data[q*4+3]=Math.round(255*Math.min(1,s*1.5)); }
+      C.cv.getContext("2d").putImageData(C.img,0,0);
+      var ox=(w-S)/2, oy=(h-S)/2-8; g.imageSmoothingEnabled=true; g.drawImage(C.cv,ox,oy,S,S);
+      g.strokeStyle=T.ink3; g.lineWidth=1; g.globalAlpha=0.5; g.beginPath(); g.moveTo(w/2,oy); g.lineTo(w/2,oy+S); g.moveTo(ox,oy+S/2); g.lineTo(ox+S,oy+S/2); g.stroke(); g.globalAlpha=1;
+      g.fillStyle=T.ink2; label(g,"z",w/2+10,oy+14,T);
+      var span=2*ext*MK.a0/z; label(g,"Width shown: "+(span<1?nf(span*1000,0)+" fm":nf(span,span<10?2:0)+" pm"),w/2,h-12,T);
+      label(g,orbName(n,l,m)+(mix?" + "+orbName(b[0],b[1],b[2]):""),w/2,oy+S-8,T);
+      return anim&&mix;
+    }
+    function hexRGB(s){ s=String(s||"").trim(); var m=/^#([0-9a-f]{6})$/i.exec(s); if(m){ var v=parseInt(m[1],16); return [v>>16&255,v>>8&255,v&255]; }
+      m=/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(s); return m?[+m[1],+m[2],+m[3]]:[120,170,255]; }
+    function mathNucleus(g,w,h,T,o,t,anim){
+      var z=o.z, A=o.A, narrow=w<480, cx=narrow?w*0.5:w*0.27, cy=narrow?h*0.27:h*0.46,
+        Rn=(narrow?Math.min(w*0.28,h*0.2):Math.min(w*0.22,h*0.36))*Math.min(1,0.45+Math.cbrt(A)/12), rN=Math.max(2.2,Rn/Math.cbrt(A)*0.92), i;
+      var golden=Math.PI*(3-Math.sqrt(5)), pts=[];
+      for(i=0;i<A;i++){ var yy=1-(i+0.5)/A*2, rad=Math.sqrt(1-yy*yy), th=golden*i, x=Math.cos(th)*rad, zz=Math.sin(th)*rad; pts.push([x,yy,zz,i]); }
+      var rs=rng(z*1000+A), isP={}, ids=pts.map(function(p){ return p[3]; }); for(i=ids.length-1;i>0;i--){ var j=Math.floor(rs()*(i+1)), tmp=ids[i]; ids[i]=ids[j]; ids[j]=tmp; } ids.slice(0,z).forEach(function(k){ isP[k]=1; });
+      pts.sort(function(a,b){ return a[2]-b[2]; });
+      pts.forEach(function(p){ var jx=anim?Math.sin(t*3+p[3]*1.7)*0.6:0, jy=anim?Math.cos(t*2.6+p[3]*2.3)*0.6:0, s=0.82+0.18*(p[2]+1)/2;
+        var px=cx+(p[0]*Rn*0.92)+jx, py=cy+(p[1]*Rn*0.92)+jy;
+        g.fillStyle=isP[p[3]]?col("p"):col("n"); g.globalAlpha=0.55+0.45*(p[2]+1)/2; g.beginPath(); g.arc(px,py,rN*s,0,6.2832); g.fill(); });
+      g.globalAlpha=1; g.fillStyle=T.ink2; g.font="500 14px Archivo, sans-serif";
+      if(!narrow) label(g,cap(isoName(z,A))+": "+nf(o.R,2)+" fm across the radius",cx,Math.min(h-14,cy+Rn+28),T);
+      /* the five terms as bars, sized so the longest label still fits */
+      var terms=[["Volume",o.vol],["Surface",o.surf],["Coulomb",o.coul],["Asymmetry",o.asym],["Pairing",o.pair]], mx=Math.max(o.vol,1);
+      var txt=terms.map(function(tm){ return tm[0]+" "+(tm[1]>=0?"+":"−")+nf(Math.abs(tm[1]),tm[1]&&Math.abs(tm[1])<10?2:0)+" MeV"; });
+      g.font="500 13px Archivo, sans-serif"; var tw=Math.max.apply(null,txt.map(function(x){ return g.measureText(x).width; }));
+      var bx=narrow?16:w*0.54, by=narrow?h*0.52:34, bh=narrow?11:Math.min(26,(h-120)/6), gap=narrow?7:10, barMax=Math.max(12,Math.min((w-bx)*0.62,w-bx-tw-20));
+      g.textAlign="left";
+      terms.forEach(function(tm,k){ var y=by+k*(bh+gap), len=Math.max(1,Math.abs(tm[1])/mx*barMax);
+        g.fillStyle=tm[1]>=0?(col("ok")||T.ink):(col("bad")||T.ink2); g.fillRect(bx,y,len,bh);
+        g.fillStyle=T.ink; g.fillText(txt[k],bx+len+8,y+bh*0.5+4.5); });
+      var yB=by+5*(bh+gap)+6; g.fillStyle=T.ink; g.font="700 14px Archivo, sans-serif"; g.fillText("Total: "+nf(o.B,1)+" MeV ("+nf(o.BA,3)+" per nucleon)",bx,yB+14);
+      g.textAlign="center"; g.font="500 14px Archivo, sans-serif";
+      return anim;
+    }
+    function mathQuarks(g,w,h,T,o,t,anim){
+      var cx=w*0.3, cy=h*0.42, Rb=Math.min(w*0.22,h*0.32), qs=MA.nucleon==="p"?["u","u","d"]:["u","d","d"], cols=["#ff5d5d","#4fd36b","#5c8dff"], i, pos=[];
+      g.strokeStyle=T.ink3; g.lineWidth=1.5; g.beginPath(); g.arc(cx,cy,Rb,0,6.2832); g.stroke();
+      for(i=0;i<3;i++){ var a=i*2.0944+(anim?t*0.7:0), rr=Rb*0.45*(1+0.18*(anim?Math.sin(t*2.3+i*2):0)); pos.push([cx+rr*Math.cos(a),cy+rr*Math.sin(a)]); }
+      for(i=0;i<3;i++){ var p=pos[i], q=pos[(i+1)%3], len=Math.hypot(q[0]-p[0],q[1]-p[1]), nx=-(q[1]-p[1])/len, ny=(q[0]-p[0])/len;
+        g.strokeStyle=col("math")||T.ink2; g.lineWidth=2; g.beginPath();
+        for(var k=0;k<=40;k++){ var f=k/40, wv=Math.sin(f*Math.PI*8+(anim?t*8:0))*4; var x=p[0]+(q[0]-p[0])*f+nx*wv, y=p[1]+(q[1]-p[1])*f+ny*wv; if(k) g.lineTo(x,y); else g.moveTo(x,y); } g.stroke(); }
+      for(i=0;i<3;i++){ g.fillStyle=cols[i]; g.beginPath(); g.arc(pos[i][0],pos[i][1],14,0,6.2832); g.fill(); g.fillStyle="#141005"; g.font="700 15px Archivo, sans-serif"; g.fillText(qs[i],pos[i][0],pos[i][1]+5); }
+      g.font="500 14px Archivo, sans-serif"; g.fillStyle=T.ink2; label(g,(MA.nucleon==="p"?"Proton: up, up, down = +1":"Neutron: up, down, down = 0"),cx,cy+Rb+26,T);
+      /* forces between two protons */
+      var x0=w*0.56, x1=w-18, y0=30, y1=h-46, rmin=0.5, rmax=4, X=function(r){ return x0+(x1-x0)*(r-rmin)/(rmax-rmin); }, lam=o.lamY, Vmax=3.2, Y=function(v){ return (y0+y1)/2-v/Vmax*(y1-y0)/2; };
+      g.strokeStyle=T.ink3; g.lineWidth=1; g.beginPath(); g.moveTo(x0,y0); g.lineTo(x0,y1); g.moveTo(x0,Y(0)); g.lineTo(x1,Y(0)); g.stroke();
+      function curve(fn,c){ g.strokeStyle=c; g.lineWidth=2; g.beginPath(); for(var k2=0;k2<=80;k2++){ var r=rmin+(rmax-rmin)*k2/80, v=Math.max(-Vmax,Math.min(Vmax,fn(r))); if(k2) g.lineTo(X(r),Y(v)); else g.moveTo(X(r),Y(v)); } g.stroke(); }
+      curve(function(r){ return MK.ke2/r; },col("p"));
+      curve(function(r){ return -3.0*Math.exp(-(r-0.5)/lam)*0.5/r; },col("math")||T.ink);
+      g.setLineDash([4,4]); g.strokeStyle=T.ink2; g.beginPath(); g.moveTo(X(MA.qr),y0); g.lineTo(X(MA.qr),y1); g.stroke(); g.setLineDash([]);
+      g.textAlign="left"; g.fillStyle=T.ink2; label(g,"electric push (MeV)",x0+6,y0+12,T,"left"); label(g,"strong pull (shape only)",x0+6,y1-6,T,"left"); g.textAlign="center";
+      label(g,nf(MA.qr,2)+" fm",X(MA.qr),y1+18,T);
+      return anim;
+    }
+
     /* ======================================================== Calculate */
     var C={tab:"light", nu:3, nl:2, cz:1, hl:"6,14", t:5700, tu:"y", n0:100, half:5700*31557600, listen:false, lastFrame:0, mass:1, mu:"g", formula:"C6H12O6"};
     var PRESETS=[];
@@ -2915,7 +3450,7 @@ var AtomLabs=(function(){
       if(!dirty&&!anim) return;
       dirty=false;
       anim=cur==="build"?(bmode==="atom"?drawBuild(now):(bmode==="molecule"?drawMol(now):false)):(cur==="calc"?drawCalc(now):(cur==="hear"?drawHear(now):
-        (cur==="trends"?drawTrend(now):(cur==="nuclides"?drawNuc(now):false))));
+        (cur==="trends"?drawTrend(now):(cur==="nuclides"?drawNuc(now):(cur==="math"?drawMath(now):false)))));
     };
     api.show=function(t,z){ if(z) api.setElement(z); if(t==="compare"&&z){ CMP.a=z; if(!CMP.b||CMP.b===z) CMP.b=partner(z); CMP.follow=true; } show(t||cur); };
     /* the table picked an element: the labs follow it, except where you chose
@@ -2926,6 +3461,7 @@ var AtomLabs=(function(){
       if(CMP.follow&&CMP.a){ CMP.a=z; if(CMP.b===z) CMP.b=partner(z); if(built.compare) renderCompare(); }
       if(built.trends) renderTrends();
       if(NU.follow&&NU.map){ NU.z=z; NU.n=commonA(z)-z; if(built.nuclides) renderNuc(); }
+      if(MA.follow){ if(built.math) mathSetZ(z); else MA.z=z; }
       dirty=true; };
     api.build=function(z){ B.p=z; B.n=commonA(z)-z; B.e=z; show("build"); setBMode("atom"); changed(); };
     api.quiz=function(z){ if(z) Z=z; Qs.mode="this"; show("predict"); nextQuestion(true); };
@@ -2952,6 +3488,7 @@ var AtomLabs=(function(){
       if(t==="compare"&&a.pair){ CMP.a=a.pair[0]; CMP.b=a.pair[1]; CMP.follow=false; show("compare"); renderCompare(); return; }
       if(t==="trends"&&a.prop){ TR.p=a.prop; if(a.line) TR.line=a.line; show("trends"); var sel=pane("trends").querySelector("[data-tp]"); if(sel) sel.value=TR.p; renderTrends(); return; }
       if(t==="nuclides"&&a.z!=null){ show("nuclides"); nuSet(a.z,(a.a||commonA(a.z))-a.z); return; }
+      if(t==="math"){ if(a.z){ MA.follow=false; MA.z=a.z; } show("math"); if(a.step!=null) mathGo(a.step); else if(a.z) mathSetZ(a.z); return; }
       if(t==="molecule"){ show("build"); setBMode("molecule"); if(a.mol){ var mb=pane("build").querySelector('[data-mp="'+a.mol+'"]'); if(mb) mb.click(); } return; }
       show(t);
     };
@@ -3035,6 +3572,25 @@ var AtomLabs=(function(){
     t("labs: molecules have the atoms their formulas say, and the right molar masses", fm&&mm, [molar("H2O"),molar("CO2"),molar("CH4"),molar("NaCl")].map(function(x){ return x.toFixed(3); }).join(" "));
     var tr=EN[8]===3.98&&EN[54]===0.79&&IE1[1]>24&&IE1[54]<4&&EN.length===118&&IE1.length===118&&EN[5]>EN[4]&&IE1[9]>IE1[10];
     t("labs: trend data (F most electronegative, He hardest to ionize, Cs easiest)", tr, [EN[8],EN[54],IE1[1],IE1[54]].join(" "));
+    /* The math tab: its physics, checked against the rest of Atom */
+    var sbad=[];
+    for(var zz=1;zz<=118;zz++){ var seen2={}; configOf(zz).forEach(function(x){ var k2=x[0]+","+x[1]; if(seen2[k2]) return; seen2[k2]=1;
+      var sp=slaterParts(zz,x[0],x[1]).Zeff, ze=zEff(zz,x[0],x[1]); if(Math.abs(sp-ze)>1e-9) sbad.push(zz+":"+x[0]+OLET[x[1]]+" "+sp.toFixed(3)+"/"+ze.toFixed(3)); }); }
+    t("math: Slater's shielding, term by term, adds up to the Zeff Atom uses everywhere (every element, every subshell)", sbad.length===0, sbad.slice(0,4).join(", "));
+    var bh=bohrLine(1,3,2).w, bl=bohrLine(1,2,1).w;
+    t("math: Bohr's levels give the same hydrogen lines as the Calculate lab (656.47 and 121.57 nm)", Math.abs(bh-lineOf(1,3,2).w)<0.02&&Math.abs(bl-lineOf(1,2,1).w)<0.01, bh.toFixed(3)+" "+bl.toFixed(3));
+    var normBad=[], nodeBad=[];
+    [[1,0],[2,0],[2,1],[3,2],[4,3],[5,1]].forEach(function(q){ var s2=0, dr=0.002*q[0]*q[0], R; for(var r=dr/2;r<q[0]*q[0]*12+20;r+=dr){ R=radial(q[0],q[1],1,r); s2+=r*r*R*R*dr; } if(Math.abs(s2-1)>2e-3) normBad.push(q.join("")+":"+s2.toFixed(4)); });
+    t("math: every hydrogen-like orbital is normalized (the electron is somewhere, with certainty)", normBad.length===0, normBad.join(" "));
+    [[3,0],[4,1],[5,2],[2,1]].forEach(function(q){ var c=0, prev=radial(q[0],q[1],1,0.01); for(var r=0.02;r<80;r+=0.01){ var v=radial(q[0],q[1],1,r); if(v*prev<0) c++; if(v!==0) prev=v; } if(c!==q[0]-q[1]-1) nodeBad.push(q.join("")+":"+c); });
+    t("math: the orbitals have n − l − 1 spherical nodes", nodeBad.length===0, nodeBad.join(" "));
+    var tcH=Math.pow(MK.a0*1e-12,3)/(4*MK.re*MK.re*MK.c);
+    t("math: a classical hydrogen atom would collapse in about 16 picoseconds (Larmor)", Math.abs(tcH-1.56e-11)<0.02e-11, tcH.toExponential(3));
+    var semfOk=[[26,56],[8,16],[92,238],[50,120],[79,197]].every(function(q){ var z0=q[0], A0=q[1], N0=A0-z0, d=(z0%2===0&&N0%2===0)?SEMF.aP/Math.sqrt(A0):((z0%2===1&&N0%2===1)?-SEMF.aP/Math.sqrt(A0):0);
+      var sum=SEMF.aV*A0-SEMF.aS*Math.pow(A0,2/3)-SEMF.aC*z0*(z0-1)/Math.pow(A0,1/3)-SEMF.aA*(A0-2*z0)*(A0-2*z0)/A0+d; return Math.abs(sum-bindingSEMF(z0,A0))<1e-9; });
+    t("math: the five liquid-drop terms it shows add up to Atom's binding energy", semfOk, "");
+    var lamY=MK.hbarc/MK.mpi, au=79*MK.alpha;
+    t("math: Yukawa's range is 1.41 fm, and gold's innermost electron moves at 58% of light speed", Math.abs(lamY-1.414)<0.002&&Math.abs(au-0.5765)<0.001, lamY.toFixed(4)+" "+au.toFixed(4));
     return out;
   }
 

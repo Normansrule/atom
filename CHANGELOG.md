@@ -2,6 +2,21 @@
 
 Atom follows [semantic versioning](https://semver.org). The newest release is at the top.
 
+## [1.4.0] - 2026-11-01
+
+A new lab, **The math**: pick any element and work through the physics of its atom in ten steps, classical and quantum, with that element's own numbers.
+
+### The math
+- **Ten steps from the outside in.** Coulomb's pull on the outer electron, a planet-like orbit, and why that orbit can't last; then Bohr's rule, de Broglie's matter waves, Schrödinger's orbitals, and Slater's shielding in a real many-electron atom; then relativity near a heavy nucleus, the nucleus and its binding energy, and the quarks and strong force inside each nucleon.
+- **Every number is the element you picked.** Its effective charge, its measured radius and ionization energy, its most common isotope, and the liquid-drop coefficients Atom uses everywhere else. The one-electron steps use the element's hydrogen-like ion (for iron, Fe²⁵⁺) and say so.
+- **Equations in proper notation.** Each one is written in MathML, so it reads as math, scales with the text, and can be spoken by a screen reader, with a line beneath that substitutes the numbers and gives the result.
+- **Pictures that move with your inputs.** The pull and orbit at any distance; the spiral collapse of a classical electron; Bohr's orbits with a jump and the light it gives off, in its true color; a wave around the loop that cancels itself when the count isn't whole; a slice through any orbital (n, l, m) with its sign in two colors, and a mix of two that sloshes at exactly the frequency of the light; the shells with the electrons that shield; the speed of the innermost electron against Z, with the break at 137; the packed nucleus with its five binding terms as bars; and three quarks joined by gluons beside the electric and strong forces between two protons.
+- **Try it, with the working shown.** Each step asks a question you can only answer by using the step's idea (the pull at twice the distance, the wavelength from another jump, the number of nodes in a bigger orbital), checks your number, and shows the worked answer on request.
+- **Where each picture stops being right** is stated at the end of every step.
+- The labs now have six tabs; the arrow keys move across all six, and on a narrow screen the ten steps shrink to numbers with the current step named.
+- The labs' self-test now also checks that the shielding shown term by term adds up to Atom's effective charge for every element and subshell, that the orbitals are normalized and have n − l − 1 spherical nodes, that Bohr's lines match the Calculate lab's, that a classical hydrogen atom collapses in about 16 picoseconds, that the five binding terms add up to Atom's binding energy, and that Yukawa's range and gold's 1s speed come out right.
+- Nine primary sources added to the list: Rutherford (1911), Bohr (1913), de Broglie (1925), Schrödinger (1926), Dirac (1928), Yukawa (1935), Larmor (1897), Pyykkö (1988) on relativity in gold, and Greiner, Müller, and Rafelski (1985) on fields past Z = 137.
+
 ## [1.3.0] - 2026-10-31
 
 Smoother, calmer, more real, and four new ways to explore: compare any two elements, color the table by its trends, walk the chart of every nucleus, and build molecules.

@@ -4,12 +4,12 @@
    right, wrong, and "careful" have theirs. Grounds stay neutral. Font sizes
    come from the host's type scale; spacing uses 4, 6, 8, 12, 16, and 24. */
 :root{
-  --lb-build:#ffa25c; --lb-predict:#b99cff; --lb-calc:#3fd8c6; --lb-bench:#ffb020; --lb-hear:#ff8fc4; --lb-you:#6fdc9a; --lb-explore:#8fb3ff;
+  --lb-build:#ffa25c; --lb-predict:#b99cff; --lb-calc:#3fd8c6; --lb-bench:#ffb020; --lb-hear:#ff8fc4; --lb-you:#6fdc9a; --lb-explore:#8fb3ff; --lb-math:#c9e86b;
   --lb-p:#ff9a55; --lb-n:#c3ccd8; --lb-e:#6fd3ff;
   --lb-ok:#5ed69a; --lb-warn:#f5c451; --lb-bad:#ff9eab; --lb-onk:#141005;
 }
 :root[data-theme="light"]{
-  --lb-build:#7a3300; --lb-predict:#4b2a91; --lb-calc:#0b5a52; --lb-bench:#643c00; --lb-hear:#8a1840; --lb-you:#1d5e2c; --lb-explore:#1f3f8f;
+  --lb-build:#7a3300; --lb-predict:#4b2a91; --lb-calc:#0b5a52; --lb-bench:#643c00; --lb-hear:#8a1840; --lb-you:#1d5e2c; --lb-explore:#1f3f8f; --lb-math:#3e5a00;
   --lb-p:#733000; --lb-n:#33435c; --lb-e:#09467a;
   --lb-ok:#0b4f2c; --lb-warn:#5c4000; --lb-bad:#861826; --lb-onk:#ffffff;
 }
@@ -26,6 +26,7 @@
 .lb [data-lt="bench"],.lb [data-lp="bench"]{--k:var(--lb-bench)}
 .lb [data-lt="hear"],.lb [data-lp="hear"]{--k:var(--lb-hear)}
 .lb [data-lg="you"],.lb [data-lp="you"]{--k:var(--lb-you)}
+.lb [data-lg="math"],.lb [data-lgp="math"],.lb [data-lp="math"]{--k:var(--lb-math)}
 /* resets carry no weight (:where), so the workbench's own rules inside the
    Workbench tab always win over them */
 :where(.lb) :where(button,input,select){font:inherit;color:inherit}
@@ -502,4 +503,49 @@
   .lb-ctable th,.lb-ctable td{padding:8px}
   .lb-tbar .lb-field select{min-width:0;width:100%}
 }
+
+/* ---- The math: ten steps through one element, equations in MathML */
+.lb-math{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.lb-mtop{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;min-width:0}
+.lb-mpick{display:flex;gap:12px;align-items:flex-end}
+.lb-mpick .lb-input{width:180px}
+.lb-msteps{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0;flex:1 1 420px;min-width:0}
+.lb-msteps button{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 12px 4px 4px;border-radius:var(--lb-rp,999px);border:1px solid var(--lb-line2);
+  background:transparent;color:var(--ink);font:inherit;font-size:var(--fs-ui,14px);cursor:pointer}
+.lb-msteps button b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--lb-raise);font-size:var(--fs-micro,13px);font-variant-numeric:tabular-nums}
+.lb-msteps button[aria-current="step"]{border-color:var(--k);box-shadow:inset 0 -3px 0 var(--k)}
+.lb-msteps button[aria-current="step"] b{background:var(--k);color:var(--lb-onk)}
+@media (hover:hover){ .lb-msteps button:hover:not([aria-current="step"]){border-color:var(--k)} }
+.lb-mcols{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.lb-mleft{display:flex;flex-direction:column;gap:12px;min-width:0}
+.lb-mstage{min-height:400px}
+.lb-mctl{display:grid;gap:12px}
+.lb-mslider{display:grid;gap:4px;font-size:var(--fs-ui,14px)}
+.lb-mslider span{display:flex;justify-content:space-between;gap:8px}
+.lb-mslider output{font-weight:600;font-variant-numeric:tabular-nums}
+.lb-mctl .lb-row .lb-field{flex:1 1 140px}
+.lb-mctl .lb-field select{width:100%}
+.lb-mright{display:flex;flex-direction:column;gap:12px;min-width:0}
+.lb-mkind{font-size:var(--fs-micro,13px);font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
+.lb-mtitle{font-size:var(--fs-h2,19px);font-weight:600;line-height:1.3}
+.lb-mq{font-weight:500;max-width:68ch}
+.lb-meqs{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.lb-meqs li{padding:12px 16px;border-radius:var(--lb-r,8px);background:var(--lb-panel);border:1px solid var(--lb-line);border-left:4px solid var(--k);min-width:0}
+.lb-mwide{max-width:100%;overflow-x:auto;padding:6px 0 8px}
+.lb-meqs math{font-size:1.15em}
+.lb-meqs p{color:var(--ink2);font-size:var(--fs-ui,14px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.lb-mcheck{padding:16px;border-radius:var(--lb-r2,12px);background:var(--lb-panel);border:1px solid var(--lb-line);border-top:4px solid var(--k)}
+.lb-mcheck .lb-h{margin-bottom:4px}
+.lb-mform{flex-wrap:wrap;align-items:center;margin-top:8px}
+.lb-mform .lb-input{flex:1 1 140px}
+.lb-munit{color:var(--ink2);min-width:2ch}
+.lb-mfb{margin-top:8px;color:var(--ink2)}
+.lb-mfb:empty{display:none}
+.lb-mfb .lb-ok{color:var(--lb-ok)}
+.lb-mnav{justify-content:space-between}
+@media (max-width:900px){ .lb-mcols{grid-template-columns:minmax(0,1fr)} .lb-mstage{min-height:340px}
+  .lb-msteps button{padding-right:4px} .lb-msteps button span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .lb-msteps button[aria-current="step"]{padding-right:12px} .lb-msteps button[aria-current="step"] span{position:static;width:auto;height:auto;overflow:visible;clip-path:none} }
+@media (max-width:520px){ .lb-meqs math{font-size:1em} .lb-meqs li{padding:8px 12px} }
+.lb-mwide:focus-visible{outline:2px solid var(--k);outline-offset:2px}
 /* ATOM-LABS-CSS END */
