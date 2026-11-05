@@ -239,7 +239,7 @@ header .sub{margin:4px 0 0;font-size:var(--fs-ui);line-height:1.4;color:var(--in
   background:var(--stage)}
 .stageview{position:relative;flex:1 1 0;min-height:72px;display:flex;overflow:hidden}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
-#cv{position:relative;display:block;width:100%;flex:1 1 auto;min-height:0;cursor:crosshair;touch-action:none}
+#cv{position:relative;display:block;width:100%;flex:1 1 auto;min-height:0;cursor:crosshair;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #cv.grab{cursor:grab} #cv.pulling{cursor:grabbing}
 /* Readouts float over the renderer, so their ground is whatever the atom is
    doing underneath. Each sits on an opaque plate of its own. */
@@ -858,7 +858,7 @@ html.calm .front-card{animation:none}
 .lb-note{color:var(--ink2);font-size:var(--fs-ui,14px);max-width:72ch}
 .lb-err{color:var(--lb-bad)}
 .lb .lb-h{font-size:var(--fs-ui,14px);font-weight:700;letter-spacing:.02em;line-height:1.4;color:var(--ink);margin:0 0 8px}
-.lb-cv{display:block;width:100%;height:100%}
+.lb-cv{display:block;width:100%;height:100%;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .lb-stagewrap{position:relative;display:flex;flex-direction:column;min-height:380px;border:1px solid var(--lb-line);border-radius:var(--lb-r2,12px);
   background:var(--lb-sunk);overflow:hidden}
 .lb-stagewrap .lb-cv{flex:1;min-height:300px}
@@ -1078,7 +1078,8 @@ html.calm .front-card{animation:none}
   .lb-vol{margin-left:0}
 }
 @media (max-width:520px){
-  .lb-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+  .lb-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
   .lb-tabs [role="tab"]{flex:none;padding:12px}
   .lb-subtabs{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .lb-subtabs button{flex:none}
@@ -1107,7 +1108,7 @@ html.calm .front-card{animation:none}
 
 /* ---------------------------------------------------------------- the card's "try it" row */
 .pd-acts{display:grid;gap:8px;margin:16px 0 0}
-.pd-acts > div{display:flex;flex-wrap:wrap;gap:8px}
+.pd-acts > div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .pd-acts button{--k:var(--lb-build);display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 12px;border-radius:var(--lb-r,8px);cursor:pointer;
   border:1px solid var(--line2);background:var(--panel2);color:var(--ink);font:inherit;font-size:var(--fs-ui,14px);font-weight:600}
 .pd-acts button::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--k);flex:none}
@@ -1119,7 +1120,7 @@ html.calm .front-card{animation:none}
 .pd-mine span::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--lb-you);box-sizing:border-box}
 .pd-mine span.on::before{background:var(--lb-you)}
 /* ---------------------------------------------------------------- the card's tabs */
-.pd-tabs{position:sticky;top:0;z-index:3;display:flex;gap:4px;margin:16px 0 0;background:var(--panel);border-bottom:1px solid var(--line);
+.pd-tabs{position:sticky;top:0;z-index:3;display:flex;gap:4px;margin:16px 0 0;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;
   overflow-x:auto;scrollbar-width:none}
 .pd-tabs [role="tab"]{position:relative;flex:none;min-height:44px;padding:8px 12px;border:0;background:none;color:var(--ink2);font:inherit;
   font-size:var(--fs-ui,14px);font-weight:600;cursor:pointer}
@@ -1295,9 +1296,12 @@ html.calm .front-card{animation:none}
 /* ---- The math: ten steps through one element, equations in MathML */
 .lb-math{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
 .lb-mtop{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;min-width:0}
-.lb-mpick{display:flex;gap:12px;align-items:flex-end}
+.lb-mpick{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.lb-mpick .lb-btn{white-space:nowrap}
 .lb-mpick .lb-input{width:180px}
-.lb-msteps{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0;flex:1 1 420px;min-width:0}
+.lb-mion{margin:0 0 4px;font-size:var(--fs-ui,14px);color:var(--ink2);padding:4px 10px;border:1px solid var(--lb-line);border-radius:999px;display:inline-block}
+.lb-msteps{display:grid;grid-template-columns:repeat(5,minmax(0,auto));gap:6px;list-style:none;margin:0;padding:0;flex:1 1 420px;min-width:0;justify-content:start}
+.lb-msteps button{width:100%;justify-content:flex-start}
 .lb-msteps button{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 12px 4px 4px;border-radius:var(--lb-rp,999px);border:1px solid var(--lb-line2);
   background:transparent;color:var(--ink);font:inherit;font-size:var(--fs-ui,14px);cursor:pointer}
 .lb-msteps button b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--lb-raise);font-size:var(--fs-micro,13px);font-variant-numeric:tabular-nums}
@@ -1332,8 +1336,11 @@ html.calm .front-card{animation:none}
 .lb-mfb .lb-ok{color:var(--lb-ok)}
 .lb-mnav{justify-content:space-between}
 @media (max-width:900px){ .lb-mcols{grid-template-columns:minmax(0,1fr)} .lb-mstage{min-height:340px}
-  .lb-msteps button{padding-right:4px} .lb-msteps button span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-  .lb-msteps button[aria-current="step"]{padding-right:12px} .lb-msteps button[aria-current="step"] span{position:static;width:auto;height:auto;overflow:visible;clip-path:none} }
+  .lb-msteps{display:flex;flex-wrap:wrap} .lb-msteps button{width:auto}
+  /* on a narrow screen a step is its number; the name stays in the button
+     (so the accessible name keeps it) at zero size, with no gap to show for it */
+  .lb-msteps button{padding-right:4px;gap:0} .lb-msteps button span{font-size:0;line-height:0}
+  .lb-msteps button[aria-current="step"]{padding-right:12px;gap:6px} .lb-msteps button[aria-current="step"] span{font-size:inherit;line-height:inherit} }
 @media (max-width:520px){ .lb-meqs math{font-size:1em} .lb-meqs li{padding:8px 12px} }
 .lb-mwide:focus-visible{outline:2px solid var(--k);outline-offset:2px}
 /* ATOM-LABS-CSS END */
@@ -4427,18 +4434,25 @@ var AtomWorld=(function(){
     if(!gl||typeof gl.createShader!=="function") return null;
     function sh(t,s){ var x=gl.createShader(t); gl.shaderSource(x,s); gl.compileShader(x);
       if(!gl.getShaderParameter(x,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; }
-    var pr;
-    try{ pr=gl.createProgram();
+    /* everything the context owns is made in build(), so it can be made
+       again after the browser takes the context away (a GPU reset, a tab
+       left in the background) and gives it back */
+    var pr, L={}, vao, lost=false;
+    function build(){
+      pr=gl.createProgram();
       gl.attachShader(pr,sh(gl.VERTEX_SHADER,"#version 300 es\nin vec2 p;void main(){gl_Position=vec4(p,0.,1.);}"));
       gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS)); gl.bindAttribLocation(pr,0,"p"); gl.linkProgram(pr);
       if(!gl.getProgramParameter(pr,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
-    }catch(err){ return null; }
-    var L={}; ["uRes","uT","uCos","uLit","uVac","uEvT","uR","uScale","uEv","uLight","uN","uPal","uMix","uEvP","uC","uQuiet","uLCol","uLines","uLineCol","uQ","uGrain"]
-      .forEach(function(k){ L[k]=gl.getUniformLocation(pr,k); });
-    var vao=gl.createVertexArray(); gl.bindVertexArray(vao);
-    var vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb);
-    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+      ["uRes","uT","uCos","uLit","uVac","uEvT","uR","uScale","uEv","uLight","uN","uPal","uMix","uEvP","uC","uQuiet","uLCol","uLines","uLineCol","uQ","uGrain"]
+        .forEach(function(k){ L[k]=gl.getUniformLocation(pr,k); });
+      vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+      var vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb);
+      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+    }
+    try{ build(); }catch(err){ return null; }
+    canvas.addEventListener("webglcontextlost",function(e){ e.preventDefault(); lost=true; },false);
+    canvas.addEventListener("webglcontextrestored",function(){ try{ build(); lost=false; }catch(e){} },false);
     var order=["b","c","n","m","l","w","h"], pal=new Float32Array(21), palInk=new Float32Array(21);
     order.forEach(function(k,i){ var a=hex(ORIGIN_KINDS[k].col), b=hex(ORIGIN_KINDS[k].ink);
       pal[i*3]=a[0];pal[i*3+1]=a[1];pal[i*3+2]=a[2]; palInk[i*3]=b[0];palInk[i*3+1]=b[1];palInk[i*3+2]=b[2]; });
@@ -4458,6 +4472,7 @@ var AtomWorld=(function(){
     api.birth=function(mix, now){ api.ev=KIND_INDEX[dominant(mix)]; api.evT0=now; };
     api.setTier=function(name){ tier={low:1,medium:1,high:1}[name]?name:((typeof AtomGL!=="undefined"&&AtomGL.tier)?AtomGL.tier(info):"medium"); QI={low:0,medium:1,high:2}[tier]; api.tier=tier; return tier; };
     api.draw=function(o){
+      if(lost) return;
       var w=o.w, h=o.h, s=api.scale*(o.small?0.8:1), bw=Math.max(2,Math.round(w*s)), bh=Math.max(2,Math.round(h*s));
       if(canvas.width!==bw||canvas.height!==bh){ canvas.width=bw; canvas.height=bh; }
       gl.viewport(0,0,bw,bh); gl.useProgram(pr); gl.bindVertexArray(vao);
@@ -5119,6 +5134,7 @@ var Missions=(function(){
   return {create:create, LIST:LIST};
 })();
 
+/* ATOM-LABS BEGIN */
 /* ----------------------------------------------------------------------------
    The labs: Atom you learn by doing. Shared by the website and the app.
 
@@ -5185,7 +5201,7 @@ var AtomLabs=(function(){
     return "rgb("+[r,g,b].map(function(v){ return Math.round(255*Math.pow(Math.max(0,v)*f,0.8)); }).join(",")+")";
   }
   var VIS0=380, VIS1=750;          /* what this module calls visible light, everywhere */
-  var SYM={}; ELEMENTS.forEach(function(e){ SYM[e[1]]=e[0]; SYM[e[1].toLowerCase()]=e[0]; SYM[e[2].toLowerCase()]=e[0]; });
+  var SYM=Object.create(null); ELEMENTS.forEach(function(e){ SYM[e[1]]=e[0]; SYM[e[1].toLowerCase()]=e[0]; SYM[e[2].toLowerCase()]=e[0]; });
   SYM.aluminum=13; SYM.cesium=55; SYM.sulphur=16;
   function zOf(s){ s=String(s||"").trim(); if(/^\d+$/.test(s)){ var n=+s; return n>=1&&n<=118?n:0; } return SYM[s]||SYM[s.toLowerCase()]||0; }
   function nameOnly(s){ s=String(s||"").trim(); return /^\d+$/.test(s)?0:(SYM[s]||SYM[s.toLowerCase()]||0); }
@@ -5702,7 +5718,7 @@ var AtomLabs=(function(){
    Slater's shielding term by term, and MathML builders. */
   var MK={a0:52.9177210544, Ry:13.605693122990, alpha:7.2973525643e-3, mec2:0.51099895069, hc:1239.841984, ke2:1.43996448,
     c:299792458, re:2.8179403205e-15, me:9.1093837139e-31, e:1.602176634e-19, kC:8.9875517862e9, G:6.67430e-11, mpkg:1.67262192595e-27,
-    mp:938.27208943, mn:939.56542194, u:931.49410372, mpi:139.57039, hbarc:197.3269804, h:6.62607015e-34, mu:2.16, md:4.67, r0:1.2, rp:0.84075};
+    mp:938.27208943, mn:939.56542194, u:931.49410372, mpi:139.57039, hbarc:197.3269804, h:6.62607015e-34, mu:2.16, md:4.70, r0:1.2, rp:0.84075};
   /* ---- MathML, written by hand: small helpers keep it legible */
   function mi(s){ return '<mi>'+s+'</mi>'; } function mn_(s){ return '<mn>'+s+'</mn>'; } function mo(s){ return '<mo>'+s+'</mo>'; }
   function mrow(){ return '<mrow>'+[].slice.call(arguments).join('')+'</mrow>'; }
@@ -5715,7 +5731,9 @@ var AtomLabs=(function(){
   var Zeff_=msub(mi("Z"),mi("eff")), hbar_=mi("ℏ"), eq_=mo("="), pi_=mi("π");
   /* ---- element numbers */
   function outerN(z){ var n=0; configOf(z).forEach(function(x){ if(x[0]>n) n=x[0]; }); return n; }
-  function outerSub(z){ var c=configOf(z), b=null; c.forEach(function(x){ if(x[1]<=1&&(!b||x[0]>b[0]||(x[0]===b[0]&&x[1]>b[1]))) b=x; }); return b||c[c.length-1]; }
+  /* the outermost electron: highest n, then highest l. Usually an s or p
+     electron; palladium (4d¹⁰, no 5s) is the one atom where it is a d */
+  function outerSub(z){ var c=configOf(z), b=null; c.forEach(function(x){ if(!b||x[0]>b[0]||(x[0]===b[0]&&x[1]>b[1])) b=x; }); return b||c[c.length-1]; }
   function ionName(z){ if(z===1) return "hydrogen"; return el(z)[1]+supNum(z-1)+"⁺"; }
   function ionWords(z){ return z===1?"hydrogen, with its one electron":lc(z)+" with all but one electron stripped away ("+ionName(z)+")"; }
   function nucMass(z){ if(z<=3) return HY[z].m; return commonA(z)*MK.u; }
@@ -5773,8 +5791,27 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     h=String(h||"").replace(/^#/,"");
     var b=/^build=(\d{1,3})-(\d{1,3})-(\d{1,3})$/.exec(h); if(b) return {build:[Math.min(118,+b[1]),Math.min(200,+b[2]),Math.min(118,+b[3])]};
     var c=/^challenge=(.+)$/.exec(h); if(c&&challengeParse(c[1])) return {challenge:challengeParse(c[1]).code};
+    /* #lab=math&z=79&step=8: any lab, with what to show in it. Numbers are
+       bounded, words are matched against a short list, anything else is dropped */
+    var m=/^lab=([a-z]+)(?:&(.*))?$/.exec(h);
+    if(m){ var LABS_OK={build:1,boxes:1,molecule:1,compare:1,trends:1,nuclides:1,hear:1,math:1,predict:1,calc:1,bench:1,you:1}, a={}, lab=m[1];
+      if(!LABS_OK[lab]) return null;
+      if(lab==="boxes"){ lab="build"; a.boxes=true; }
+      a.lab=lab;
+      (m[2]||"").split("&").forEach(function(kv){ var p=kv.split("="), k=p[0], v=decodeURIComponent(p[1]||"");
+        if(k==="z"||k==="e"){ var n=+v; if(n>=0&&n<=118&&n===Math.floor(n)) a[k]=n; }
+        else if(k==="a"){ var A=+v; if(A>=1&&A<=300&&A===Math.floor(A)) a.a=A; }
+        else if(k==="step"){ var st=+v; if(st>=1&&st<=10) a.step=st-1; }
+        else if(k==="pair"){ var pr=v.split("-").map(Number); if(pr.length===2&&pr.every(function(x){ return x>=1&&x<=118&&x===Math.floor(x); })) a.pair=pr; }
+        else if(k==="prop"||k==="mol"||k==="calc"||k==="preset"){ if(/^[a-z0-9_-]{1,24}$/i.test(v)) a[k]=v; }
+        else if(k==="line"){ if(/^\d{1,2},\d{1,2}$/.test(v)) a.line=v; } });
+      if(a.lab==="build"&&a.z&&a.e==null) a.e=a.z;
+      return {act:a}; }
     return null;
   }
+  /* the link that opens a lab the way it is now */
+  function labLink(a){ var q=[]; Object.keys(a).forEach(function(k){ if(k==="lab"||a[k]==null||a[k]===false) return; q.push(k+"="+encodeURIComponent(k==="step"?a[k]+1:(k==="pair"?a[k].join("-"):a[k]))); });
+    return linkBase()+"#lab="+a.lab+(q.length?"&"+q.join("&"):""); }
   function copyText(text,input,done){
     function fallback(){ var ok=false; try{ if(input){ input.focus(); input.select(); } ok=D.execCommand("copy"); }catch(e){ ok=false; } done(ok); }
     try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ done(true); },fallback); return; } }catch(e){}
@@ -6227,9 +6264,10 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     function isMetal(z){ return !!METAL[el(z)[5]]; }
     function enOf(z){ return EN[z-1]; }
     function radOf(z){ return z<=96?ARAD[z-1]:null; }
-    /* Slater's charge felt by the outermost s or p electron (the same in his
-       rules), which is what sets size and how tightly the atom holds on */
-    function zeffOf(z){ var c=configOf(z), n=0; c.forEach(function(x){ if(x[0]>n&&(x[1]<=1)) n=x[0]; }); return zEff(z,n,0); }
+    /* Slater's charge felt by the outermost electron (s and p share a value in
+       his rules; palladium's is a 4d), which sets size and how tightly the
+       atom holds on */
+    function zeffOf(z){ var b=outerSub(z); return zEff(z,b[0],b[1]); }
     function cK(K){ return K==null?null:K; }
     function tempTxt(K,z){ if(z===2) return "never freezes at normal pressure"; if(z===6||z===33) return "turns straight to gas at "+fmt(el(z)[11]-273.15,0)+" °C"; return K==null?"unknown":fmt(K-273.15,0)+" °C"; }
     var dlId="lbEls"+Math.floor(Math.random()*1e6);
@@ -6669,7 +6707,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       var z=mz(), o={z:z};
       var zf=zeffOf(z), r=MA.r||rAtom(z), rm=r*1e-12;
       o.zf=zf; o.r=r; o.F=MK.kC*zf*MK.e*MK.e/(rm*rm); o.U=-MK.ke2*zf/(r/1000);
-      o.Fg=MK.G*MK.me*MK.mpkg/(rm*rm);
+      o.Fg=MK.G*MK.me*(nucMass(z)/MK.mp*MK.mpkg)/(rm*rm);   /* gravity from the whole nucleus: mass is never shielded */
       o.v=Math.sqrt(MK.kC*zf*MK.e*MK.e/(MK.me*rm)); o.T=2*Math.PI*rm/o.v; o.Eo=o.U/2;
       var ie=IE1[z-1]; o.ie=ie; o.rmatch=ie?MK.ke2*zf/(2*ie)*1000:null;
       o.tc=Math.pow(rm,3)/(4*zf*MK.re*MK.re*MK.c);
@@ -6685,7 +6723,12 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       var N=MA.nn>=0?MA.nn:commonA(z)-z, A=z+N; o.N=N; o.A=A; o.R=MK.r0*Math.pow(A,1/3);
       o.vol=SEMF.aV*A; o.surf=-SEMF.aS*Math.pow(A,2/3); o.coul=-SEMF.aC*z*(z-1)/Math.pow(A,1/3); o.asym=-SEMF.aA*(A-2*z)*(A-2*z)/A;
       o.pair=(z%2===0&&N%2===0)?SEMF.aP/Math.sqrt(A):((z%2===1&&N%2===1)?-SEMF.aP/Math.sqrt(A):0);
-      o.B=bindingSEMF(z,A); o.BA=o.B/A; o.dm=o.B/MK.u; o.M=z*MK.mp+N*MK.mn-o.B;
+      /* the formula's answer, the measured one where Atom has it (AME2020), and
+         the one the later numbers use: measured first, then the formula, and
+         nothing for a lone proton or a nucleus the formula says flies apart */
+      var bm=(typeof BA_MEAS!=="undefined"&&BA_MEAS[z+"-"+A]!=null)?BA_MEAS[z+"-"+A]*A:null;
+      o.Bf=bindingSEMF(z,A); o.Bm=A===1?0:bm; o.Bsrc=A===1?"none":(bm!=null?"measured":"formula");
+      o.B=o.Bm!=null?o.Bm:Math.max(0,o.Bf); o.BA=o.B/A; o.dm=o.B/MK.u; o.M=z*MK.mp+N*MK.mn-o.B;
       o.barrier=MK.ke2*z/(o.R+MK.rp); o.ratio=rAtom(z)*1000/o.R;
       o.ups=2*z+N; o.downs=z+2*N; o.qm=o.ups*MK.mu+o.downs*MK.md; o.qfrac=o.qm/o.M;
       o.lamY=MK.hbarc/MK.mpi; o.Vc=MK.ke2/MA.qr;
@@ -6699,15 +6742,17 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       if(id==="pull"){
         var F2=o.F/4;
         return {title:"How hard the nucleus pulls on "+E+"'s outer electron", q:"If the electron were a tiny charged ball and nothing else, how strong is the pull?",
-          idea:cap(E)+"'s nucleus carries "+z+" positive charge"+(z>1?"s":"")+", but its outer electron doesn't feel all of them: the electrons in the inner shells sit between and cancel part of it. Slater's rules estimate what is left, the effective charge. Then it is Coulomb's law, the same law that makes a balloon stick to a wall.",
+          idea:(z===1?"Hydrogen's nucleus is one proton, and its one electron feels all of its charge; there is nothing in between.":
+                z===2?"Helium's nucleus carries 2 positive charges, and each electron feels a little less than both: the other electron spends part of its time between it and the nucleus. Slater's rules estimate what is left, the effective charge.":
+                cap(E)+"'s nucleus carries "+z+" positive charges, but its outer electron doesn't feel all of them: the electrons in the inner shells sit between and cancel part of it. Slater's rules estimate what is left, the effective charge.")+" Then it is Coulomb's law, the same law that makes a balloon stick to a wall.",
           eqs:[[MM(mi("F")+eq_+mfrac(mi("k")+mo("⁢")+msub(mi("q"),mn_(1))+mo("⁢")+msub(mi("q"),mn_(2)),msup(mi("r"),mn_(2)))),"Coulomb's law: the pull grows with both charges and falls with the square of the distance."],
             [MM(Zeff_+eq_+mi("Z")+mo("−")+mi("S")+eq_+mn_(z)+mo("−")+mn_(nf(z-o.zf,2))+eq_+mn_(nf(o.zf,2))),"The charge the outer electron feels, after the inner electrons shield S of it."],
             [MM(mi("F")+eq_+mfrac(mi("k")+mo("⁢")+Zeff_+mo("⁢")+msup(mi("e"),mn_(2)),msup(mi("r"),mn_(2)))),"= (8.988 × 10⁹ N·m²/C²) × "+nf(o.zf,2)+" × (1.602 × 10⁻¹⁹ C)² ÷ ("+sciT(o.r*1e-12,3)+" m)² = "+nf(o.F*1e9,2)+" nanonewtons"],
             [MM(mi("U")+eq_+mo("−")+mfrac(mi("k")+mo("⁢")+Zeff_+mo("⁢")+msup(mi("e"),mn_(2)),mi("r"))),"= −1.440 eV·nm × "+nf(o.zf,2)+" ÷ "+nf(o.r/1000,4)+" nm = "+nf(o.U,2)+" eV, the energy it would take to pull it free if this picture were right"]],
-          facts:[["Effective charge",nf(o.zf,2)],["Distance",nf(o.r,0)+" pm"],["Pull",nf(o.F*1e9,2)+" nN"],["Electric against gravity",sciT(o.F/o.Fg,2)+" times stronger"]],
+          facts:[["Effective charge",nf(o.zf,2)],["Distance",nf(o.r,0)+" pm"],["Pull",nf(o.F*1e9,2)+" nN"],["Electric against the whole nucleus's gravity",sciT(o.F/o.Fg,2)+" times stronger"]],
           check:{q:"Move the electron to twice this distance. What is the pull now, in nanonewtons?", a:F2*1e9, tol:0.03, unit:"nN",
             why:"Double the distance and the pull falls to a quarter, because of the r² below the line: "+nf(o.F*1e9,2)+" ÷ 4 = "+nf(F2*1e9,2)+" nN."},
-          limit:"An electron is not a tiny ball sitting at one distance; the cloud spreads over a range. This step uses "+E+"'s measured atomic radius as the distance.",
+          limit:"An electron is not a tiny ball sitting at one distance; the cloud spreads over a range. This step uses "+E+"'s "+(radOf(z)?"measured atomic radius":"atomic radius estimated from Slater's rules (none has been measured)")+" as the distance.",
           alt:"The nucleus of "+E+" with the outer electron "+nf(o.r,0)+" picometers away and an arrow for the pull."};
       }
       if(id==="orbit"){
@@ -6737,7 +6782,8 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
           alt:"The electron spiraling into "+E+"'s nucleus as it radiates, the whole fall stretched to a few seconds."};
       }
       if(id==="bohr"){
-        var nu2=Math.min(8,MA.nu+1), L2=bohrLine(z,nu2,MA.nl);
+        var nu2=MA.nu<8?MA.nu+1:MA.nu, nl2=MA.nu<8?MA.nl:Math.max(1,MA.nl-1), L2=bohrLine(z,nu2,nl2);
+        if(nu2===MA.nu&&nl2===MA.nl){ nl2=MA.nl===1?2:1; if(nl2>=nu2) nl2=nu2-1; L2=bohrLine(z,nu2,nl2); }
         return {title:"Bohr's rule: only some orbits are allowed", q:"What if the electron's angular momentum can only come in whole steps of ℏ?",
           idea:"In 1913 Niels Bohr simply declared it: the orbit's angular momentum must be a whole number times ℏ, and an electron in an allowed orbit does not radiate. Light comes out only when it jumps down from one orbit to another. The rule is exact for one electron, so this step uses "+ionWords(z)+".",
           eqs:[[MM(mi("m")+mo("⁢")+mi("v")+mo("⁢")+mi("r")+eq_+mi("n")+mo("⁢")+hbar_+mo(",")+mspace()+mi("n")+eq_+mn_(1)+mo(",")+mn_(2)+mo(",")+mn_(3)+mo("…")),"The one new rule. Combine it with the circular orbit from step 2."],
@@ -6745,8 +6791,8 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
             [MM(msub(mi("E"),mi("n"))+eq_+mo("−")+mfrac(mn_("13.606 eV")+mo("⁢")+msup(mi("Z"),mn_(2)),msup(mi("n"),mn_(2)))),"E₁ = "+nf(o.En(1),z>9?0:2)+" eV; E"+subNum(MA.nu)+" = "+nf(o.En(MA.nu),2)+" eV; E"+subNum(MA.nl)+" = "+nf(o.En(MA.nl),2)+" eV (with the small correction for the nucleus recoiling)"],
             [MM(mi("λ")+eq_+mfrac(mi("h")+mo("⁢")+mi("c"),msub(mi("E"),mi("upper"))+mo("−")+msub(mi("E"),mi("lower")))),"= 1239.84 eV·nm ÷ "+nf(o.line.E,3)+" eV = "+nf(o.line.w,o.line.w<10?4:2)+" nm, "+lightWord(o.line.w)]],
           facts:[["Atom",cap(ionName(z))],["Innermost orbit",nf(o.rn(1),3)+" pm"],["Jump "+MA.nu+" → "+MA.nl,nf(o.line.w,o.line.w<10?4:2)+" nm"],["Speed in orbit 1",nf(o.v1c*100,2)+"% of light"]],
-          check:{q:"What wavelength comes out when the electron falls from "+nu2+" to "+MA.nl+", in nanometers?", a:L2.w, tol:0.01, unit:"nm",
-            why:"ΔE = 13.606 eV × "+z+"² × (1/"+MA.nl+"² − 1/"+nu2+"²) × "+nf(redF(z),6)+" = "+nf(L2.E,3)+" eV, and λ = 1239.84 ÷ that = "+nf(L2.w,L2.w<10?4:2)+" nm."},
+          check:{q:"What wavelength comes out when the electron falls from "+nu2+" to "+nl2+", in nanometers?", a:L2.w, tol:0.01, unit:"nm",
+            why:"ΔE = 13.606 eV × "+z+"² × (1/"+nl2+"² − 1/"+nu2+"²) × "+nf(redF(z),6)+" = "+nf(L2.E,3)+" eV, and λ = 1239.84 ÷ that = "+nf(L2.w,L2.w<10?4:2)+" nm."},
           limit:"Bohr's rule gets one-electron atoms right and fails for everything else, and it can't say why the rule holds. Step 5 gives the reason; step 7 deals with many electrons.",
           alt:"The allowed orbits of "+ionName(z)+", with the electron jumping from orbit "+MA.nu+" to orbit "+MA.nl+" and giving off light."};
       }
@@ -6780,14 +6826,16 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       if(id==="many"){
         var sl=o.sl_, sub=o.sn+OLET[o.sl], err=o.ie?(o.ieEst-o.ie)/o.ie*100:null;
         return {title:"Many electrons: who shields whom", q:"How does a real, neutral "+E+" atom hold its electrons?",
-          idea:"With "+z+" electron"+(z>1?"s":"")+", each one is pulled by the nucleus and pushed by all the others, and no exact formula exists. The standard shortcut: fill the orbitals in order (Pauli lets two share each), then let each electron feel the nucleus minus the electrons that shield it. Slater's rules put numbers on the shielding: inner electrons hide almost all of a proton each, electrons in the same shell only about a third.",
+          idea:(z===1?"Hydrogen, with one electron, is the one neutral atom solved exactly (step 5). Add a second electron and each one is pushed by the other as well as pulled by the nucleus, and from there on no exact formula exists. The standard shortcut:":
+                z===2?"With 2 electrons, each one is pulled by the nucleus and pushed by the other, and no exact formula exists. The standard shortcut:":
+                "With "+z+" electrons, each one is pulled by the nucleus and pushed by all the others, and no exact formula exists. The standard shortcut:")+" fill the orbitals in order (Pauli lets two share each), then let each electron feel the nucleus minus the electrons that shield it. Slater's rules put numbers on the shielding: inner electrons hide almost all of a proton each, electrons in the same shell only about a third.",
           eqs:[[MM(mtext(configStr(z).replace(/([spdf])(\d+)/g,function(m0,a,b){ return a+supNum(b); }))),"How "+E+"'s electrons fill the shells, lowest energy first."],
             [MM(mi("S")+eq_+mo("∑")+mi("count")+mo("×")+mi("share")+eq_+mn_(nf(sl.S,2))),sl.parts.length?sl.parts.map(function(p){ return p.cnt+" × "+nf(p.f,2)+" ("+p.name+")"; }).join(" + ")+" = "+nf(sl.S,2):"Nothing to shield it: it is the only electron."],
             [MM(Zeff_+eq_+mi("Z")+mo("−")+mi("S")+eq_+mn_(nf(sl.Zeff,2))),"A "+sub+" electron in "+E+" feels about "+nf(sl.Zeff,2)+" of the nucleus's "+z+" charges."],
             [MM(mi("E")+mo("≈")+mo("−")+mn_("13.606 eV")+mo("⁢")+msup(mrow(mo("("),mfrac(Zeff_,msup(mi("n"),mo("*"))),mo(")")),mn_(2))),"= 13.606 × ("+nf(sl.Zeff,2)+" ÷ "+nf(o.nstar,1)+")² = "+nf(o.ieEst,2)+" eV to remove it"+(o.ie&&sub===((function(b){ return b[0]+OLET[b[1]]; })(outerSub(z)))?"; measured: "+nf(o.ie,2)+" eV ("+(err>=0?"+":"−")+nf(Math.abs(err),0)+"%)":"")+". n* is Slater's effective n."]],
           facts:[["Electron",sub],["Shielding S",nf(sl.S,2)],["Charge it feels",nf(sl.Zeff,2)+" of "+z],["Estimate to remove it",nf(o.ieEst,2)+" eV"]],
-          check:{q:"How much of the nucleus's charge is shielded from a "+sub+" electron (S)?", a:sl.S, tol:0.005, unit:"",
-            why:"S = Z − Zeff = "+z+" − "+nf(sl.Zeff,2)+" = "+nf(sl.S,2)+", the sum of the shares shown."},
+          check:{q:"Use n = "+o.sn+" instead of Slater's n* = "+nf(o.nstar,1)+". What does the estimate to remove a "+sub+" electron become, in eV?", a:MK.Ry*Math.pow(sl.Zeff/o.sn,2), tol:0.02, unit:"eV",
+            why:"13.606 × ("+nf(sl.Zeff,2)+" ÷ "+o.sn+")² = "+nf(MK.Ry*Math.pow(sl.Zeff/o.sn,2),2)+" eV. "+(o.nstar<o.sn?"Slater shrank n to n* = "+nf(o.nstar,1)+" because his estimates came out too small for big shells.":"For n up to 3, n* is n, so the estimate does not change.")},
           limit:"Slater's rules are a rule of thumb from 1930: estimates within 20 to 50 percent are normal. Modern calculations (Hartree–Fock and beyond) solve for all the electrons together.",
           alt:cap(E)+"'s electrons in their shells, with the "+sub+" electrons highlighted and the inner electrons shielding the nucleus."};
       }
@@ -6810,10 +6858,10 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
           idea:"Nuclei are made of protons and neutrons packed like drops of liquid, so the volume grows with the number of nucleons, A. The liquid-drop model counts the glue: every nucleon bonds to its neighbors, the ones on the surface have fewer neighbors, the protons push each other apart, and nature prefers equal numbers of protons and neutrons, in pairs. The total, the binding energy, is mass that disappeared when the nucleus formed: E = mc².",
           eqs:[[MM(mi("R")+eq_+msub(mi("r"),mn_(0))+mo("⁢")+msup(mi("A"),mfrac(mn_(1),mn_(3)))),"= 1.2 fm × "+A+"^⅓ = "+nf(o.R,2)+" fm. The atom is about "+nf(sig(o.ratio,2),0)+" times wider."],
             [MM(mi("B")+eq_+msub(mi("a"),mi("V"))+mi("A")+mo("−")+msub(mi("a"),mi("S"))+msup(mi("A"),mfrac(mn_(2),mn_(3)))+mo("−")+msub(mi("a"),mi("C"))+mfrac(mi("Z")+mo("(")+mi("Z")+mo("−")+mn_(1)+mo(")"),msup(mi("A"),mfrac(mn_(1),mn_(3))))+mo("−")+msub(mi("a"),mi("A"))+mfrac(msup(mrow(mo("("),mi("A"),mo("−"),mn_(2),mi("Z"),mo(")")),mn_(2)),mi("A"))+mo("±")+mi("δ")),
-              "= "+nf(o.vol,0)+" − "+nf(-o.surf,0)+" − "+nf(-o.coul,0)+" − "+nf(-o.asym,1)+(o.pair?(o.pair>0?" + ":" − ")+nf(Math.abs(o.pair),2):" + 0")+" = "+nf(o.B,1)+" MeV, or "+nf(o.BA,3)+" MeV per nucleon"],
-            [MM(mi("Δ")+mi("m")+eq_+mfrac(mi("B"),msup(mi("c"),mn_(2)))),"= "+nf(o.B,1)+" MeV ÷ 931.494 MeV per u = "+nf(o.dm,4)+" u missing: the nucleus weighs that much less than its parts"],
+              "= "+nf(o.vol,0)+" − "+nf(-o.surf,0)+" − "+nf(-o.coul,0)+" − "+nf(-o.asym,1)+(o.pair?(o.pair>0?" + ":" − ")+nf(Math.abs(o.pair),2):" + 0")+" = "+nf(o.Bf,1)+" MeV"+(o.Bsrc==="none"?". A lone proton has nothing to bind to, so its real binding energy is 0; the formula is built for nuclei of many nucleons and means nothing here":(o.Bf<0?", a negative number: the formula says this nucleus would fly apart":", or "+nf(o.Bf/A,3)+" MeV per nucleon")+(o.Bm!=null?". Measured (AME2020): "+nf(o.Bm,1)+" MeV":""))],
+            [MM(mi("Δ")+mi("m")+eq_+mfrac(mi("B"),msup(mi("c"),mn_(2)))),"= "+nf(o.B,1)+" MeV ÷ 931.494 MeV per u = "+nf(o.dm,4)+" u missing"+(o.Bsrc==="none"?": nothing, because one proton is its own nucleus":": the nucleus weighs that much less than its parts")+(o.Bsrc==="measured"?" (using the measured B)":"")],
             [MM(msub(mi("V"),mi("barrier"))+eq_+mfrac(mi("k")+mo("⁢")+mi("Z")+mo("⁢")+msup(mi("e"),mn_(2)),mi("R")+mo("+")+msub(mi("r"),mi("p")))),"= 1.440 MeV·fm × "+z+" ÷ ("+nf(o.R,2)+" + 0.84) fm = "+nf(o.barrier,2)+" MeV for a proton to touch it"]],
-          facts:[["Nucleus",cap(isoName(z,A))+": "+st.title.toLowerCase()],["Radius",nf(o.R,2)+" fm"],["Binding energy",nf(o.B,1)+" MeV"],["Per nucleon",nf(o.BA,3)+" MeV"]],
+          facts:[["Nucleus",cap(isoName(z,A))+": "+st.title.toLowerCase()],["Radius",nf(o.R,2)+" fm"],["Binding energy",nf(o.B,1)+" MeV"+(o.Bsrc==="measured"?", measured":(o.Bsrc==="formula"?", formula":""))],["Per nucleon",nf(o.BA,3)+" MeV"]],
           check:{q:"A nucleus with eight times as many nucleons: what is its radius, in femtometers?", a:2*o.R, tol:0.02, unit:"fm",
             why:"R goes as A^⅓, and 8^⅓ = 2, so the radius doubles: 2 × "+nf(o.R,2)+" = "+nf(2*o.R,2)+" fm."},
           limit:"The liquid-drop model misses the magic numbers (2, 8, 20, 28, 50, 82, 126), where nuclei are extra stable. Its coefficients here are Rohlf's (1994), the same ones Atom uses everywhere.",
@@ -6822,14 +6870,14 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       /* quarks */
       var V1=MK.ke2/1.0;
       return {title:"Inside the nucleons: quarks and the strong force", q:"What holds protons together when their charges push them apart?",
-        idea:"Two protons touching repel with millions of electron-volts. Something stronger and very short-ranged must hold them: the strong force. Yukawa's 1935 idea gives its range from the mass of the particle that carries it, the pion. Look deeper and each proton and neutron is three quarks bound by gluons, and almost all of their mass is that binding energy, not the quarks themselves.",
+        idea:"Two protons touching repel with millions of electron-volts. Something stronger and very short-ranged must hold them: the strong force. Yukawa's 1935 idea gives its range from the mass of the particle that carries it, the pion. Look deeper and each proton and neutron is three quarks bound by gluons, and almost all of their mass is the energy of the quarks' motion and of the gluon field, not the quarks' own masses.",
         eqs:[[MM(msub(mi("V"),mi("C"))+eq_+mfrac(mi("k")+mo("⁢")+msup(mi("e"),mn_(2)),mi("r"))),"= 1.440 MeV·fm ÷ "+nf(MA.qr,2)+" fm = "+nf(o.Vc,2)+" MeV pushing two protons apart"],
           [MM(mi("λ")+eq_+mfrac(hbar_,msub(mi("m"),mi("π"))+mo("⁢")+mi("c"))+eq_+mfrac(mn_("197.33 MeV·fm"),mn_("139.57 MeV"))),"= "+nf(o.lamY,3)+" fm: the strong force fades within about this distance, like e^(−r/λ)/r"],
           [MM(mi("p")+eq_+mi("u")+mi("u")+mi("d")+mo(":")+mfrac(mn_(2),mn_(3))+mo("+")+mfrac(mn_(2),mn_(3))+mo("−")+mfrac(mn_(1),mn_(3))+eq_+mn_(1)+mo(",")+mspace()+mi("n")+eq_+mi("u")+mi("d")+mi("d")+mo(":")+mn_(0)),"The charges of the quarks add up to the proton's and neutron's."],
-          [MM(mfrac(mrow(mi("quark"),mspace(),mi("masses")),mrow(mi("nucleus"),mspace(),mi("mass")))+eq_+mfrac(mn_(o.ups+" × 2.16 + "+o.downs+" × 4.67 MeV"),mn_(nf(o.M,0)+" MeV"))),"= "+nf(o.qfrac*100,2)+"%: the rest of "+isoName(z,o.A)+"'s mass is the energy of the quarks and gluons moving inside, E = mc²"]],
+          [MM(mfrac(mrow(mi("quark"),mspace(),mi("masses")),mrow(mi("nucleus"),mspace(),mi("mass")))+eq_+mfrac(mn_(o.ups+" × 2.16 + "+o.downs+" × 4.70 MeV"),mn_(nf(o.M,0)+" MeV"))),"= "+nf(o.qfrac*100,2)+"%: the rest of "+isoName(z,o.A)+"'s mass is the energy of the quarks and gluons moving inside, E = mc²"]],
         facts:[["Up quarks",String(o.ups)],["Down quarks",String(o.downs)],["Quark rest mass",nf(o.qm,0)+" MeV"],["Share of the mass",nf(o.qfrac*100,2)+"%"]],
-        check:{q:"How many down quarks are in "+isoName(z,o.A)+"'s nucleus?", a:o.downs, tol:0, unit:"",
-          why:"Each proton has one down quark and each neutron two: "+z+" + 2 × "+o.N+" = "+o.downs+"."},
+        check:{q:"Add one neutron to "+isoName(z,o.A)+". How many down quarks does the nucleus hold now?", a:o.downs+2, tol:0, unit:"",
+          why:"A neutron is up, down, down, so it brings two: "+o.downs+" + 2 = "+(o.downs+2)+"."},
         limit:"Quark masses are the running masses from the Particle Data Group (about 2.2 and 4.7 MeV) and are only known to a few percent. The strong-force curve shows its shape and range, not a fitted strength.",
         alt:"A "+(MA.nucleon==="p"?"proton":"neutron")+" as three quarks joined by gluons, and the electric and strong forces between two protons "+nf(MA.qr,2)+" femtometers apart."};
     }
@@ -6864,6 +6912,11 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       var zn=P.querySelector(".lb-mzname"); if(zn) zn.textContent=lc(z);
       [].forEach.call(P.querySelectorAll("[data-mch]"),function(b,i){ if(i===MA.ch) b.setAttribute("aria-current","step"); else b.removeAttribute("aria-current"); });
       P.querySelector(".lb-mkind").textContent="Step "+(MA.ch+1)+" of "+MCH.length+" · "+ch.kind;
+      /* steps 4 to 6 are worked on the one-electron ion (Fe²⁵⁺ for iron): the
+         badge says so where the eye lands, not only in the text */
+      var ion=P.querySelector(".lb-mion"), oneE=(ch.id==="bohr"||ch.id==="waves"||ch.id==="cloud")&&z>1;
+      ion.hidden=!oneE; if(oneE) ion.textContent="Worked on "+ionName(z)+", "+lc(z)+" with one electron";
+      var fb=P.querySelector("[data-mfollow]"); if(fb) fb.hidden=!!MA.follow;
       P.querySelector(".lb-mkind").setAttribute("data-kind",ch.kind.toLowerCase());
       P.querySelector(".lb-mtitle").textContent=t.title;
       P.querySelector(".lb-mq").textContent=t.q;
@@ -6891,11 +6944,13 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     BUILD.math=function(P){
       MA.z=MA.z||Z||1;
       P.innerHTML=elDatalist()+'<div class="lb-math">'+
-        '<div class="lb-mtop"><div class="lb-mpick"><span class="lb-mtile" aria-hidden="true"></span><label class="lb-field">Element<input class="lb-input" data-mz list="'+dlId+'" autocomplete="off" spellcheck="false"></label></div>'+
+        '<div class="lb-mtop"><div class="lb-mpick"><span class="lb-mtile" aria-hidden="true"></span><label class="lb-field">Element<input class="lb-input" data-mz list="'+dlId+'" autocomplete="off" spellcheck="false"></label>'+
+        '<button type="button" class="lb-btn ghost" data-mfollow hidden title="Go back to the element picked in the table">Follow the table</button>'+
+        '<button type="button" class="lb-btn ghost" data-mlink title="A link that opens this element at this step">Copy link</button></div>'+
         '<ol class="lb-msteps" aria-label="Steps">'+MCH.map(function(c,i){ return '<li><button type="button" data-mch="'+i+'" data-kind="'+c.kind.toLowerCase()+'"><b>'+(i+1)+'</b> <span>'+esc(c.short)+'</span></button></li>'; }).join('')+'</ol></div>'+
         '<div class="lb-cols lb-mcols"><div class="lb-mleft"><div class="lb-stagewrap lb-mstage"><canvas class="lb-cv" data-c="math" role="img" aria-label=""></canvas></div>'+
         '<div class="lb-mctl"></div></div>'+
-        '<div class="lb-mright"><p class="lb-mkind"></p><h3 class="lb-mtitle"></h3><p class="lb-mq"></p><p class="lb-say lb-midea"></p>'+
+        '<div class="lb-mright"><p class="lb-mkind"></p><p class="lb-mion" hidden></p><h3 class="lb-mtitle"></h3><p class="lb-mq"></p><p class="lb-say lb-midea"></p>'+
         '<h4 class="lb-h">The math, with '+'<span class="lb-mzname"></span>'+'\'s numbers</h4><ol class="lb-meqs"></ol>'+
         '<dl class="lb-facts lb-mfacts"></dl>'+
         '<section class="lb-mcheck" aria-label="Try it"><h4 class="lb-h">Try it</h4><p class="lb-mcq"></p>'+
@@ -6917,8 +6972,11 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
         else if(k==="nucleon") MA.nucleon=v;
         mathRender(true); var again=pane("math").querySelector('select[data-mv="'+k+'"]'); if(again) again.focus(); });
       P.addEventListener("click",function(e){
-        var c=e.target.closest("[data-mch]"), nv=e.target.closest("[data-mnav]"), x=e.target.closest("[data-mx]"), w=e.target.closest("[data-mw]"), o3=e.target.closest("[data-mo3]"), sb=e.target.closest("[data-msub]"), sh=e.target.closest("[data-mshow]");
+        var c=e.target.closest("[data-mch]"), nv=e.target.closest("[data-mnav]"), x=e.target.closest("[data-mx]"), w=e.target.closest("[data-mw]"), o3=e.target.closest("[data-mo3]"), sb=e.target.closest("[data-msub]"), sh=e.target.closest("[data-mshow]"),
+          lk=e.target.closest("[data-mlink]"), fo=e.target.closest("[data-mfollow]");
         if(c){ mathGo(+c.getAttribute("data-mch")); return; }
+        if(lk){ var url=labLink({lab:"math",z:mz(),step:MA.ch}); copyText(url,null,function(ok){ toast(ok?"Link copied: "+url:"Could not copy. The link is "+url); }); ev("math:link"); return; }
+        if(fo){ MA.follow=true; mathSetZ(Z); ev("math:follow"); return; }
         if(nv){ var dn=+nv.getAttribute("data-mnav"); mathGo(dn>0&&MA.ch===MCH.length-1?0:MA.ch+dn); var tgt=pane("math").querySelector(".lb-mright"); if(tgt) try{ tgt.scrollIntoView({block:"nearest",behavior:opt.calm?"auto":"smooth"}); }catch(er){} return; }
         if(w){ MA.waves=+w.getAttribute("data-mw"); var rr=pane("math").querySelector('input[data-mv="waves"]'); if(rr) rr.value=MA.waves; mathRender(false); return; }
         if(o3){ var p=o3.getAttribute("data-mo3").split(","); MA.on=+p[0]; MA.ol=+p[1]; MA.om=+p[2]; MA.cache=null; mathRender(true); return; }
@@ -6932,10 +6990,28 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       P.querySelector(".lb-mform").addEventListener("submit",function(e){ e.preventDefault(); var ck=MA.check, a=P.querySelector("[data-mans]"), v=parseFloat(String(a.value).replace(/,/g,"")), fb=P.querySelector(".lb-mfb");
         if(!isFinite(v)){ fb.textContent="Type a number first."; a.focus(); return; }
         var ok=ck.tol===0?Math.abs(v-ck.a)<0.5:Math.abs(v-ck.a)<=Math.abs(ck.a)*ck.tol;
-        fb.innerHTML=(ok?'<b class="lb-ok">Right.</b> ':'<b class="lb-err">Not quite.</b> ')+esc(ok?ck.why:"Try again, or press Show me.");
+        fb.innerHTML=(ok?'<b class="lb-ok">Right.</b> ':'<b class="lb-err">Not quite.</b> ')+esc(ok?ck.why:mathHint(v,ck));
         ev("math:check:"+MCH[MA.ch].id+":"+(ok?"right":"wrong")); });
       mathRender(true);
+      MA.pending=false;
     };
+    /* a wrong answer gets a hint about what kind of wrong it is: a unit slip
+       (off by 1,000 or a million), a sign, a factor of 2 or 4, a square root
+       not taken, or just far off */
+    function mathHint(v,ck){
+      var a=ck.a, tol=Math.max(ck.tol,0.02);
+      function near(x,y){ return y!==0&&Math.abs(x-y)<=Math.abs(y)*tol; }
+      if(a!==0&&v!==0&&(v<0)!==(a<0)&&near(-v,a)) return "Right size, wrong sign. Which way does this quantity point?";
+      if(near(v*1000,a)||near(v/1000,a)) return "Off by a factor of 1,000: check the unit the question asks for"+(ck.unit?" ("+ck.unit+")":"")+".";
+      if(near(v*1e6,a)||near(v/1e6,a)) return "Off by a factor of a million: check the unit the question asks for"+(ck.unit?" ("+ck.unit+")":"")+".";
+      if(near(v*2,a)) return "Half the answer. Something in the step is twice what you used.";
+      if(near(v/2,a)) return "Twice the answer. Something in the step is half what you used.";
+      if(near(v*4,a)||near(v/4,a)) return "Off by a factor of 4. Is there a square in this step?";
+      if(a>0&&v>0&&(near(v*v,a)||near(Math.sqrt(v),a))) return "That is the square (or the root) of the answer. Check which one the step wants.";
+      if(a!==0&&Math.abs(v-a)<=Math.abs(a)*0.12) return "Close: within 12 percent. Carry more digits through, or reread which value the step uses.";
+      if(a!==0&&(Math.abs(v)>Math.abs(a)*100||Math.abs(v)<Math.abs(a)/100)) return "Far off, by more than a hundred times. Start again from the equation above.";
+      return "Try again, or press Show me.";
+    }
     function ckAns(ck){ var a=ck.a; return (ck.tol===0?String(Math.round(a)):(Math.abs(a)>=100?nf(a,0):(Math.abs(a)>=10?nf(a,1):nf(a,Math.abs(a)>=1?2:3))))+(ck.unit?" "+ck.unit:""); }
     REFRESH.math=function(){ var P=pane("math"); if(P){ var s=P.querySelector(".lb-mzname"); if(s) s.textContent=lc(mz()); } mathRender(false); };
 
@@ -7070,7 +7146,8 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       g.globalAlpha=1; g.fillStyle=T.ink2; g.font="500 14px Archivo, sans-serif";
       if(!narrow) label(g,cap(isoName(z,A))+": "+nf(o.R,2)+" fm across the radius",cx,Math.min(h-14,cy+Rn+28),T);
       /* the five terms as bars, sized so the longest label still fits */
-      var terms=[["Volume",o.vol],["Surface",o.surf],["Coulomb",o.coul],["Asymmetry",o.asym],["Pairing",o.pair]], mx=Math.max(o.vol,1);
+      var terms=[["Volume",o.vol],["Surface",o.surf],["Coulomb",o.coul],["Asymmetry",o.asym],["Pairing",o.pair]],
+        mx=Math.max(1,Math.abs(o.vol),Math.abs(o.surf),Math.abs(o.coul),Math.abs(o.asym));   /* in the lightest nuclei a loss term outgrows the volume term */
       var txt=terms.map(function(tm){ return tm[0]+" "+(tm[1]>=0?"+":"−")+nf(Math.abs(tm[1]),tm[1]&&Math.abs(tm[1])<10?2:0)+" MeV"; });
       g.font="500 13px Archivo, sans-serif"; var tw=Math.max.apply(null,txt.map(function(x){ return g.measureText(x).width; }));
       var bx=narrow?16:w*0.54, by=narrow?h*0.52:34, bh=narrow?11:Math.min(26,(h-120)/6), gap=narrow?7:10, barMax=Math.max(12,Math.min((w-bx)*0.62,w-bx-tw-20));
@@ -7078,7 +7155,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       terms.forEach(function(tm,k){ var y=by+k*(bh+gap), len=Math.max(1,Math.abs(tm[1])/mx*barMax);
         g.fillStyle=tm[1]>=0?(col("ok")||T.ink):(col("bad")||T.ink2); g.fillRect(bx,y,len,bh);
         g.fillStyle=T.ink; g.fillText(txt[k],bx+len+8,y+bh*0.5+4.5); });
-      var yB=by+5*(bh+gap)+6; g.fillStyle=T.ink; g.font="700 14px Archivo, sans-serif"; g.fillText("Total: "+nf(o.B,1)+" MeV ("+nf(o.BA,3)+" per nucleon)",bx,yB+14);
+      var yB=by+5*(bh+gap)+6; g.fillStyle=T.ink; g.font="700 14px Archivo, sans-serif"; g.fillText("Formula: "+nf(o.Bf,1)+" MeV"+(o.Bm!=null&&o.Bsrc!=="none"?"; measured "+nf(o.Bm,1):(o.Bsrc==="none"?"; a lone proton: 0":"")),bx,yB+14);
       g.textAlign="center"; g.font="500 14px Archivo, sans-serif";
       return anim;
     }
@@ -7410,6 +7487,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     api.open=function(spec){ if(!spec) return false;
       if(spec.build){ B.p=spec.build[0]; B.n=spec.build[1]; B.e=spec.build[2]; show("build"); setBMode("atom"); changed(); toast("Here is the atom you were sent."); return true; }
       if(spec.challenge){ show("predict"); if(challengeStart(spec.challenge)){ toast("Challenge loaded: "+CH.keys.length+" questions."); return true; } }
+      if(spec.act){ api.act(spec.act); toast("Opened from a shared link."); return true; }
       return false; };
     /* what a mission's "Show me" asks of the labs */
     api.act=function(a){
@@ -7426,9 +7504,9 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       if(t==="hear"){ if(a.z){ H.z=a.z; H.guess=null; } show("hear"); renderGuess(); REFRESH.hear(); if(a.play) playLight(H.z||Z); return; }
       if(t==="predict"){ if(a.z) api.quiz(a.z); else show("predict"); return; }
       if(t==="compare"&&a.pair){ CMP.a=a.pair[0]; CMP.b=a.pair[1]; CMP.follow=false; show("compare"); renderCompare(); return; }
-      if(t==="trends"&&a.prop){ TR.p=a.prop; if(a.line) TR.line=a.line; show("trends"); var sel=pane("trends").querySelector("[data-tp]"); if(sel) sel.value=TR.p; renderTrends(); return; }
+      if(t==="trends"&&a.prop){ if(TPROPS[a.prop]) TR.p=a.prop; if(a.line==="period"||a.line==="group") TR.line=a.line; show("trends"); var sel=pane("trends").querySelector("[data-tp]"); if(sel) sel.value=TR.p; renderTrends(); return; }
       if(t==="nuclides"&&a.z!=null){ show("nuclides"); nuSet(a.z,(a.a||commonA(a.z))-a.z); return; }
-      if(t==="math"){ if(a.z){ MA.follow=false; MA.z=a.z; } show("math"); if(a.step!=null) mathGo(a.step); else if(a.z) mathSetZ(a.z); return; }
+      if(t==="math"){ if(a.z){ MA.follow=false; MA.z=a.z; } show("math"); if(a.step!=null){ MA.ch=a.step; } if(built.math) mathRender(true); else MA.pending=true; return; }
       if(t==="molecule"){ show("build"); setBMode("molecule"); if(a.mol){ var mb=pane("build").querySelector('[data-mp="'+a.mol+'"]'); if(mb) mb.click(); } return; }
       show(t);
     };
@@ -7531,6 +7609,21 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     t("math: the five liquid-drop terms it shows add up to Atom's binding energy", semfOk, "");
     var lamY=MK.hbarc/MK.mpi, au=79*MK.alpha;
     t("math: Yukawa's range is 1.41 fm, and gold's innermost electron moves at 58% of light speed", Math.abs(lamY-1.414)<0.002&&Math.abs(au-0.5765)<0.001, lamY.toFixed(4)+" "+au.toFixed(4));
+    /* the outermost electron is the highest shell's highest subshell: 4d for
+       palladium, which has no 5s; s or p everywhere else */
+    var pd=outerSub(46), spBad=[]; for(var zo=1;zo<=118;zo++){ if(zo===46) continue; var ob=outerSub(zo); if(ob[1]>1) spBad.push(zo); }
+    t("math: the outer electron is palladium's 4d, and an s or p electron for the other 117", pd[0]===4&&pd[1]===2&&spBad.length===0, pd.slice(0,2).join(",")+" "+spBad.join(" "));
+    /* the liquid-drop formula is wrong for the lightest nuclei: Atom shows the
+       measured value where it has one, and a lone proton binds nothing */
+    t("math: the liquid-drop formula fails for hydrogen and deuterium, and the measured values it shows instead are right (2.22 MeV for deuterium)",
+      bindingSEMF(1,1)<0&&bindingSEMF(1,2)<0&&Math.abs(BA_MEAS["1-2"]*2-2.2246)<0.001, bindingSEMF(1,1).toFixed(2)+" "+(BA_MEAS["1-2"]*2).toFixed(4));
+    t("math: names that are not elements, like \"constructor\", are not elements", zOf("constructor")===0&&zOf("toString")===0&&zOf("Pd")===46, "");
+    /* links into the labs: read back exactly, and nothing unexpected gets through */
+    var l1=fromHash("#lab=math&z=79&step=8"), l2=fromHash("#lab=compare&pair=79-47"), l3=fromHash("#lab=math&z=999&step=0&prop=<b>"), l4=fromHash("#lab=nothing&z=1");
+    t("links: #lab=math&z=79&step=8 opens gold at step 8, a bad z, step, or lab is dropped",
+      l1&&l1.act.lab==="math"&&l1.act.z===79&&l1.act.step===7&&l2&&l2.act.pair.join("-")==="79-47"&&l3&&l3.act.z==null&&l3.act.step==null&&l3.act.prop==null&&l4===null,
+      JSON.stringify([l1,l2,l3,l4]));
+    t("links: the link The math copies reads back as the same element and step", (function(){ var u=labLink({lab:"math",z:26,step:3}), h=u.slice(u.indexOf("#")), r=fromHash(h); return r&&r.act.z===26&&r.act.step===3; })(), labLink({lab:"math",z:26,step:3}));
     return out;
   }
 
@@ -7538,6 +7631,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     fromHash:fromHash, challengeParse:challengeParse};
 })();
 
+/* ATOM-LABS END */
 /* ATOM-PTABLE END */
 /* ----------------------------------------------------------------------------
    THEME — the two grounds, for the canvases.
@@ -9087,16 +9181,17 @@ function renderQuark(){
      'touched is <b>binding energy</b>, not matter. The Higgs field gives quarks their small current '+
      'masses; QCD supplies the rest, and QCD is doing almost all of the work.</p>';
   h+='<p class="body">Lattice QCD can now split that 99% up. One calculation finds the proton&rsquo;s mass is about '+
-     '<b>33% quark motion, 37% gluon field energy, 23% a quantum effect called the trace anomaly, and 9% the quark '+
-     'masses themselves</b>, with a few per cent uncertainty on each (Yang et al., 2018). The split depends on how the '+
-     'pieces are defined, but every definition agrees that the Higgs share is small.</p>';
+     '<b>32% quark motion, 36% gluon field energy, 23% a quantum effect called the trace anomaly, and 9% the '+
+     'quark-mass term</b>, with a few percent uncertainty on each (Yang et al., 2018). That last share is bigger than '+
+     'the three quarks&rsquo; 1% because it also counts the short-lived quark pairs, strange ones included, inside the '+
+     'proton. The split depends on how the pieces are defined, but every definition agrees that the Higgs share is small.</p>';
   h+='<div class="segbar">'+
-     '<span style="width:33%;background:var(--acc2)">33</span><span style="width:37%;background:var(--acc)">37</span>'+
+     '<span style="width:32%;background:var(--acc2)">32</span><span style="width:36%;background:var(--acc)">36</span>'+
      '<span style="width:23%;background:var(--warn)">23</span><span style="width:9%;background:var(--psiP)">9</span></div>';
   h+='<div class="seglabels"><span><i style="background:var(--acc2)"></i>quark energy</span>'+
      '<span><i style="background:var(--acc)"></i>gluon field energy</span>'+
      '<span><i style="background:var(--warn)"></i>trace anomaly</span>'+
-     '<span><i style="background:var(--psiP)"></i>quark masses</span></div>';
+     '<span><i style="background:var(--psiP)"></i>quark-mass term</span></div>';
   h+='<p class="note">Quark masses are the PDG 2026 MS-bar values at μ = 2 GeV: m<sub>u</sub> = 2.16 '+
      '(±0.07) MeV, m<sub>d</sub> = 4.70 (±0.07) MeV. They are <b>scheme- and scale-dependent</b> — '+
      'a "quark mass" is not a directly measurable thing the way an electron mass is. Propagating the '+
@@ -10609,9 +10704,14 @@ function stagePt(ev){ var r=cv.getBoundingClientRect(); return [ev.clientX-r.lef
 function grabQuark(ev){
   if(!(st.qkDet>0.5) || !st.hit || !st.hit.quarks || PULL.broken) return null;
   var p=stagePt(ev), best=null, bd=1e9;
-  st.hit.quarks.forEach(function(q){ var d=Math.hypot(q.x-p[0],q.y-p[1]); if(d<q.r+8 && d<bd){ bd=d; best=q; } });
+  /* the quarks jiggle, so the grab reaches past the drawn edge, further for a finger */
+  var pad=ev.pointerType==="mouse"?12:22;
+  st.hit.quarks.forEach(function(q){ var d=Math.hypot(q.x-p[0],q.y-p[1]); if(d<q.r+pad && d<bd){ bd=d; best=q; } });
   return best;
 }
+/* a drag that starts on the stage never turns into a text selection in the
+   panels beside it (Safari starts one even under pointer capture) */
+document.addEventListener("selectstart", function(ev){ if(st.drag||PULL.dragging) ev.preventDefault(); });
 function startPull(q, ev){
   var p=stagePt(ev);
   PULL.on=true; PULL.dragging=true; PULL.idx=q.j; PULL.hold=0; PULL.v=[0,0];

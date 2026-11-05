@@ -1,6 +1,6 @@
 # Security
 
-Atom is a static website and a small Mac app that shows one local HTML file. It makes no network requests, stores nothing but your theme and mission progress (in your own browser or app), and has no accounts or servers.
+Atom is a static website and small Mac, Windows, and Linux apps that show one local HTML file. It makes no network requests, stores nothing but your theme, your picture-quality choice, and your labs and mission progress (in your own browser or app), and has no accounts or servers. A link you share (`#build=`, `#challenge=`, `#lab=`) carries only what it shows; nothing is sent to anyone.
 
 If you find a security problem anyway, please report it privately through GitHub: open the repository's **Security** tab and choose **Report a vulnerability**. Please don't open a public issue for it. You'll get a reply within a week.
 

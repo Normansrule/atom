@@ -15,7 +15,7 @@ on:
   push:
     tags: ["v*"]
 permissions:
-  contents: write
+  contents: read
 jobs:
   check:
     name: The tag matches VERSION
@@ -23,6 +23,23 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: test "v$(cat VERSION)" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME but VERSION says $(cat VERSION)"; exit 1; }
+
+  site:
+    name: Website and in-browser app still pass
+    needs: check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm install --no-save --no-audit --no-fund playwright@1.64.1 axe-core@4.14.0 html-validate@11.17.0
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx html-validate docs/index.html docs/404.html
+      - run: node scripts/smoke.mjs
+      - run: ATOM_BROWSER=webkit node scripts/smoke.mjs
+      - run: cmp app/atom.html docs/app/index.html
 
   mac:
     name: macOS
@@ -87,7 +104,7 @@ jobs:
         run: node build.mjs win
       - name: Start the app and run its self-test
         run: |
-          npm install --no-save --no-audit --no-fund playwright-core@1
+          npm install --no-save --no-audit --no-fund playwright-core@1.64.1
           node desktop/smoke-desktop.mjs
       - uses: actions/upload-artifact@v7
         with:
@@ -120,7 +137,7 @@ jobs:
           # Ubuntu 24.04 blocks the user namespaces Chromium's sandbox uses
           # unless an app is installed with its AppArmor profile; allow them here
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
-          npm install --no-save --no-audit --no-fund playwright-core@1
+          npm install --no-save --no-audit --no-fund playwright-core@1.64.1
           xvfb-run -a node desktop/smoke-desktop.mjs
       - name: The AppImage itself starts and runs its self-test
         run: |
@@ -141,8 +158,10 @@ jobs:
 
   publish:
     name: Publish the release
-    needs: [mac, windows, linux]
+    needs: [site, mac, windows, linux]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     env:
       MAC_SIGNED: ${{ secrets.MACOS_CERT_P12 != '' }}
     steps:

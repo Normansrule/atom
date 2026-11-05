@@ -9,6 +9,7 @@
 //
 //   npm install --no-save playwright axe-core && npx playwright install chromium
 //   node scripts/smoke.mjs
+//   ATOM_BROWSER=webkit node scripts/smoke.mjs      (Safari's engine; also firefox)
 //
 // CHROME_PATH points it at a browser you already have, if you prefer.
 import http from "node:http";
@@ -18,8 +19,11 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
-let chromium;
-try { ({ chromium } = await import("playwright")); } catch { ({ chromium } = await import("playwright-core")); }
+let pw;
+try { pw = await import("playwright"); } catch { pw = await import("playwright-core"); }
+const ENGINE = process.env.ATOM_BROWSER || "chromium";
+const launcher = pw[ENGINE];
+if (!launcher) { console.error(`no such browser: ${ENGINE} (chromium, webkit, firefox)`); process.exit(2); }
 const AXE = fs.readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
 const ROOT = path.resolve(process.env.DOCS_ROOT || path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "docs"));
@@ -45,10 +49,11 @@ const failures = [];
 const fail = (where, what) => { failures.push(`${where}: ${what}`); console.log(`  FAIL ${where}: ${what}`); };
 const ok = (where, what) => console.log(`  ok   ${where}: ${what}`);
 
-const browser = await chromium.launch({
+console.log(`browser: ${ENGINE}`);
+const browser = await launcher.launch(ENGINE === "chromium" ? {
   executablePath: process.env.CHROME_PATH || undefined,
   args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
-});
+} : {});
 
 async function visit(name, url, check, opts = {}) {
   console.log(`\n${name}  ${url}`);
@@ -88,6 +93,17 @@ await visit("site", `${BASE}`, async (page, n) => {
   /Atom/.test(title) ? ok(n, `title "${title}"`) : fail(n, `title "${title}"`);
   await page.click(".pt-el[data-z='79']"); await page.waitForTimeout(1200);
   (await page.locator("#sheet").isVisible()) ? ok(n, "gold's card opens") : fail(n, "the card did not open");
+  // the labs arrive on their own once a reader heads for them
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => document.getElementById("labs").scrollIntoView());
+  await page.waitForFunction(() => window.AtomLabs && document.querySelectorAll("#labsHost [role=tab]").length === 6, null, { timeout: 15000 }).catch(() => {});
+  const tabs = await page.locator("#labsHost [role=tab]").count();
+  tabs === 6 ? ok(n, "the labs load on approach, six tabs") : fail(n, `the labs did not load (${tabs} tabs)`);
+  const labBad = await page.evaluate(() => window.AtomLabs ? AtomLabs.selfTest().filter((x) => !x[1]).map((x) => x[0]) : ["no AtomLabs"]);
+  labBad.length ? fail(n, "labs self-test on the site: " + labBad.join("; ")) : ok(n, "labs self-test passes on the site");
+  await page.evaluate(() => document.getElementById("lbTab-math").click()); await page.waitForTimeout(400);
+  const mt = await page.evaluate(() => (document.querySelector("#labsHost .lb-mtitle") || {}).textContent || "");
+  /gold/i.test(mt) ? ok(n, "The math opens on gold") : fail(n, `The math did not open (${mt})`);
 });
 
 await visit("site, phone", `${BASE}?el=Fe`, async (page, n) => {
@@ -104,6 +120,26 @@ await visit("app in the browser", `${BASE}app/`, async (page, n) => {
   st && st.ok ? ok(n, "physics self-test passes") : fail(n, "physics self-test: " + JSON.stringify(st));
   const tiles = await page.locator("#front .pt-el").count();
   tiles === 118 ? ok(n, "118 squares on the front table") : fail(n, `${tiles} squares`);
+  // the labs: every self-test, then every step of The math for the elements
+  // most likely to break it (one electron, two, a d-shell oddity, the heaviest)
+  const labBad = await page.evaluate(() => AtomLabs.selfTest().filter((x) => !x[1]).map((x) => x[0]));
+  labBad.length ? fail(n, "labs self-test: " + labBad.join("; ")) : ok(n, "labs self-test passes");
+  const mathBad = await page.evaluate(async () => {
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    frontLabs("math"); await wait(500);
+    const host = document.querySelector("#frontBenchHost"), out = [];
+    for (const name of ["Hydrogen", "Helium", "Iron", "Palladium", "Gold", "Oganesson"]) {
+      const box = host.querySelector("[data-mz]"); box.value = name; box.dispatchEvent(new Event("change", { bubbles: true })); await wait(60);
+      for (let k = 0; k < 10; k++) {
+        host.querySelector(`[data-mch="${k}"]`).click(); await wait(40);
+        const t = host.querySelector("[data-lp=math] .lb-math").innerText;
+        if (/NaN|undefined|Infinity/.test(t)) out.push(`${name} step ${k + 1}`);
+        if (k === 8 && /Binding energy\s*−/.test(t)) out.push(`${name}: negative binding energy`);
+      }
+    }
+    return out;
+  });
+  mathBad.length ? fail(n, "The math: " + mathBad.join(", ")) : ok(n, "The math: 6 elements × 10 steps render cleanly");
 }, { wait: 9000, viewport: { width: 1440, height: 960 } });
 
 await visit("404", `${BASE}no-such-page`, async (page, n) => {

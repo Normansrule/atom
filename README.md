@@ -39,6 +39,7 @@ It runs as a website, as a desktop app for Mac, Windows, and Linux, or as a sing
 - **Explore: Hear.** Each visible line in an element's spectrum becomes a tone exactly 40 octaves below the light itself, so red plays low, violet high, and every element has its own chord with the light's real proportions. Play its electrons filling their shells as a melody, or try **Guess by ear**: a mystery element's chord and four names to choose from. Nothing plays until you press a button.
 - **The math.** Pick any element and walk through the physics of its atom in ten steps, from the outside in, each worked through with that element's own numbers. Three classical steps: Coulomb's pull on the outer electron (with Slater's effective charge), the speed and period of a planet-like orbit, and why that orbit can't last (an accelerating charge radiates; hydrogen's would collapse in about 16 picoseconds). Then the quantum fix: Bohr's rule and the light each jump gives off, de Broglie's waves that must fit the loop (slide to a fraction of a wave and watch it cancel itself), Schrödinger's orbitals as clouds you can pick by n, l, and m (mix two and the cloud sloshes at exactly the frequency of the light), and Slater's shielding for a real, many-electron atom, compared with the measured energy to remove an electron. Then relativity near a heavy nucleus (why gold is yellow, and where the simple formula breaks past Z = 137), the nucleus itself (its size, the five pieces of its binding energy, the mass that disappears as E = mc²), and the quarks inside each proton and neutron, with Yukawa's range for the strong force and how little of the mass the quarks themselves carry. Every step has sliders or choices, a picture that moves, the equations in proper notation with the numbers substituted, a question to try with its worked answer, and a note on where that picture stops being right.
 - **Predict.** A question, your answer, then the reason. Fifteen kinds of questions: neutrons, charge, atomic numbers, atom size, configurations you type in or name, stable or radioactive, density, melting points, blocks, valence electrons, the ions elements form, where they were made, which was discovered first, and how common they are in Earth's crust. The ones you miss come back ten minutes later, then a day later, then less and less often as you keep getting them right. Three different right answers about one element and you have mastered it.
+- **Links to any lab, for teachers.** Every lab can be opened by a link: `#lab=math&z=79&step=8` opens The math on gold at step 8, `#lab=compare&pair=79-47` compares gold and silver, `#lab=nuclides&z=6&a=14` opens the chart on carbon-14, and `#lab=build&z=6&a=14` builds it. **Copy link** in The math makes one for whatever is on the screen. Nothing is sent anywhere; the link is the whole assignment.
 - **Challenges, for teachers and friends.** In Predict, choose the elements, how many questions, and which kinds, and Atom makes a challenge: a link, plus a short code such as `A1.k3j9.10.nqcsb.H-He-Li-C` that can be read aloud or typed into the desktop app. Everyone who opens it gets the same questions in the same order, then a score, a list of what they missed, and a page to print. Nothing is collected: the questions are rebuilt from the code itself.
 - **Experiment: Calculate.** Four calculators with real formulas: the light an electron gives off when it falls between levels (with its color and series), radioactive decay with presets from carbon-14 to uranium-238 and a Geiger counter you can listen to, E = mc² with comparisons from burning gasoline to antimatter, and the molar mass of any formula you type, hydrates included.
 - **Experiment: Workbench.** The three experiments: fuse nuclei, bond two protons with one electron, and build a battery.
@@ -127,9 +128,9 @@ npm start               # or just run it
 
 The page gets no Node.js, no preload bridge, and no permissions, runs in Chromium's sandbox, and cannot navigate anywhere but itself; the Electron fuses that would let someone run the app as plain Node.js or attach a debugger to it are switched off.
 
-On GitHub, pushing a tag such as `v1.0.1` builds all three apps, starts the Windows and Linux builds to run their self-tests, and publishes one release with every download and a `SHA256SUMS.txt`. Every push is checked by the workflows in `.github/workflows`: the HTML is validated, every page is loaded under the same path GitHub Pages uses, the physics self-test runs, accessibility is checked with axe-core, the Mac app is compiled and launched on a real Mac, and the Windows and Linux apps are built and started.
+On GitHub, pushing a tag such as `v1.0.1` builds all three apps, starts the Windows and Linux builds to run their self-tests, and publishes one release with every download and a `SHA256SUMS.txt`. Every push is checked by the workflows in `.github/workflows`: the HTML is validated, every page is loaded under the same path GitHub Pages uses in Chromium, WebKit (Safari's engine, which the Mac app and every iPhone and iPad use), and Firefox, the physics and labs self-tests run, every step of The math is rendered for six elements, accessibility is checked with axe-core, the generated files are compared with the app they come from, the Mac app is compiled and launched on a real Mac, and the Windows and Linux apps are built and started. A release runs the website checks again before it publishes anything.
 
-`app/atom.html` is the single source of truth. The website's physics, element data, renderer, and table (`docs/assets/atom-*.js`) are cut out of it by `scripts/sync-from-lab.sh`, never retyped, so the site and the app can't drift apart.
+`app/atom.html` is the single source of truth. The website's physics, element data, renderer, table, and labs (`docs/assets/atom-*.js`) are cut out of it by `scripts/extract-site.sh`, never retyped, so the site and the app can't drift apart. The labs are their own file so the website's first screen does not wait for them: they load on their own when a reader scrolls toward them, opens a card, searches, or arrives by a link.
 
 ## Project structure
 
@@ -145,7 +146,8 @@ atom/
 │   │   ├── site.css
 │   │   ├── atom-data.js         generated: constants, the 118 elements, configurations, nuclear formulas
 │   │   ├── atom-engines.js      generated: the WebGL 2 orbital ray-marcher and the quark-string physics
-│   │   ├── atom-ptable.js       generated: the living table, the card, the nebula, the labs, and the missions
+│   │   ├── atom-ptable.js       generated: the living table, the card, the nebula, and the missions
+│   │   ├── atom-labs.js         generated: the labs, loaded when a reader heads for them
 │   │   ├── atom-labs.css        generated: the labs' styles, shared with the app
 │   │   └── fonts/               Archivo, the one typeface, and its license (OFL.txt)
 │   └── media/                   screenshots and the recordings in this README (animated WebP)
@@ -159,6 +161,7 @@ atom/
 │   └── icon.png
 ├── scripts/
 │   ├── sync-from-lab.sh         copies the app in and regenerates the site's generated files
+│   ├── extract-site.sh          cuts the generated files out of the app (CI runs it too, and compares)
 │   ├── extract-site-data.js
 │   └── smoke.mjs                loads every page the way GitHub Pages serves it and checks it
 ├── .github/                     the checks on every push, the release build, and the issue forms

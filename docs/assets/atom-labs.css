@@ -70,7 +70,7 @@
 .lb-note{color:var(--ink2);font-size:var(--fs-ui,14px);max-width:72ch}
 .lb-err{color:var(--lb-bad)}
 .lb .lb-h{font-size:var(--fs-ui,14px);font-weight:700;letter-spacing:.02em;line-height:1.4;color:var(--ink);margin:0 0 8px}
-.lb-cv{display:block;width:100%;height:100%}
+.lb-cv{display:block;width:100%;height:100%;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .lb-stagewrap{position:relative;display:flex;flex-direction:column;min-height:380px;border:1px solid var(--lb-line);border-radius:var(--lb-r2,12px);
   background:var(--lb-sunk);overflow:hidden}
 .lb-stagewrap .lb-cv{flex:1;min-height:300px}
@@ -290,7 +290,8 @@
   .lb-vol{margin-left:0}
 }
 @media (max-width:520px){
-  .lb-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+  .lb-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
   .lb-tabs [role="tab"]{flex:none;padding:12px}
   .lb-subtabs{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .lb-subtabs button{flex:none}
@@ -319,7 +320,7 @@
 
 /* ---------------------------------------------------------------- the card's "try it" row */
 .pd-acts{display:grid;gap:8px;margin:16px 0 0}
-.pd-acts > div{display:flex;flex-wrap:wrap;gap:8px}
+.pd-acts > div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .pd-acts button{--k:var(--lb-build);display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 12px;border-radius:var(--lb-r,8px);cursor:pointer;
   border:1px solid var(--line2);background:var(--panel2);color:var(--ink);font:inherit;font-size:var(--fs-ui,14px);font-weight:600}
 .pd-acts button::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--k);flex:none}
@@ -331,7 +332,7 @@
 .pd-mine span::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--lb-you);box-sizing:border-box}
 .pd-mine span.on::before{background:var(--lb-you)}
 /* ---------------------------------------------------------------- the card's tabs */
-.pd-tabs{position:sticky;top:0;z-index:3;display:flex;gap:4px;margin:16px 0 0;background:var(--panel);border-bottom:1px solid var(--line);
+.pd-tabs{position:sticky;top:0;z-index:3;display:flex;gap:4px;margin:16px 0 0;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;
   overflow-x:auto;scrollbar-width:none}
 .pd-tabs [role="tab"]{position:relative;flex:none;min-height:44px;padding:8px 12px;border:0;background:none;color:var(--ink2);font:inherit;
   font-size:var(--fs-ui,14px);font-weight:600;cursor:pointer}
@@ -507,9 +508,12 @@
 /* ---- The math: ten steps through one element, equations in MathML */
 .lb-math{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
 .lb-mtop{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;min-width:0}
-.lb-mpick{display:flex;gap:12px;align-items:flex-end}
+.lb-mpick{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.lb-mpick .lb-btn{white-space:nowrap}
 .lb-mpick .lb-input{width:180px}
-.lb-msteps{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0;flex:1 1 420px;min-width:0}
+.lb-mion{margin:0 0 4px;font-size:var(--fs-ui,14px);color:var(--ink2);padding:4px 10px;border:1px solid var(--lb-line);border-radius:999px;display:inline-block}
+.lb-msteps{display:grid;grid-template-columns:repeat(5,minmax(0,auto));gap:6px;list-style:none;margin:0;padding:0;flex:1 1 420px;min-width:0;justify-content:start}
+.lb-msteps button{width:100%;justify-content:flex-start}
 .lb-msteps button{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 12px 4px 4px;border-radius:var(--lb-rp,999px);border:1px solid var(--lb-line2);
   background:transparent;color:var(--ink);font:inherit;font-size:var(--fs-ui,14px);cursor:pointer}
 .lb-msteps button b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--lb-raise);font-size:var(--fs-micro,13px);font-variant-numeric:tabular-nums}
@@ -544,8 +548,11 @@
 .lb-mfb .lb-ok{color:var(--lb-ok)}
 .lb-mnav{justify-content:space-between}
 @media (max-width:900px){ .lb-mcols{grid-template-columns:minmax(0,1fr)} .lb-mstage{min-height:340px}
-  .lb-msteps button{padding-right:4px} .lb-msteps button span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-  .lb-msteps button[aria-current="step"]{padding-right:12px} .lb-msteps button[aria-current="step"] span{position:static;width:auto;height:auto;overflow:visible;clip-path:none} }
+  .lb-msteps{display:flex;flex-wrap:wrap} .lb-msteps button{width:auto}
+  /* on a narrow screen a step is its number; the name stays in the button
+     (so the accessible name keeps it) at zero size, with no gap to show for it */
+  .lb-msteps button{padding-right:4px;gap:0} .lb-msteps button span{font-size:0;line-height:0}
+  .lb-msteps button[aria-current="step"]{padding-right:12px;gap:6px} .lb-msteps button[aria-current="step"] span{font-size:inherit;line-height:inherit} }
 @media (max-width:520px){ .lb-meqs math{font-size:1em} .lb-meqs li{padding:8px 12px} }
 .lb-mwide:focus-visible{outline:2px solid var(--k);outline-offset:2px}
 /* ATOM-LABS-CSS END */

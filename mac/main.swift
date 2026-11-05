@@ -45,7 +45,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         webView.uiDelegate = self
         webView.allowsBackForwardNavigationGestures = false
         webView.setValue(false, forKey: "drawsBackground")      // no white flash before the first frame
-        if #available(macOS 13.3, *) { webView.isInspectable = true }
+        #if DEBUG
+        if #available(macOS 13.3, *) { webView.isInspectable = true }   // Safari's Web Inspector, in development builds only
+        #endif
 
         let screen = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
         let w = min(1440, screen.width - 60), h = min(960, screen.height - 60)
@@ -130,8 +132,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
 
     // If the page's process is ever stopped (memory pressure, a GPU reset),
-    // load it again rather than leave an empty window.
-    func webViewWebContentProcessDidTerminate(_ wv: WKWebView) { loadPage() }
+    // load it again rather than leave an empty window. Bounded, as the
+    // Windows and Linux apps are: a page that keeps stopping must not loop.
+    var crashTimes: [Date] = []
+    func webViewWebContentProcessDidTerminate(_ wv: WKWebView) {
+        let now = Date()
+        crashTimes = crashTimes.filter { now.timeIntervalSince($0) < 60 } + [now]
+        if crashTimes.count <= 3 { loadPage(); return }
+        let a = NSAlert()
+        a.messageText = "Atom stopped"
+        a.informativeText = "The page stopped several times in a minute. Choose Reload to try again."
+        a.addButton(withTitle: "Reload")
+        a.addButton(withTitle: "Quit")
+        if a.runModal() == .alertFirstButtonReturn { crashTimes = []; loadPage() } else { NSApp.terminate(nil) }
+    }
 
     @objc func reloadPage(_ sender: Any?) { loadPage() }   // always the app's own page, whatever is showing
     @objc func openSite(_ sender: Any?) { NSWorkspace.shared.open(siteURL) }

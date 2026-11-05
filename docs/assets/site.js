@@ -239,23 +239,30 @@ function makeField(canvas){
   if(!gl||typeof gl.createShader!=="function") return null;
   function sh(t,s){ var x=gl.createShader(t); gl.shaderSource(x,s); gl.compileShader(x);
     if(!gl.getShaderParameter(x,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; }
-  var pr;
-  try{
+  /* everything the context owns is made in build(), so it can be made again
+     after the browser takes the context away (a GPU reset, a tab left in
+     the background) and gives it back */
+  var pr, L={}, vao, lost=false;
+  function build(){
     pr=gl.createProgram();
     gl.attachShader(pr,sh(gl.VERTEX_SHADER,"#version 300 es\nin vec2 p;void main(){gl_Position=vec4(p,0.,1.);}"));
     gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS)); gl.bindAttribLocation(pr,0,"p"); gl.linkProgram(pr);
     if(!gl.getProgramParameter(pr,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
-  }catch(err){ return null; }
-  var L={}; ["uC","uK","uT","uW","uTube","uVac","uN","uLight","uA","uB","uCol","uTubeCol","uQ"].forEach(function(k){ L[k]=gl.getUniformLocation(pr,k); });
+    ["uC","uK","uT","uW","uTube","uVac","uN","uLight","uA","uB","uCol","uTubeCol","uQ"].forEach(function(k){ L[k]=gl.getUniformLocation(pr,k); });
+    vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+    var vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+  }
+  try{ build(); }catch(err){ return null; }
+  canvas.addEventListener("webglcontextlost",function(e){ e.preventDefault(); lost=true; },false);
+  canvas.addEventListener("webglcontextrestored",function(){ try{ build(); lost=false; }catch(e){} },false);
   function QI(){ return (GA&&GA.tier)?{low:0,medium:1,high:2}[GA.tier]:1; }
-  var vao=gl.createVertexArray(); gl.bindVertexArray(vao);
-  var vb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,vb);
-  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
-  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
   var scale=1;
   function rgb(hx){ return [parseInt(hx.substr(1,2),16)/255,parseInt(hx.substr(3,2),16)/255,parseInt(hx.substr(5,2),16)/255]; }
   return {
     draw:function(o){
+      if(lost) return;
       var s=Math.min(DPR,1.5)*scale, w=Math.round(W*s), h=Math.round(H*s);
       if(canvas.width!==w||canvas.height!==h){ canvas.width=w; canvas.height=h; }
       gl.viewport(0,0,w,h); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
@@ -628,9 +635,24 @@ function markGauge(){ var k=gaugeMap[active]||"edge"; gaugeLinks.forEach(functio
 /* ------------------------------------------------------------------ pointer: turn the atom, pull the quark */
 var cam={yaw:-0.6,pitch:0.42,ty:-0.6,tp:0.42,vy:0,vp:0,drag:null,dy0:0,dp0:0};
 function hit(n){ return D.querySelector('.hit[data-hit="'+n+'"]'); }
+/* A press on the stage must never start a text selection in the copy beside
+   it. Pointer capture does not stop one in Safari, and a press that missed a
+   quark used to fall through to the browser's own drag-to-select. So the
+   stage keeps every press (it holds no text and takes no focus), and while
+   anything is held the page refuses to select. */
+var ROOT=D.documentElement;
+function holdPage(on){
+  ROOT.classList.toggle("atom-drag",on);
+  if(on){ try{ var s=window.getSelection(); if(s&&!s.isCollapsed) s.removeAllRanges(); }catch(_){} }
+}
+D.addEventListener("selectstart",function(e){ if(ROOT.classList.contains("atom-drag")) e.preventDefault(); });
+[hit("cloud"),hit("pull")].forEach(function(el){ if(!el) return;
+  el.addEventListener("mousedown",function(e){ e.preventDefault(); });
+  el.addEventListener("dragstart",function(e){ e.preventDefault(); });
+});
 (function(){
   var h=hit("cloud"); if(!h) return;
-  h.addEventListener("pointerdown",function(e){ cam.drag={x:e.clientX,y:e.clientY,yaw:cam.ty,pitch:cam.tp,lx:e.clientX,ly:e.clientY,lt:e.timeStamp,fx:0,fy:0}; h.setPointerCapture(e.pointerId); h.classList.add("dragging"); });
+  h.addEventListener("pointerdown",function(e){ if(e.button>0) return; cam.drag={x:e.clientX,y:e.clientY,yaw:cam.ty,pitch:cam.tp,lx:e.clientX,ly:e.clientY,lt:e.timeStamp,fx:0,fy:0}; h.setPointerCapture(e.pointerId); h.classList.add("dragging"); holdPage(true); });
   h.addEventListener("pointermove",function(e){
     if(cam.drag){ var d=cam.drag, dt=Math.max(1,e.timeStamp-d.lt);
       cam.ty=d.yaw+(e.clientX-d.x)*0.008; cam.tp=Math.max(-1.4,Math.min(1.4,d.pitch+(e.clientY-d.y)*0.008));
@@ -640,30 +662,39 @@ function hit(n){ return D.querySelector('.hit[data-hit="'+n+'"]'); }
   /* letting go with the pointer moving flings the atom: the target runs on
      by the speed of the hand, and the spring brings it to rest */
   var up=function(e){ var d=cam.drag; if(d&&!CALM&&e&&e.timeStamp-d.lt<80){ cam.ty+=d.fx*0.008*180; cam.tp=Math.max(-1.4,Math.min(1.4,cam.tp+d.fy*0.008*180)); }
-    cam.drag=null; h.classList.remove("dragging"); };
+    cam.drag=null; h.classList.remove("dragging"); holdPage(false); };
   h.addEventListener("pointerup",up); h.addEventListener("pointercancel",up);
 })();
 var hp=hit("pull");
 function kPull(){ return radius()/1.15; }   /* px per fm: 1.15 fm to the edge of the stage radius */
 function P2F(x,y){ var c=center(); return [(x-c[0])/kPull(), (c[1]-y)/kPull()]; }
-function nearestQuark(x,y){
+/* the quarks jiggle, so the grab reaches twice the drawn radius for a mouse
+   and three times for a finger */
+function nearestQuark(x,y,pt){
   var c=center(), k=kPull(), qs=quarks(performance.now()/1000).q, best=-1, bd=1e9;
   qs.forEach(function(q,j){ var d=Math.hypot(c[0]+q[0]*k-x, c[1]-q[1]*k-y); if(d<bd){ bd=d; best=j; } });
-  return bd<Math.max(28,0.16*k)?best:-1;
+  return bd<(pt==="mouse"?Math.max(32,0.2*k):Math.max(44,0.3*k))?best:-1;
 }
 if(hp){
   hp.addEventListener("pointerdown",function(e){
-    if(PULL.broken) return; var j=nearestQuark(e.clientX,e.clientY); if(j<0) return;
+    if(e.button>0||PULL.broken) return; var j=nearestQuark(e.clientX,e.clientY,e.pointerType); if(j<0) return;
     if(!PULL.on){ PULL.restL=quarks(performance.now()/1000).S.L; }
     PULL.on=true; PULL.drag=true; PULL.idx=j; PULL.hold=0; PULL.v=[0,0]; PULL.hand=P2F(e.clientX,e.clientY); PULL.lastT=performance.now();
     if(CALM) PULL.q=PULL.hand.slice(); else PULL.q=restQuarks(performance.now()/1000)[j].slice();
-    hp.setPointerCapture(e.pointerId); hp.classList.add("dragging"); D.getElementById("pullHint").style.opacity="0";
+    hp.setPointerCapture(e.pointerId); hp.classList.add("dragging"); holdPage(true); D.getElementById("pullHint").style.opacity="0";
   });
+  /* on a phone the stage scrolls the page like the rest of it, unless the
+     finger lands on a quark: then the page holds still and the quark comes */
+  hp.addEventListener("touchstart",function(e){
+    var t=e.touches[0]; if(e.touches.length===1&&!PULL.broken&&nearestQuark(t.clientX,t.clientY,"touch")>=0) e.preventDefault();
+  },{passive:false});
   hp.addEventListener("pointermove",function(e){
     if(PULL.drag){ PULL.hand=P2F(e.clientX,e.clientY); if(CALM) PULL.q=PULL.hand.slice(); return; }
-    hp.classList.toggle("over", nearestQuark(e.clientX,e.clientY)>=0);
+    hp.classList.toggle("over", nearestQuark(e.clientX,e.clientY,e.pointerType)>=0);
   });
-  var upP=function(){ if(PULL.drag){ PULL.drag=false; PULL.hand=null; hp.classList.remove("dragging"); } };
+  /* the string can snap mid-drag (which ends PULL.drag), so letting go
+     always releases the hand, the cursor, and the page */
+  var upP=function(){ PULL.drag=false; PULL.hand=null; hp.classList.remove("dragging"); holdPage(false); };
   hp.addEventListener("pointerup",upP); hp.addEventListener("pointercancel",upP);
 }
 D.getElementById("pullOut").addEventListener("click",function(){
@@ -729,10 +760,27 @@ function setLens(lens, filter){
   lg.innerHTML=lens==="shapes"?"":h; root.classList.toggle("lens-on",lens!=="shapes"); readout(PT.hover||SEL); fitTable();
   if(MS) MS.signal("lens:"+lens+(filter?":"+filter:""));
 }
+/* The labs (a quarter of the site's code) are fetched only when a reader is
+   about to use them: scrolling toward them, opening a card, searching, or
+   arriving by a shared link. Until then the first screen owes them nothing.
+   withLabs(fn) runs fn once they are mounted. */
+var LABS_Q=[], LABS_STATE=0;   /* 0 not asked, 1 loading, 2 mounted, 3 failed */
+function withLabs(fn){
+  if(LABS_STATE===2){ if(fn) fn(); return; }
+  if(fn) LABS_Q.push(fn);
+  if(LABS_STATE!==0) return;
+  LABS_STATE=1;
+  var s=D.createElement("script"); s.src="assets/atom-labs.js"; s.async=true;
+  s.onload=function(){ try{ labsBoot(); LABS_STATE=2; }catch(e){ LABS_STATE=3; if(window.console) console.error(e); return; } var q=LABS_Q; LABS_Q=[]; q.forEach(function(g){ g(); }); };
+  s.onerror=function(){ LABS_STATE=3; var st=D.getElementById("labsStatus"); if(st) st.textContent="The labs could not be loaded. Check your connection and reload the page."; };
+  D.head.appendChild(s);
+}
+var labsBoot=function(){};
 function openSheet(z){
-  sheetBody.innerHTML=PTable.detail(z);
-  AtomLabs.progress.mark("seen",z);
-  var hd=sheetBody.querySelector(".pd-head"); if(hd) hd.insertAdjacentHTML("afterend",AtomLabs.cardActions(z));
+  sheetBody.innerHTML=PTable.detail(z); sheetBody.setAttribute("data-z",String(z));
+  withLabs(function(){ if(sheetBody.getAttribute("data-z")!==String(z)) return;
+    AtomLabs.progress.mark("seen",z);
+    var hd=sheetBody.querySelector(".pd-head"); if(hd&&!sheetBody.querySelector(".pd-acts")) hd.insertAdjacentHTML("afterend",AtomLabs.cardActions(z)); });
   if(MS) MS.signal("card:"+z);
   sheet.hidden=false; ptsec.classList.add("sheet-open"); root.classList.add("card-open"); fitTable();
   requestAnimationFrame(function(){ sheet.classList.add("open"); });
@@ -740,6 +788,7 @@ function openSheet(z){
 }
 function closeSheet(focusTile){
   if(sheet.hidden) return;
+  sheetBody.removeAttribute("data-z");
   sheet.classList.remove("open"); ptsec.classList.remove("sheet-open"); root.classList.remove("card-open"); fitTable();
   setTimeout(function(){ if(!sheet.classList.contains("open")) sheet.hidden=true; }, CALM?0:320);
   if(focusTile&&PT) PT.focusSelected();
@@ -749,9 +798,10 @@ D.getElementById("sheetClose").addEventListener("click",function(){ closeSheet(t
 sheetBody.addEventListener("click",function(e){ var b=e.target.closest("[data-la]"); if(!b) return;
   var k=b.getAttribute("data-la"); closeSheet(false); goLabs(k==="quiz"?"predict":k, SEL); });
 function goLabs(tab, z){
-  var L=D.getElementById("labs"); if(!L||!LABS) return;
+  var L=D.getElementById("labs"); if(!L) return;
   window.scrollTo({top:L.getBoundingClientRect().top+window.scrollY-56, behavior:CALM?"auto":"smooth"});
-  if(tab==="build"&&z) LABS.build(z); else if(tab==="predict"&&z) LABS.quiz(z); else if(tab==="hear"&&z) LABS.hear(z); else LABS.show(tab||LABS.current(), z);
+  withLabs(function(){ if(!LABS) return;
+    if(tab==="build"&&z) LABS.build(z); else if(tab==="predict"&&z) LABS.quiz(z); else if(tab==="hear"&&z) LABS.hear(z); else LABS.show(tab||LABS.current(), z); });
 }
 /* today's element: three small tasks, and the button says how many are done */
 function today(){
@@ -927,6 +977,44 @@ function drawSparkle(o, fov, c, alpha){
     ctx.fillRect(c[0]+x1*kp-0.8, c[1]-y2*kp-0.8, 1.6, 1.6); }
   ctx.globalAlpha=1;
 }
+/* Without WebGL the cloud is the same Monte-Carlo sample the sparkle draws
+   from, all 2,600 points, turned by the same camera and shaded by depth, so
+   the stage still shows a real orbital that turns under the hand. A whole
+   atom ("s26") is drawn as its filled subshells, one sample set each. */
+function fallbackSpecs(o){
+  if(typeof o!=="string") return [[o,1]];
+  if(o==="shine") return [[orbOf(2,1,0,1),1]];
+  if(o.indexOf("emit")===0) return [[orbOf(+o.slice(4),2,0,1),1]];
+  var z=+o.slice(1), out=[], tot=0;
+  configOf(z).forEach(function(cfg){ tot+=cfg[2]; });
+  configOf(z).forEach(function(cfg){ out.push([orbOf(cfg[0],cfg[1],0,zRad(z,cfg[0],cfg[1]),true), cfg[2]/tot]); });
+  return out;
+}
+var FEXT={};
+function fallbackExt(o){
+  var k=keyOf(o); if(FEXT[k]) return FEXT[k];
+  var specs=fallbackSpecs(o), ext=1;
+  specs.forEach(function(sw){ var s=sw[0], rmax=(3.6*s.n*s.n+22)/s.Z, peak=0, i, r, v, last=0;
+    for(i=1;i<=400;i++){ r=i*rmax/400; v=R(s.n,s.l,r,s.Z); v=r*r*v*v; if(v>peak) peak=v; if(v>peak*0.01) last=r; }
+    ext=Math.max(ext,last); });
+  FEXT[k]=ext; return ext;
+}
+function drawFallbackCloud(o, fov, c, alpha){
+  var specs=fallbackSpecs(o), kp=(Math.min(W,H)/2)/(fov/a0);
+  var cyw=Math.cos(cam.yaw), syw=Math.sin(cam.yaw), cp=Math.cos(cam.pitch), sp=Math.sin(cam.pitch), light=theme==="light";
+  var inkP=light?"#09467a":"#bfe6ff", inkN=light?"#84134d":"#ffd0e6", r0=mqSmall.matches?1.6:2.1;
+  specs.forEach(function(sw){
+    var S=samples(sw[0]); if(!S) return;
+    var N=Math.max(120,Math.round(2600*sw[1])), step=Math.max(1,Math.floor(2600/N));
+    for(var k=0;k<2600;k+=step){ var x=S.p[k*3], y=S.p[k*3+1], z=S.p[k*3+2];
+      var x1=x*cyw-z*syw, z1=x*syw+z*cyw, y2=y*cp-z1*sp, z2=y*sp+z1*cp;
+      var depth=0.55+0.45*Math.max(0,Math.min(1,0.5+z2*kp/(Math.min(W,H)*0.6)));
+      ctx.globalAlpha=alpha*depth*(light?0.5:0.7);
+      ctx.fillStyle=S.s[k]<0?inkN:inkP;
+      ctx.beginPath(); ctx.arc(c[0]+x1*kp, c[1]-y2*kp, r0*depth, 0, 6.2832); ctx.fill(); }
+  });
+  ctx.globalAlpha=1;
+}
 
 /* ------------------------------------------------------------------ the world behind the page */
 var WTARGET={table:[1,0,0], cloud:[0.25,1,0], light:[0,1,0], empty:[0,0.55,0.35], nucleus:[0,0.15,0.75], proton:[0,0,0.35], pull:[0,0,0.3], edge:[0.65,0,0.3], bench:[1,0,0], end:[1,0,0]};
@@ -940,6 +1028,12 @@ function drawWorld(now, dt){
      which halves its cost and can't be seen; a change of scene, a birth, the
      zoom, or a scroll draws every frame */
   var busy=moving||scrolled||(WORLD.evT0&&now-WORLD.evT0<6000)||(active==="table"&&prog>0.01);
+  /* below the descent (the labs, the questions, the downloads, the sources)
+     the sky only has to be there: once it has settled it is drawn one last
+     time and then left alone until the window, the theme, or the scene
+     changes, so reading costs the battery nothing */
+  var idleKey=(active==="bench"||active==="end")&&!busy ? [W,H,theme,SEL].join("|") : "";
+  if(idleKey){ if(worldIdle===idleKey) return; worldIdle=idleKey; } else worldIdle="";
   WORLD.govern(dt);
   if(!busy&&!CALM&&(frames&1)) return;
   if(CALM&&!busy&&worldDrawn&&frames%30) return;
@@ -950,7 +1044,7 @@ function drawWorld(now, dt){
   WORLD.draw({w:W,h:H,t:CALM?20:now/1000,now:now,cos:WL.cos,lit:WL.lit,vac:WL.vac,mix:ORIGIN[SEL-1],evx:ev[0],evy:ev[1],r:r,
     cx:c[0],cy:c[1],quiet:quiet,light:theme==="light",calm:CALM,small:mqSmall.matches});
 }
-var worldDrawn=false, scrolled=false, lastY=-1, cloudKey="", ovUsed=true;
+var worldDrawn=false, worldIdle="", scrolled=false, lastY=-1, cloudKey="", ovUsed=true;
 
 /* ------------------------------------------------------------------ the frame */
 var last=performance.now(), frames=0, cloudStep=-1, zoomRect=null, statusDone=false;
@@ -1090,9 +1184,11 @@ function frame(now){
   if(front){ put(front.c,"visibility","visible"); if(back) put(back.c,"visibility",now-swapAt>650?"hidden":"visible"); }
   /* the overlay: cleared and composited only while something is on it
      (sparkle, a nucleus, quarks, a flash, a photon) */
-  var ovNeed=(sparkle&&cloudA>0.05)||nucA>0.01||protA>0.01||pullA>0.01||(PULL.broken&&now-flash<500)||(EM&&EM.phase>=1&&active==="light");
+  var noGL=!front&&orb&&cloudA>0.02;
+  var ovNeed=(sparkle&&cloudA>0.05)||noGL||nucA>0.01||protA>0.01||pullA>0.01||(PULL.broken&&now-flash<500)||(EM&&EM.phase>=1&&active==="light");
   if(ovNeed||ovUsed){ ctx.clearRect(0,0,W,H); }
   ovUsed=ovNeed; put(cO,"visibility",ovNeed?"visible":"hidden");
+  if(noGL){ var fext=fallbackExt(orb); drawFallbackCloud(orb, (fixFov?fov:fext*a0*tight)*1.45, c, cloudA*(active==="table"?smooth(0.7,0.95,prog):1)); }
   if(sparkle && cloudA>0.05 && front && front.h) drawSparkle(orb, (active==="table"&&zoomRect)?Math.max(front.h.ext*a0*tight, front.h.ext*0.70*a0*(Math.min(W,H)/2)/(zoomRect/2)):front.h.ext*a0*tight, c, cloudA*(active==="table"?smooth(0.7,0.95,prog):1));
   if(nucA>0.01){
     var kfm=(Math.min(W,H)/2)/fov*1e-15;
@@ -1133,16 +1229,16 @@ function frame(now){
 
 /* "Show me": what a mission step asks for, done for you */
 function missionGo(a){
-  if(a.lab && LABS){ goLabs(); LABS.act(a); return; }
+  if(a.lab){ goLabs(); withLabs(function(){ if(LABS) LABS.act(a); }); return; }
   if(a.pick){ var z=a.pick; if(z!==SEL) setElement(z); if(PT){ PT.select(z); readout(z); }
     if(active!=="table") window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); if(MS) MS.signal("pick:"+z); }
   if(a.lens) { if(active!=="table") window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setLens(a.lens, a.filter||""); }
   if(a.card){ var zc=a.card; if(a.tab) PTable.detailTab(a.tab); if(zc!==SEL) setElement(zc); if(PT) PT.select(zc); window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setTimeout(function(){ openSheet(zc); }, CALM?0:500); }
   if(a.depth){ var sec=D.getElementById(a.depth); if(sec){ var y=sec.getBoundingClientRect().top+window.scrollY+(sec.classList.contains("pin")?H*0.2:0); window.scrollTo({top:y,behavior:CALM?"auto":"smooth"}); } }
-  if(a.sim && LABS){ goLabs("bench"); var SIMS=LABS.sims();
+  if(a.sim){ goLabs("bench"); withLabs(function(){ var SIMS=LABS&&LABS.sims();
     if(SIMS){ SIMS.show(a.sim); if(a.react){ var HOST=D.getElementById("labsHost"), rb=HOST.querySelector('[data-r="'+a.react+'"]'); if(rb) rb.click();
       var T=HOST.querySelector('[data-i="T"]'); if(T&&a.hot&&+T.value<440){ T.value=440; T.dispatchEvent(new Event("input")); }   /* about 12.6 keV */
-      var fb=HOST.querySelector('[data-i="fire"]'); if(fb&&!fb.closest("[hidden]")) fb.click(); } } }
+      var fb=HOST.querySelector('[data-i="fire"]'); if(fb&&!fb.closest("[hidden]")) fb.click(); } } }); }
 }
 
 /* the download that fits this computer goes first and gets the accent */
@@ -1217,33 +1313,46 @@ function boot(){
   setLens("shapes","");
   /* the labs: build, predict, calculate, the workbench, hear, and your progress */
   var lh=D.getElementById("labsHost");
-  if(lh){
-    var simTheme=function(){ return {light:theme==="light", plate:T.plate, ink:T.ink, ink2:T.ink2, ink3:T.ink3, acc:T.acc, sub:T.sub,
+  var simTheme=function(){ return {light:theme==="light", plate:T.plate, ink:T.ink, ink2:T.ink2, ink3:T.ink3, acc:T.acc, sub:T.sub,
         pF:T.pF, nF:T.nF, pos:T.gl.pos, neg:T.gl.neg, posInk:T.gl.posInk, negInk:T.gl.negInk}; };
-    var toTable=function(z, card){ if(z!==SEL) setElement(z); if(PT) PT.select(z); if(MS) MS.signal("pick:"+z); readout(z);
+  var toTable=function(z, card){ if(z!==SEL) setElement(z); if(PT) PT.select(z); if(MS) MS.signal("pick:"+z); readout(z);
       if(card){ window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setTimeout(function(){ openSheet(z); }, CALM?0:600); } };
-    LABS=AtomLabs.mount(lh,{calm:CALM, theme:simTheme, simTheme:simTheme, catColor:catColor,
+  var fi=D.getElementById("ptFind"), tb=D.getElementById("todayBtn");
+  labsBoot=function(){
+    if(lh) LABS=AtomLabs.mount(lh,{calm:CALM, theme:simTheme, simTheme:simTheme, catColor:catColor,
       element:function(){ return SEL; },
       onEvent:function(e){ if(MS) MS.signal(e); },
       select:function(z){ toTable(z,false); },
       card:function(z){ toTable(z,true); },
       fall:function(z){ toTable(z,false); var c=D.getElementById("cloud"); window.scrollTo({top:c.getBoundingClientRect().top+window.scrollY, behavior:CALM?"auto":"smooth"}); }});
-    if("IntersectionObserver" in window) new IntersectionObserver(function(es){ es.forEach(function(e){ labsVisible=e.isIntersecting; }); },{rootMargin:"100px"}).observe(lh);
-    else labsVisible=true;
+    var st=D.getElementById("labsStatus"); if(st) st.remove();
+    /* find an element, today's element, and the "Yours" lens kept current */
+    if(fi) AtomLabs.search(fi,function(z){ toTable(z,false); openSheet(z); });
+    AtomLabs.progress.on(function(){ today(); if(PT&&PT.lens==="yours") PT.setLens("yours",""); });
+    if(tb) tb.hidden=false;
+    today();
+    if(PT&&PT.lens==="yours") PT.setLens("yours","");
+  };
+  if(lh){
+    if("IntersectionObserver" in window){
+      new IntersectionObserver(function(es){ es.forEach(function(e){ labsVisible=e.isIntersecting; }); },{rootMargin:"100px"}).observe(lh);
+      /* fetch the labs a screen and a half before they come into view */
+      var near=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ withLabs(); near.disconnect(); } }); },{rootMargin:"1500px 0px"}); near.observe(lh);
+    } else { labsVisible=true; withLabs(); }
   }
-  /* find an element, today's element, and the "Yours" lens kept current */
-  var fi=D.getElementById("ptFind");
-  if(fi) AtomLabs.search(fi,function(z){ toTable(z,false); openSheet(z); });
-  var tb=D.getElementById("todayBtn");
-  if(tb) tb.addEventListener("click",function(){ goLabs("you"); });
-  AtomLabs.progress.on(function(){ today(); if(PT&&PT.lens==="yours") PT.setLens("yours",""); });
-  today();
+  if(tb){ tb.hidden=true; tb.addEventListener("click",function(){ goLabs("you"); }); }
+  if(fi) fi.addEventListener("focus",function(){ withLabs(); },{once:true});
+  [].forEach.call(D.querySelectorAll('a[href="#labs"],[data-golabs]'),function(a){ a.addEventListener("click",function(){ withLabs(); }); });
+  /* a link into the labs, or the "Yours" lens, needs them at once; otherwise
+     they arrive in the background once the first screen has settled */
+  if(/^#(build|challenge|lab|math)=/.test(location.hash)) withLabs();
+  else if(window.requestIdleCallback) requestIdleCallback(function(){ withLabs(); },{timeout:12000}); else setTimeout(function(){ withLabs(); },6000);
   /* missions */
   var md=D.getElementById("missions");
   if(md) MS=Missions.create({host:md, go:missionGo, onStart:function(){ if(LABS) LABS.resync(); },
     toggles:[D.getElementById("msBarBtn"),D.getElementById("msFootBtn")].filter(Boolean)});
   /* a shared atom or challenge (#build=6-8-6, #challenge=A1...) opens in the labs */
-  function shared(){ var sp=AtomLabs.fromHash(location.hash); if(sp&&LABS){ goLabs(); LABS.open(sp); } }
+  function shared(){ if(!/^#(build|challenge|lab|math)=/.test(location.hash)) return; withLabs(function(){ var sp=AtomLabs.fromHash(location.hash); if(sp&&LABS){ goLabs(); LABS.open(sp); } }); }
   window.addEventListener("hashchange",shared); setTimeout(shared,300);
 }
 if(D.readyState==="loading") D.addEventListener("DOMContentLoaded",boot); else boot();

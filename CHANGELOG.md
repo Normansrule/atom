@@ -2,6 +2,49 @@
 
 Atom follows [semantic versioning](https://semver.org). The newest release is at the top.
 
+## [1.5.0] - 2026-11-03
+
+A release for classrooms and for Safari: links to any lab, step, and element; a website that loads a third lighter and stays right without a graphics card; checks in Safari's engine on every push; and the fixes from a full audit, including five wrong numbers a student would have met.
+
+### For teachers
+- **A link to any lab.** `#lab=math&z=79&step=8` opens The math on gold at step 8; `#lab=compare&pair=79-47`, `#lab=nuclides&z=6&a=14`, `#lab=build&z=6&a=14`, `#lab=trends&prop=ie`, and `#lab=predict&z=26` work the same way. A **Copy link** button in The math makes one for whatever is on the screen. Bad values in a link are dropped, never run.
+- **The math says when it is working on the ion.** Steps 4 to 6 use the one-electron ion (Fe²⁵⁺ for iron); a badge now says so where the eye lands, not only in the text.
+- **Follow the table again.** Typing an element in The math used to stop it following the table for good; a **Follow the table** button brings it back.
+- **A wrong answer gets a real hint.** Off by a factor of 1,000 or a million (a unit slip), the wrong sign, half or twice the answer, a factor of 4 (a square), the square or the root, within 12 percent, or far off: each gets its own sentence instead of "Not quite."
+- Step 4's question at n = 8 no longer asks about the jump already on the screen.
+
+### The website
+- **A third lighter to start.** The labs are their own file now and arrive on their own when you scroll toward them, open a card, search, or follow a link; until then the first screen owes them nothing. Code and styles on first load went from 278 KB to 192 KB (gzipped).
+- **The cloud still shows without a graphics card.** Where WebGL 2 is off, the cloud scene used to be an empty stage. It now draws the same Monte-Carlo sample of the orbital the sparkle comes from, 2,600 points shaded by depth, and it still turns under the hand.
+- **The sky and the quark field come back after a graphics reset.** When the browser takes the graphics context away (a GPU reset, a tab left in the background) and returns it, both are rebuilt; before, they stayed blank until a reload. The electron clouds already recovered.
+- **The sky rests while you read.** Below the descent (the labs, the questions, the downloads, the sources) it is drawn once and then left alone until the window, the theme, or the element changes, so reading costs the battery nothing.
+- The card's four actions sit in two even columns; the picture-quality control looks like the buttons beside it; the step rail in The math is two rows of five that line up; a scrollable tab row fades at its edge so you can tell; on a phone, **Copy link** takes its own row.
+
+### The apps
+- The Mac app reloads a stopped page at most three times a minute, then asks, as the Windows and Linux apps already did. Developer tools are no longer in a released app's menu.
+
+### Checks
+- **Every push is now tested in Safari's engine (WebKit) and in Firefox** as well as Chromium. The Mac app and every iPhone and iPad run WebKit, and the text-selection bug below was WebKit-only. These two are advisory until they have been seen green once, then they become required.
+- The website's checks run again at release time, so a tag can't publish a page that fails them.
+- CI compares the site's generated files with the app they are cut from, and the release workflow gives write access only to the one job that publishes and pins the versions of its checkers.
+- The labs' self-test adds two checks on links: a link reads back exactly, and bad values are dropped.
+
+### Fixed
+- The text-selection and audit fixes below, which were prepared as 1.4.1 and never published, ship here.
+- **Pulling a quark or turning the atom no longer highlights the page's text.** A press on the stage that missed a quark fell through to the browser's drag-to-select, and Safari could start a selection even during a drag. The stage now keeps every press, the page can't be selected while something is held, and the same guard covers the app's chamber and the labs' canvases. The quarks are also easier to catch (the grab reaches past their drawn edge, further for a finger), the pointer only turns into a hand over a quark, and letting go after the string snaps always releases the cursor.
+- **On a phone, the quark scene scrolls like the rest of the page** unless your finger lands on a quark. Before, half the screen there ignored swipes.
+- **Hydrogen no longer has a negative binding energy** in The math, step 9. The liquid-drop formula fails for the lightest nuclei (it gives −25.8 MeV for a single proton), so the step now shows the formula's answer, says when it fails, and uses the measured binding energy (AME2020) wherever Atom has one. A lone proton binds nothing, so its value is 0, and step 10's nucleus mass follows.
+- **Palladium's outer electron is its 4d,** the one atom with no s electron in its outer shell. Steps 1 to 3 and 7, Compare, and Trends used a 4s or 4p electron instead and showed an estimate of hundreds of electron-volts.
+- **Electric against gravity** in step 1 now uses the gravity of the whole nucleus, not one proton, so the ratio is right (for iron, about 1.5 × 10³⁸ rather than 8 × 10³⁹).
+- **The proton's mass budget** now gives Yang et al.'s figures (32, 36, 23, and 9 percent, summing to 100) and explains why the quark-mass share (9%) is bigger than the three quarks' 1%: it also counts the short-lived quark pairs inside. Step 10 now says a nucleon's mass is the energy of the quarks' motion and the gluon field, rather than calling it binding energy, and uses the down-quark mass of 4.70 MeV, as the app's quark depth already did.
+- **Clearer wording:** hydrogen and helium get their own sentences in steps 1 and 7 (hydrogen has no inner electrons, and it is the one atom solved exactly); step 1 says when a radius is estimated rather than measured (past curium); the phase of a single state turns at one rate across the whole cloud; antihydrogen falls down to within about 20%; and the strong CP sentence says what is measured.
+- Two "Try it" questions asked for a number already on the screen. Step 7 now asks for the estimate without Slater's n*, and step 10 asks what one more neutron adds.
+- Typing a word like "constructor" where an element goes no longer throws an error.
+
+### Checks, from the audit
+- The labs' self-test adds three checks: palladium's outer electron is 4d and every other element's is s or p; the liquid-drop formula fails for hydrogen and deuterium and the measured values shown instead are right; and words that are not elements are not read as elements.
+- The smoke test (and so every push to GitHub) now runs the labs' self-test and every step of The math for hydrogen, helium, iron, palladium, gold, and oganesson, and fails on NaN, undefined, or a negative binding energy. Run against 1.4.0, it catches the hydrogen bug.
+
 ## [1.4.0] - 2026-11-01
 
 A new lab, **The math**: pick any element and work through the physics of its atom in ten steps, classical and quantum, with that element's own numbers.

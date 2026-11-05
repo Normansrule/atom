@@ -105,7 +105,7 @@
       <p class="pt-swipe">Swipe the table sideways for all 18 columns.</p>
       <div class="actions">
         <a class="btn btn-primary btn-small labs-go" href="#labs">Open the labs</a>
-        <button type="button" class="btn btn-small today" id="todayBtn"><span>Today</span> <b id="todayEl">H</b> <i id="todayN">0 of 3</i></button>
+        <button type="button" class="btn btn-small today" id="todayBtn" hidden><span>Today&rsquo;s element</span> <b id="todayEl">H</b> <i id="todayN">0 of 3</i></button>
         <button type="button" class="btn btn-small ms-foot" id="msFootBtn" aria-controls="missions" aria-expanded="false">Missions</button>
       </div>
     </div>
@@ -127,7 +127,7 @@
       <h2 id="t-labs">Labs</h2>
       <p class="lede">Learn it by doing it: build atoms and molecules, explore the table's patterns, work through the math of any atom, test yourself, and run real experiments. Your progress stays in this browser.</p>
     </div>
-    <div id="labsHost"></div>
+    <div id="labsHost"><p class="labs-status" id="labsStatus" aria-live="polite">Loading the labs&hellip;</p></div>
   </div>
 </section>
 
@@ -154,7 +154,7 @@
       <div class="steps">
         <p class="step" data-step="0" id="cs0"></p>
         <p class="step" data-step="1" id="cs1"></p>
-        <p class="step" data-step="2" id="cs2">The color is the wave&rsquo;s <b>phase</b>. In a single state it only turns in place, faster where the electron is more tightly bound, and the shape never moves. Opposite colors are opposite signs, and that decides whether two atoms&rsquo; clouds add up into a bond or cancel.</p>
+        <p class="step" data-step="2" id="cs2">The color is the wave&rsquo;s <b>phase</b>. In a single state the whole cloud&rsquo;s phase turns in place at one rate, faster for a more tightly bound state, and the shape never moves. Opposite colors are opposite signs, and that decides whether two atoms&rsquo; clouds add up into a bond or cancel.</p>
         <p class="step" data-step="3" id="cs3"></p>
       </div>
       <canvas class="radial" id="radial" aria-hidden="true"></canvas>
@@ -205,7 +205,7 @@
     <p id="nucText"></p>
     <p class="equation small" id="nucEq"></p>
     <figure class="budget"><canvas class="curve" id="bindingCurve" aria-label="Binding energy per nucleon against mass number. It rises steeply, peaks near iron at about 8.8 MeV, and falls slowly toward uranium." role="img"></canvas>
-    <figcaption>Binding energy per nucleon, in MeV, against the number of nucleons. Dots are measured masses; the line is the liquid-drop formula above. The white dot is <span data-el="name">iron</span>.</figcaption></figure>
+    <figcaption>Binding energy per nucleon, in MeV, against the number of nucleons. Dots are measured masses; the line is the liquid-drop formula above. The white dot is <span data-el="lname">iron</span>.</figcaption></figure>
     <p>Per nucleon that binding peaks near iron and nickel. Fusing light nuclei climbs the curve from one side and splitting heavy ones climbs it from the other, which is the whole story of starlight and of reactors.</p>
     <p class="note"><b>New in 2026:</b> clocks that tick on a transition inside a nucleus. Thorium-229 was first excited by a laser in 2024, and in October 2026 two groups reported working nuclear clocks.</p>
   </div>
@@ -217,10 +217,10 @@
     <h2 id="t-proton">A proton is mostly energy</h2>
     <p>Keep falling, into one of <span data-el="protons">iron&rsquo;s 26 protons</span>. Its three quarks, two up and one down, add up to about <b>9 MeV</b>. The proton weighs <b>938.27 MeV</b>. The other 99% is the energy of the gluon field and of quarks moving inside a box a femtometer wide.</p>
     <figure class="budget">
-      <div class="bars" role="img" aria-label="Proton mass: 33 percent quark energy, 37 percent gluon field energy, 23 percent trace anomaly, 9 percent quark masses">
-        <span style="--w:33" class="b1">33</span><span style="--w:37" class="b2">37</span><span style="--w:23" class="b3">23</span><span style="--w:9" class="b4">9</span>
+      <div class="bars" role="img" aria-label="Proton mass: 32 percent quark energy, 36 percent gluon field energy, 23 percent trace anomaly, 9 percent quark-mass term">
+        <span style="--w:32" class="b1">32</span><span style="--w:36" class="b2">36</span><span style="--w:23" class="b3">23</span><span style="--w:9" class="b4">9</span>
       </div>
-      <figcaption>Where the proton&rsquo;s mass comes from, in per cent: quark motion, gluon field energy, a quantum effect called the trace anomaly, and the quark masses themselves (Yang et al., 2018).</figcaption>
+      <figcaption>Where the proton&rsquo;s mass comes from, in percent: quark motion, gluon field energy, a quantum effect called the trace anomaly, and the quark-mass term (Yang et al., 2018). That last share is bigger than the three quarks&rsquo; 1% because it also counts the short-lived quark pairs, strange ones included, inside the proton.</figcaption>
     </figure>
     <p class="note">Its charge radius is 0.84075 fm. The famous proton radius puzzle has largely closed: in 2026 ordinary hydrogen gave 0.8406 fm, matching the muonic measurement.</p>
   </div>
@@ -263,8 +263,8 @@
     <li><span class="status">Open</span><h3>Where does the proton&rsquo;s spin come from?</h3><p>Quark spins supply only about 30%. The Electron-Ion Collider, now being built in Brookhaven&rsquo;s old collider tunnel, should settle the rest in the mid-2030s.</p></li>
     <li><span class="status">Claim</span><h3>Is there a particle made only of glue?</h3><p>In 2026 the BESIII experiment reported that X(2370) is mostly a glueball. One experiment&rsquo;s reading, not yet confirmed by anyone else.</p></li>
     <li><span class="status">Unresolved</span><h3>How long does a free neutron live?</h3><p>877.8 seconds in a bottle, 887.7 in a beam. Ten seconds apart, about four standard deviations, and a new beam method now sides with the bottles.</p></li>
-    <li><span class="status">Open</span><h3>Why does the strong force respect mirrors?</h3><p>The theory allows the neutron to be lopsided, and it measures perfectly round to one part in ten billion. That is the strong CP problem; a particle called the axion is one proposed answer.</p></li>
-    <li><span class="status">Open</span><h3>Why is there matter at all?</h3><p>The Big Bang should have made equal amounts of matter and antimatter. Antihydrogen falls down like hydrogen (2023), and the missing asymmetry is still missing.</p></li>
+    <li><span class="status">Open</span><h3>Why does the strong force respect mirrors?</h3><p>The theory allows the neutron&rsquo;s charge to be lopsided, yet none is seen: the knob that would tilt it must be set below one part in ten billion. That is the strong CP problem; a particle called the axion is one proposed answer.</p></li>
+    <li><span class="status">Open</span><h3>Why is there matter at all?</h3><p>The Big Bang should have made equal amounts of matter and antimatter. Antihydrogen falls down, not up (2023, measured to about 20%), and the missing asymmetry is still missing.</p></li>
     <li><span class="status">New</span><h3>A clock inside a nucleus</h3><p>Thorium-229&rsquo;s nuclear transition was laser-excited in 2024, and the first nuclear clocks were reported in October 2026.</p></li>
     <li><span class="status">Settled</span><h3>Two famous anomalies, closed</h3><p>The muon&rsquo;s magnetism now agrees with theory (2025), and hydrogen settled the proton&rsquo;s radius at 0.84 fm (2026).</p></li>
   </ul>

@@ -117,7 +117,7 @@ if (!app.requestSingleInstanceLock()) {
           { role: "resetZoom" }, { role: "zoomIn" }, { role: "zoomOut" },
           { type: "separator" },
           { role: "togglefullscreen" },
-          { role: "toggleDevTools" },
+          ...(app.isPackaged ? [] : [{ role: "toggleDevTools" }]),   // a developer's tool, not a reader's
         ],
       },
       { role: "windowMenu" },

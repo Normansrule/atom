@@ -9,7 +9,7 @@ Thank you for helping. The most valuable contribution to Atom is a **correction*
 
 ## How the project is put together
 
-- `app/atom.html` is the whole app in one file, and the single source of truth. The website's physics, data, renderer, and table (`docs/assets/atom-*.js`) are generated from it by `scripts/sync-from-lab.sh`, so please propose changes to the app's content as issues rather than editing the generated files.
+- `app/atom.html` is the whole app in one file, and the single source of truth. The website's physics, data, renderer, and table (`docs/assets/atom-*.js`) are generated from it by `scripts/extract-site.sh` (which `scripts/sync-from-lab.sh` runs after copying the app in from the private workspace it is developed in, so a change made only to `app/atom.html` here is overwritten by the next sync), so please propose changes to the app's content as issues rather than editing the generated files.
 - `docs/` is the website, served by GitHub Pages. `docs/assets/site.js` and `site.css` are written by hand.
 - `mac/` is a small Swift window around the app, built by `mac/build-mac-app.sh`.
 - `desktop/` is the Windows and Linux app, an Electron window around the same file. `cd desktop && npm ci && npm start` runs it; `node build.mjs win` or `node build.mjs linux` packages it.
