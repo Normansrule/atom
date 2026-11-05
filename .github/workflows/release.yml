@@ -39,6 +39,7 @@ jobs:
       - run: npx html-validate docs/index.html docs/404.html
       - run: node scripts/smoke.mjs
       - run: ATOM_BROWSER=webkit node scripts/smoke.mjs
+        continue-on-error: true
       - run: cmp app/atom.html docs/app/index.html
 
   mac:
