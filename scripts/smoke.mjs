@@ -104,6 +104,9 @@ await visit("site", `${BASE}`, async (page, n) => {
   await page.evaluate(() => document.getElementById("lbTab-math").click()); await page.waitForTimeout(400);
   const mt = await page.evaluate(() => (document.querySelector("#labsHost .lb-mtitle") || {}).textContent || "");
   /gold/i.test(mt) ? ok(n, "The math opens on gold") : fail(n, `The math did not open (${mt})`);
+  // back to the top with everything loaded, so the accessibility pass that
+  // follows sees the table's bar (Today's element, the lenses) as a reader would
+  await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(400);
 });
 
 await visit("site, phone", `${BASE}?el=Fe`, async (page, n) => {

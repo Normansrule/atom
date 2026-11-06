@@ -808,7 +808,9 @@ function today(){
   var d=AtomLabs.progress.daily(), n=(d.card?1:0)+(d.build?1:0)+(d.quiz?1:0), e=ELEMENTS[d.z-1], b=D.getElementById("todayBtn");
   if(!b) return;
   D.getElementById("todayEl").textContent=e[1]; D.getElementById("todayN").textContent=d.done?"done":n+" of 3";
-  b.setAttribute("aria-label","Today "+e[1]+" "+(d.done?"done":n+" of 3")+": today's element is "+e[2]+". See your progress.");
+  /* the name begins with the visible text, word for word (the same curly
+     apostrophe), so a screen reader and the screen agree */
+  b.setAttribute("aria-label","Today\u2019s element "+e[1]+" "+(d.done?"done":n+" of 3")+". Today\u2019s element is "+e[2]+". See your progress.");
   b.classList.toggle("done",!!d.done);
 }
 D.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!sheet.hidden) closeSheet(true); });

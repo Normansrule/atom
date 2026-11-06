@@ -2,6 +2,15 @@
 
 Atom follows [semantic versioning](https://semver.org). The newest release is at the top.
 
+## [1.5.1] - 2026-11-04
+
+The 1.5.0 release never published: its own checks caught a mistake of 1.5.0's, in every browser. Fixed here.
+
+### Fixed
+- **The "Today's element" button's spoken name did not contain its visible text.** 1.5.0 renamed the button from "Today" but left its accessible name as it was, so a screen reader and the screen disagreed, and the accessibility check failed. The name now begins with the visible words.
+- The smoke test scrolls back to the top with everything loaded before its accessibility pass, so a mismatch in the table's bar is always seen, not only when timing happens to show it.
+- The release workflow's WebKit check is advisory until it has been seen green once, as the push check's already was.
+
 ## [1.5.0] - 2026-11-03
 
 A release for classrooms and for Safari: links to any lab, step, and element; a website that loads a third lighter and stays right without a graphics card; checks in Safari's engine on every push; and the fixes from a full audit, including five wrong numbers a student would have met.
