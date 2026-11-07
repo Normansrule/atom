@@ -40,7 +40,7 @@
   color-scheme:light;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html{scroll-behavior:smooth;scroll-padding-top:72px;-webkit-text-size-adjust:100%}
 html.calm{scroll-behavior:auto}
 body{margin:0;background:var(--bg);transition:background-color 700ms ease;color:var(--ink);font:400 18px/1.55 "Archivo",system-ui,-apple-system,sans-serif;
   font-variant-numeric:tabular-nums;-webkit-font-smoothing:auto}
@@ -72,7 +72,12 @@ sub,sup{font-size:.7em;line-height:0}
 .wordmark{font-weight:300;font-stretch:125%;font-size:22px;letter-spacing:-.01em;text-decoration:none}
 .bar nav{display:flex;gap:20px;margin-left:12px}
 .bar nav a{display:inline-flex;align-items:center;min-height:40px;text-decoration:none;color:var(--ink2);font-size:15px;transition:color 160ms ease}
-.bar-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.bar-actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-shrink:0}
+.bar nav a,.nav-ms{white-space:nowrap}
+/* between a tablet and a laptop the bar has five links and four controls to
+   seat on one line: tighter gaps and a shorter search box, never a second row */
+@media (min-width:901px) and (max-width:1180px){ .bar nav{gap:14px;margin-left:8px} .bar .find input{width:150px} }
+@media (min-width:901px) and (max-width:1100px){ .bar .btn-small{display:none} .bar .find input{width:140px} }   /* Get Atom stays in the hero and the Get section */
 /* the two switches are quiet: the one filled button in the bar is Get Atom */
 .toggle{background:transparent;color:var(--ink2);border:0;box-shadow:inset 0 0 0 1px var(--line);padding:8px 12px;min-height:40px;font:600 14px/1 "Archivo",sans-serif;
   cursor:pointer;transition:transform 160ms var(--ease-out),color 160ms ease,box-shadow 160ms ease}
@@ -116,6 +121,7 @@ h2{font-size:clamp(40px,5.2vw,84px);margin-bottom:24px;max-width:13ch}
 p{margin:0 0 16px;max-width:60ch}
 b{font-weight:650}
 .fine{font-size:15px;color:var(--ink2);max-width:62ch}
+.teach{font-size:15px;color:var(--ink2);max-width:62ch;margin:20px 0 0}
 /* the picture-quality control: Auto reads the graphics card's name */
 .qual{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:24px 0 16px;font-size:15px;color:var(--ink2)}
 .qual select{background:var(--bg2);color:var(--ink);border:0;box-shadow:inset 0 0 0 1px var(--line);border-radius:0;padding:6px 32px 6px 12px;min-height:40px;font:600 14px/1 "Archivo",sans-serif;cursor:pointer;appearance:none;-webkit-appearance:none;
@@ -510,7 +516,7 @@ html.lens-on .pt-foot{display:none}
 @media (hover:hover) and (pointer:fine){ .today:hover span{color:inherit} .today:hover i{border-color:currentColor} }
 .labs-go::before{content:"";width:30px;height:10px;margin-right:10px;flex:none;outline:1px solid var(--onacc);
   background:linear-gradient(90deg,var(--lb-build) 0 20%,var(--lb-explore) 20% 40%,var(--lb-predict) 40% 60%,var(--lb-calc) 60% 80%,var(--lb-you) 80%)}
-.labs{position:relative;z-index:1;padding:120px var(--m) 72px}
+.labs{position:relative;z-index:2;padding:120px var(--m) 72px}   /* 2, above the tour: the labs' toast is fixed at the foot of the screen and must not slip under the next section */
 .labs-panel{background:var(--veil);padding:32px 28px 28px}
 .labs-head{max-width:900px;margin-bottom:24px}
 .labs-head h2{margin-bottom:12px}

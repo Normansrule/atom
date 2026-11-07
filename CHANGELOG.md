@@ -2,6 +2,35 @@
 
 Atom follows [semantic versioning](https://semver.org). The newest release is at the top.
 
+## [1.6.0] - 2026-11-07
+
+A release for the classroom: two new labs (electron energies and the Sun's light), a guide for teachers mapped to the standards, worksheets with answer keys, turn-in codes that need no accounts, a website that works with no connection at all, and tests that check Atom's numbers against outside data.
+
+### New labs
+- **Electron energies.** Photoelectron spectroscopy as a lab: one peak per subshell, as tall as the number of electrons in it, on a log scale from the core to the valence shell, for any element. **Mystery element** hides the name and asks you to read the configuration off the peaks. The energies are Slater's estimates and the lab says so; the pattern is the lesson.
+- **The Sun.** The Sun's spectrum with its dark Fraunhofer lines. Pick an element and its measured lines (NIST) are laid over the Sun's; five of the candidates match and the lab tells you which lines, in which order they were found, and why helium, the Sun's second ingredient, shows no dark line at all.
+- **Common mistakes.** Six questions in Predict about the things people get wrong: a nucleus a meter across and where the electrons would be, what an orbital is, where a proton's mass comes from, what binding energy does to a nucleus's mass, which electrons a transition metal loses first, and how much of an atom's mass is electrons. Each wrong choice is the common belief, and the explanation says why it is wrong.
+- **Where the model breaks, drawn.** Trends draws Slater's estimate of the ionization energy as a dashed line against NIST's measured values, so the gap for p electrons is visible; step 7 of The math says the same in words.
+
+### For teachers
+- **A teacher guide** at `teachers.html`: a link for every lab, six twenty-minute activities with what to collect, how to collect work without accounts, and a table mapping each lab to NGSS (HS-PS1-1, HS-PS1-3, HS-PS1-8, HS-PS4-3, HS-ESS1-3) and AP Chemistry (1.5 to 1.8, Unit 2). Linked from the top bar and from the Get section.
+- **Worksheets.** In The math, **Worksheet** prints the ten questions for the chosen element, with the answer key on its own last page.
+- **Turn-in codes.** The You tab makes a one-line code with the date, the counts, which elements, and a check digit, and no name; **Read the codes** turns a class's codes into a table. Nothing is sent anywhere.
+- **Progress travels.** **Save my progress** writes a small file and **Bring progress back** merges it in on another computer, for shared machines and carts.
+- A ready-made challenge, `#challenge=A1.empty.6.w.Fe`, deals the six common-mistakes questions on iron in a fixed order; the challenge maker can build one from any elements and question types, Common mistakes included.
+
+### The website
+- **Works offline.** A service worker keeps the site after the first visit, so a Chromebook cart or an iPad keeps working when the Wi-Fi does not, and the site can be installed as an app from the browser. The cache is named for the release, and the smoke test refuses a release whose cache name disagrees with VERSION.
+- **The bar stays one line** between 901 and 1180 px wide; before, the Missions button wrapped to three lines and the bar grew to 94 px.
+- **In-page links land below the bar.** Elements, Labs, Tour, and Get Atom used to scroll their section's top under the fixed bar.
+- **The labs' toast is never hidden.** Near the foot of the labs, the "Opened from a shared link" and "Badge earned" notices slid under the tour section; the labs now sit above it.
+- The frontier notes on the neutron's lifetime and the thorium nuclear clock cite the newest work (J-PARC 2024; Nature 2026, two papers) and four sources join the list.
+
+### Checks
+- **Outside data.** The labs' self-test now checks the stored first ionization energies against NIST for eight elements, the liquid-drop formula against AME2020 (within 3 percent from oxygen-16 up, 9 percent or more off up to lithium-6), Slater's rules against the measured values (outer s within 25 percent at the median, every outer p up to radon at least twice too high), and that every common-mistakes question builds with exactly one right answer.
+- **The app's HTML is validated** in CI along with the site's pages; 24 markup faults were fixed to get there (implicit button types, inline styles).
+- The smoke test visits the teacher page, checks every lab link names a real lab, and reloads the site offline.
+
 ## [1.5.1] - 2026-11-04
 
 The 1.5.0 release never published: its own checks caught a mistake of 1.5.0's, in every browser. Fixed here.

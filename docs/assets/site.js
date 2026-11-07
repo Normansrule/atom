@@ -1358,4 +1358,10 @@ function boot(){
   window.addEventListener("hashchange",shared); setTimeout(shared,300);
 }
 if(D.readyState==="loading") D.addEventListener("DOMContentLoaded",boot); else boot();
+/* the site keeps itself for offline use (a classroom cart, a plane); the
+   worker is registered after the first screen is up so it never competes
+   with it, and only where it can run (https, or a local test server) */
+if("serviceWorker" in navigator && /^(https:|http:)$/.test(location.protocol) && !/\.(app)$/.test(location.hostname)){
+  window.addEventListener("load",function(){ setTimeout(function(){ try{ navigator.serviceWorker.register("sw.js").catch(function(){}); }catch(e){} }, 2500); });
+}
 })();

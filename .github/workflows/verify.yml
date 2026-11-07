@@ -36,7 +36,7 @@ jobs:
         run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Validate the HTML
         if: matrix.browser == 'chromium'
-        run: npx html-validate docs/index.html docs/404.html
+        run: npx html-validate docs/index.html docs/404.html docs/teachers.html app/atom.html
       - name: Load every page, run the self-tests, check accessibility
         run: node scripts/smoke.mjs
         env:

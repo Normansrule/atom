@@ -36,7 +36,7 @@ jobs:
           node-version: 22
       - run: npm install --no-save --no-audit --no-fund playwright@1.64.1 axe-core@4.14.0 html-validate@11.17.0
       - run: npx playwright install --with-deps chromium webkit
-      - run: npx html-validate docs/index.html docs/404.html
+      - run: npx html-validate docs/index.html docs/404.html docs/teachers.html app/atom.html
       - run: node scripts/smoke.mjs
       - run: ATOM_BROWSER=webkit node scripts/smoke.mjs
         continue-on-error: true

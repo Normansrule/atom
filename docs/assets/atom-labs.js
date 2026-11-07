@@ -150,10 +150,37 @@ var AtomLabs=(function(){
       badges:count(P.badges), due:due().length, orbitals:count(P.orbitals), challenges:count(P.challenges)}; }
     function daily(){ var t=P.daily[day()]||{}; return {z:dailyZ(), card:!!t.card, build:!!t.build, quiz:!!t.quiz, done:!!t.done}; }
     function reset(){ P=blank(); save(); emit("reset",{}); }
+    /* progress travels as a file (everything) or as a turn-in code (a summary
+       a teacher can read), so a shared Chromebook is not a dead end */
+    function exportJSON(){ return JSON.stringify({atom:"progress", v:P.v||1, when:day(), data:P}); }
+    function importJSON(text, merge){
+      var d=null; try{ d=JSON.parse(String(text||"")); }catch(e){ return "That is not an Atom progress file."; }
+      if(!d||d.atom!=="progress"||!d.data||typeof d.data!=="object") return "That is not an Atom progress file.";
+      var b=blank(), inc=d.data, k;
+      for(k in b) if(inc[k]==null||typeof inc[k]!==typeof b[k]) inc[k]=b[k];
+      if(merge){ for(k in b){ if(typeof b[k]==="number") P[k]=Math.max(P[k]||0,inc[k]||0); else { var o=inc[k], kk; for(kk in o) if(Object.prototype.hasOwnProperty.call(o,kk)){
+          if(k==="built"&&P.built[kk]){ var iso=o[kk], kkk; for(kkk in iso) P.built[kk][kkk]=iso[kkk]; }
+          else if(k==="learn"&&P.learn[kk]&&P.learn[kk].due>o[kk].due) continue;
+          else P[k][kk]=o[kk]; } } } }
+      else P=inc;
+      save(); emit("sync",{}); return "";
+    }
+    /* the turn-in code: a date, the counts, and three 118-bit maps (explored,
+       built, mastered), with a check digit; no name and nothing private */
+    var B64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    function bits(o){ var out="", v=0, n=0, z; for(z=1;z<=120;z++){ v=(v<<1)|(o[z]?1:0); n++; if(n===6){ out+=B64[v]; v=0; n=0; } } return out; }
+    function unbits(s){ var o={}, z=1, i, c, k; for(i=0;i<s.length;i++){ c=B64.indexOf(s[i]); if(c<0) return null; for(k=5;k>=0;k--){ if(z<=118&&((c>>k)&1)) o[z]=1; z++; } } return o; }
+    function sum(s){ var h=2166136261, i; for(i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return (h.toString(36)+"000").slice(0,4); }
+    function code(){ var s=stats(), body=[day(),s.seen,s.built,s.mastered,s.right,s.streak,s.orbitals,s.challenges,bits(P.seen),bits(P.built),bits(P.mastered)].join("."); return "A2."+body+"."+sum(body); }
+    function readCode(c){ c=String(c||"").trim(); var m=/^A2\.(.+)\.([a-z0-9]{4})$/.exec(c); if(!m||sum(m[1])!==m[2]) return null;
+      var p=m[1].split("."); if(p.length!==11||!/^\d{4}-\d{2}-\d{2}$/.test(p[0])) return null;
+      var seen=unbits(p[8]), built=unbits(p[9]), mast=unbits(p[10]); if(!seen||!built||!mast) return null;
+      return {date:p[0], seen:+p[1], built:+p[2], mastered:+p[3], right:+p[4], streak:+p[5], orbitals:+p[6], challenges:+p[7], mastList:Object.keys(mast).map(Number).sort(function(a,b){ return a-b; }), builtList:Object.keys(built).map(Number).sort(function(a,b){ return a-b; })}; }
     /* a second window on the same device sees the first window's progress */
     try{ window.addEventListener("storage",function(e){ if(e.key===KEY){ load(); emit("sync",{}); } }); }catch(e){}
     return {mark:mark, answer:answer, due:due, forget:forget, level:level, stats:stats, daily:daily, badges:BADGES, has:function(id){ return !!P.badges[id]; },
-      goal:function(id){ return !!P.goals[id]; }, on:function(f){ subs.push(f); }, reset:reset, data:function(){ return P; }};
+      goal:function(id){ return !!P.goals[id]; }, on:function(f){ subs.push(f); }, reset:reset, data:function(){ return P; },
+      exportJSON:exportJSON, importJSON:importJSON, code:code, readCode:readCode};
   })();
 
   /* ------------------------------------------------------------ electrons */
@@ -459,7 +486,36 @@ var AtomLabs=(function(){
   function ppm(x){ return x>=10000?fmt(x/10000,x>=100000?0:1)+"%":x>=1?sci(x,2)+" parts per million":x>=1e-3?sci(x*1e3,2)+" parts per billion":sci(x*1e6,2)+" parts per trillion"; }
   function plainCfg(z){ return cfgText(configOf(z),false); }
   var QLABEL={n:"Neutrons",q:"Charge",z:"Atomic numbers",r:"Atom size",c:"Configurations",g:"Name the configuration",s:"Stable or radioactive",d:"Density",
-    m:"Melting points",b:"Blocks",v:"Valence electrons",i:"Ions",o:"Where it was made",y:"Discovery",a:"Abundance"};
+    m:"Melting points",b:"Blocks",v:"Valence electrons",i:"Ions",o:"Where it was made",y:"Discovery",a:"Abundance",w:"Common mistakes"};
+  /* the mistakes students actually make, each asked with the element's own
+     numbers: the empty atom, orbit against orbital, the sign of binding
+     energy, where a proton's mass is, which electrons an ion loses first, and
+     where an atom's mass sits */
+  var MIS=[
+    {ok:function(z){ return z<=96&&!!ARAD[z-1]; }, make:function(z){ var A=commonA(z), Rn=1.2*Math.pow(A,1/3), ratio=ARAD[z-1]*1000/Rn, km=ratio/1000;
+        var right=km>=1?fmt(km,0)+" km":fmt(ratio,0)+" m", wrong=[fmt(ratio/1000,0)+" m", fmt(ratio/100,0)+" m", fmt(ratio/10,0)+" m"].map(function(s){ return s==="0 m"?"3 m":s; });
+        return {text:"If "+lc(z)+"'s nucleus were a ball 1 meter across, how far out would its outer electrons be?", choices:[wrong[0],wrong[1],wrong[2],right].map(function(s){ return {v:s,label:s}; }), tiles:[z],
+          check:function(v){ return {ok:v===right, answer:right, right:right, why:cap(lc(z))+"'s atom is about "+fmt(ARAD[z-1],0)+" pm across its radius and its nucleus about "+fmt(Rn,1)+" fm: "+fmt(ratio,0)+" times smaller. Scale the nucleus up to a meter and the electrons are "+right+" away, with nothing but field in between. An atom is almost entirely empty."}; }}; }},
+    {ok:function(z){ return true; }, make:function(z){ var c=configOf(z), last=c[c.length-1], orb=last[0]+OLET[last[1]];
+        var ch=["travels around the nucleus in a circle, like a planet","is a cloud of probability with no path and no position until it is measured","sits still at one fixed distance from the nucleus","bounces between the shells"];
+        return {text:"An electron in "+lc(z)+"'s "+orb+" orbital…", choices:ch.map(function(s,i){ return {v:String(i),label:s}; }), tiles:[z],
+          check:function(v){ return {ok:v==="1", answer:ch[1], right:"1", why:"An orbital is not an orbit. It is the shape of the electron's wave, |ψ|², which says where the electron is likely to be found; the electron has no path, and a measurement finds it somewhere in that cloud. A circling charge would radiate and spiral in within picoseconds (The math, step 3)."}; }}; }},
+    {ok:function(z){ return z>=2&&z<=94; }, make:function(z){ var A=commonA(z), N=A-z, B=BA_MEAS[z+"-"+A]!=null?BA_MEAS[z+"-"+A]*A:bindingSEMF(z,A);
+        var ch=["more than "+z+" protons and "+N+" neutrons weigh apart, by "+fmt(B,0)+" MeV/c²","less than "+z+" protons and "+N+" neutrons weigh apart, by "+fmt(B,0)+" MeV/c²","exactly what "+z+" protons and "+N+" neutrons weigh apart","less, by "+A+" atomic mass units"];
+        return {text:isoName(z,A).charAt(0).toUpperCase()+isoName(z,A).slice(1)+"'s binding energy is "+fmt(B,0)+" MeV. Its nucleus weighs…", choices:ch.map(function(s,i){ return {v:String(i),label:s}; }), tiles:[z],
+          check:function(v){ return {ok:v==="1", answer:ch[1], right:"1", why:"Binding energy is energy that left when the nucleus formed, so the nucleus weighs less than its parts by B/c²: "+fmt(B,0)+" MeV ÷ 931.5 MeV per u = "+fmt(B/931.494,3)+" u missing. That missing mass is what a reactor or a star gives back."}; }}; }},
+    {ok:function(z){ return true; }, make:function(z){ var ch=["the gluons, which are heavy","the energy of the quarks' motion and of the gluon field, E = mc²","electrons hidden inside the proton","the measurement is wrong"];
+        return {text:"The three quarks in one of "+lc(z)+"'s protons have masses adding to about 9 MeV. The proton weighs 938 MeV. Where is the rest?", choices:ch.map(function(s,i){ return {v:String(i),label:s}; }), tiles:[z],
+          check:function(v){ return {ok:v==="1", answer:ch[1], right:"1", why:"Gluons have no mass at all. About 99 percent of a proton's mass is energy: the quarks moving at nearly the speed of light inside a femtometer, and the gluon field holding them, counted as mass by E = mc². Only about 1 percent is the quarks themselves."}; }}; }},
+    {ok:function(z){ return [21,22,23,25,26,27,28,30].indexOf(z)>=0; }, make:function(z){ var c=configOf(z), d=0; c.forEach(function(x){ if(x[0]===3&&x[1]===2) d=x[2]; });
+        var ch=["the two 4s electrons","two of the 3d electrons","one 4s and one 3d","the two electrons that were added last, from 3d"];
+        return {text:cap(lc(z))+" is "+configStr(z,true)+". When it becomes "+el(z)[1]+"²⁺, which electrons leave?", choices:ch.map(function(s,i){ return {v:String(i),label:s}; }), tiles:[z],
+          check:function(v){ return {ok:v==="0", answer:ch[0], right:"0", why:"The 4s electrons fill first but leave first: once the 3d orbitals hold electrons they sit lower in energy than 4s and shield the 4s from the nucleus. "+el(z)[1]+"²⁺ is [Ar] 3d"+supNum(d)+", with both 4s electrons gone."}; }}; }},
+    {ok:function(z){ return true; }, make:function(z){ var me=z*0.00054858, mA=el(z)[3], pct=100*me/mA;
+        var ch=["in the electrons","in the nucleus","spread evenly through the atom","in the space between the nucleus and the electrons"];
+        return {text:"Where is almost all of "+lc(z)+"'s mass?", choices:ch.map(function(s,i){ return {v:String(i),label:s}; }), tiles:[z],
+          check:function(v){ return {ok:v==="1", answer:ch[1], right:"1", why:cap(lc(z))+"'s "+z+" electron"+(z>1?"s":"")+" together weigh "+fmt(me,4)+" u, which is "+fmt(pct,2)+" percent of its "+fmt(mA,2)+" u. The rest is in the nucleus, in a space a hundred thousand times smaller than the atom."}; }}; }}
+  ];
   var QTYPES={
     n:{ ok:function(z){ return (STABLE[z]||[]).length>0||(NOTABLE[z]||[]).length>0; },
         param:function(z,r){ var l=(STABLE[z]||[]).concat((NOTABLE[z]||[]).map(function(x){ return x[0]; })); return l[Math.floor(r()*l.length)]; },
@@ -537,7 +593,10 @@ var AtomLabs=(function(){
         param:function(z,r){ var x=el(z)[14], l=ELEMENTS.filter(function(f){ return f[0]!==z&&f[14]>0&&f[0]<=92&&Math.max(f[14],x)/Math.min(f[14],x)>=10; }); return l[Math.floor(r()*l.length)][0]; },
         make:function(z,w){ var a=[z,w].sort(function(x,y){ return x-y; }); return {text:"Which is more common in Earth's crust?", choices:a.map(function(k){ return {v:k,label:nm(k)}; }), tiles:a,
           check:function(v){ var more=el(z)[14]>el(w)[14]?z:w, less=more===z?w:z; return {ok:+v===more, answer:nm(more), right:more,
-            why:cap(lc(more))+" makes up about "+ppm(el(more)[14])+" of Earth's crust by mass; "+lc(less)+", about "+ppm(el(less)[14])+"."}; }}; }}
+            why:cap(lc(more))+" makes up about "+ppm(el(more)[14])+" of Earth's crust by mass; "+lc(less)+", about "+ppm(el(less)[14])+"."}; }}; }},
+    w:{ ok:function(z){ return MIS.some(function(m){ return m.ok(z); }); },
+        param:function(z,r){ var ks=[]; MIS.forEach(function(m,i){ if(m.ok(z)) ks.push(i); }); return ks[Math.floor(r()*ks.length)]; },
+        make:function(z,i){ var m=MIS[i]; if(!m||!m.ok(z)) throw new Error("no such question"); return m.make(z); }}
   };
   function makeQ(key){ if(!key) return null; var p=String(key).split(":"), t=QTYPES[p[0]], z=+p[1], par=+p[2];
     if(!t||!(z>=1&&z<=118)||!t.ok(z)||!isFinite(par)) return null;
@@ -658,7 +717,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     /* #lab=math&z=79&step=8: any lab, with what to show in it. Numbers are
        bounded, words are matched against a short list, anything else is dropped */
     var m=/^lab=([a-z]+)(?:&(.*))?$/.exec(h);
-    if(m){ var LABS_OK={build:1,boxes:1,molecule:1,compare:1,trends:1,nuclides:1,hear:1,math:1,predict:1,calc:1,bench:1,you:1}, a={}, lab=m[1];
+    if(m){ var LABS_OK={build:1,boxes:1,molecule:1,compare:1,trends:1,nuclides:1,hear:1,pes:1,sun:1,math:1,predict:1,calc:1,bench:1,you:1}, a={}, lab=m[1];
       if(!LABS_OK[lab]) return null;
       if(lab==="boxes"){ lab="build"; a.boxes=true; }
       a.lab=lab;
@@ -699,9 +758,9 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
   /* six tabs; Explore and Experiment hold more than one lab, on a rail under
      the tabs. A lab is still named by its own id everywhere (show("hear"),
      the "lab:hear" event), whichever tab holds it. */
-  var GROUPS=[["build","Build",["build"]],["explore","Explore",["compare","trends","nuclides","hear"]],["math","The math",["math"]],["predict","Predict",["predict"]],
+  var GROUPS=[["build","Build",["build"]],["explore","Explore",["compare","trends","nuclides","hear","pes","sun"]],["math","The math",["math"]],["predict","Predict",["predict"]],
     ["experiment","Experiment",["calc","bench"]],["you","You",["you"]]];
-  var PANE_NAME={math:"The math",compare:"Compare",trends:"Trends",nuclides:"Nuclides",hear:"Hear",calc:"Calculate",bench:"Workbench"};
+  var PANE_NAME={math:"The math",compare:"Compare",trends:"Trends",nuclides:"Nuclides",hear:"Hear",pes:"Electron energies",sun:"The Sun",calc:"Calculate",bench:"Workbench"};
   var TABS=[]; GROUPS.forEach(function(g){ g[2].forEach(function(p){ TABS.push([p,PANE_NAME[p]||g[1],g[0]]); }); });
   function groupOf(p){ for(var i=0;i<GROUPS.length;i++) if(GROUPS[i][0]===p||GROUPS[i][2].indexOf(p)>=0) return GROUPS[i]; return null; }
   var GOALS=[
@@ -1277,6 +1336,9 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     function trRange(pr){ var lo=Infinity, hi=-Infinity; for(var z=1;z<=118;z++){ var v=pr.get(z); if(v==null||!(v>0||!pr.log)) continue; v=pr.log?Math.log10(v):v; if(v<lo) lo=v; if(v>hi) hi=v; } return [lo,hi]; }
     function trT(pr,rg,v){ if(v==null||(pr.log&&!(v>0))) return null; v=pr.log?Math.log10(v):v; return (v-rg[0])/((rg[1]-rg[0])||1); }
     function trVal(pr,v){ if(v==null) return "no value"; return (pr.log?sci(v,3):fmt(v,pr.d))+pr.unit; }
+    /* where the model breaks: Slater's estimate of the energy to remove the
+       outer electron, drawn against NIST's measured value for every element */
+    function ieEstOf(z){ var b=outerSub(z), sp=slaterParts(z,b[0],b[1]); return MK.Ry*Math.pow(sp.Zeff/(NSTAR[b[0]]||b[0]),2); }
     function trLine(z){ var e=el(z), out=[], i;
       if(TR.line==="group"&&e[6]){ for(i=1;i<=118;i++) if(el(i)[6]===e[6]) out.push(i); return {zs:out, name:"down group "+e[6]}; }
       for(i=1;i<=118;i++) if(el(i)[7]===e[7]) out.push(i); return {zs:out, name:"across period "+e[7]}; }
@@ -1290,7 +1352,10 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       if(TR.line==="group"&&!e[6]) TR.line="period";
       [].forEach.call(P.querySelectorAll("[data-tl]"),function(b){ b.setAttribute("aria-pressed",b.getAttribute("data-tl")===TR.line?"true":"false"); });
       var L=trLine(z), vals=L.zs.map(function(x){ return pr.get(x); }), have=vals.filter(function(v){ return v!=null; });
-      P.querySelector(".lb-tsay").innerHTML='<b>'+esc(nm(z))+': '+esc(trVal(pr,pr.get(z)))+(TR.p==="ie"&&IE_EST[z]?' (an estimate)':'')+'.</b> '+esc(pr[TR.line==="group"&&e[6]?"group":"period"]);
+      var modelSay="";
+      if(TR.p==="ie"&&pr.get(z)!=null){ var est=ieEstOf(z), rel=(est-pr.get(z))/pr.get(z), ob=outerSub(z);
+        modelSay=" Slater's rules estimate "+fmt(est,2)+" eV, "+(Math.abs(rel)<0.005?"on the nose":(rel>0?"+":"−")+Math.round(Math.abs(rel)*100)+"%")+(ob[1]===1?": a p electron, where his rules break.":"."); }
+      P.querySelector(".lb-tsay").innerHTML='<b>'+esc(nm(z))+': '+esc(trVal(pr,pr.get(z)))+(TR.p==="ie"&&IE_EST[z]?' (an estimate)':'')+'.</b> '+esc(pr[TR.line==="group"&&e[6]?"group":"period"])+esc(modelSay);
       var cv=P.querySelector('[data-c="trend"]');
       cv.setAttribute("aria-label",pr.name+" "+L.name+": "+(have.length?"from "+trVal(pr,Math.min.apply(null,have))+" to "+trVal(pr,Math.max.apply(null,have)):"no values")+".");
       dirty=true;
@@ -1303,17 +1368,25 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       var x0=56, x1=w-24, y0=28, y1=h-44;
       g.strokeStyle=T.ink3; g.lineWidth=1; g.beginPath(); g.moveTo(x0,y0); g.lineTo(x0,y1); g.lineTo(x1,y1); g.stroke();
       if(!have.length){ g.fillStyle=T.ink2; label(g,"No values "+L.name,(x0+x1)/2,(y0+y1)/2,T); return false; }
-      var lo=Math.min.apply(null,have.map(function(p){ return p.v; })), hi=Math.max.apply(null,have.map(function(p){ return p.v; })), pad=(hi-lo)*0.12||1; lo-=pad; hi+=pad;
+      var lo=Math.min.apply(null,have.map(function(p){ return p.v; })), hi=Math.max.apply(null,have.map(function(p){ return p.v; })), pad=(hi-lo)*0.12||1;
+      var model=TR.p==="ie", epts=model?L.zs.map(function(x){ return pr.get(x)==null?null:ieEstOf(x); }):[];
+      if(model){ var ehi=Math.max.apply(null,epts.filter(function(v){ return v!=null; })); if(ehi>hi) hi=ehi; }
+      lo-=pad; hi+=pad;
       var X=function(i){ return pts.length>1?x0+16+(x1-x0-32)*i/(pts.length-1):(x0+x1)/2; }, Y=function(v){ return y1-(y1-y0)*(v-lo)/(hi-lo); };
       g.fillStyle=T.ink2; g.textAlign="right";
       [lo+pad,hi-pad].forEach(function(v){ var s=pr.log?sci(Math.pow(10,v),2):fmt(v,pr.d); label(g,s,x0-8,Y(v)+5,T,"right"); g.strokeStyle=T.ink3; g.globalAlpha=0.4; g.beginPath(); g.moveTo(x0,Y(v)); g.lineTo(x1,Y(v)); g.stroke(); g.globalAlpha=1; });
+      /* for the energy to remove an electron, Slater's estimate rides along as
+         a dashed line, so the eye sees where the rule of thumb holds (outer s
+         electrons) and where it does not (p electrons, two to four times too high) */
+      if(model){ g.strokeStyle=T.ink2; g.lineWidth=1.5; g.setLineDash([5,4]); g.beginPath(); var es=false;
+        epts.forEach(function(v,i){ if(v==null){ es=false; return; } if(!es){ g.moveTo(X(i),Y(v)); es=true; } else g.lineTo(X(i),Y(v)); }); g.stroke(); g.setLineDash([]); }
       g.strokeStyle=col("explore")||T.ink; g.lineWidth=2; g.beginPath(); var started=false;
       pts.forEach(function(p,i){ if(p.v==null){ started=false; return; } if(!started){ g.moveTo(X(i),Y(p.v)); started=true; } else g.lineTo(X(i),Y(p.v)); }); g.stroke();
       var every=Math.max(1,Math.ceil(pts.length*28/Math.max(1,x1-x0-32)));
       pts.forEach(function(p,i){ var x=X(i);
         if(p.v!=null){ g.fillStyle=p.z===z?T.ink:(col("explore")||T.ink); g.beginPath(); g.arc(x,Y(p.v),p.z===z?6:4,0,6.2832); g.fill(); if(p.z===z){ g.strokeStyle=T.plate; g.lineWidth=2; g.stroke(); } }
         if(i%every===0||p.z===z){ g.fillStyle=p.z===z?T.ink:T.ink2; label(g,el(p.z)[1],x,y1+22,T); } });
-      g.fillStyle=T.ink2; label(g,pr.name+(pr.log?" (log scale)":""),x0,16,T,"left");
+      g.fillStyle=T.ink2; label(g,pr.name+(pr.log?" (log scale)":"")+(model?" · solid: measured (NIST) · dashed: Slater's estimate":""),x0,16,T,"left");
       return false;
     }
     BUILD.trends=function(P){
@@ -1543,6 +1616,139 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       setBag("H2O"); renderMol();
     }
 
+    /* ======================================================== Electron energies (photoelectron spectroscopy)
+       Shine X-rays on the atoms and count the electrons that fly out by the
+       energy it took to free them: one peak per subshell, as tall as the
+       number of electrons in it. The energies here are Slater's estimates
+       (the same the rest of Atom uses), and the lab says so: the pattern is
+       the lesson, the exact numbers are not. 1 eV = 0.0964853 MJ/mol. */
+    var PE={z:0, follow:true, guess:null, right:0, tries:0};
+    var EV_MJ=0.0964853;
+    function pesPeaks(z){
+      var c=configOf(z), out=[];
+      c.forEach(function(x){ var sp=slaterParts(z,x[0],x[1]), E=MK.Ry*Math.pow(sp.Zeff/(NSTAR[x[0]]||x[0]),2); out.push({n:x[0],l:x[1],name:x[0]+OLET[x[1]],count:x[2],eV:E,mj:E*EV_MJ}); });
+      return out.sort(function(a,b){ return b.eV-a.eV; });
+    }
+    function pesZ(){ return PE.guess?PE.guess.z:(PE.z||Z||1); }
+    function drawPes(now){
+      var c=host.querySelector('[data-c="pes"]'); if(!c||!c.offsetParent) return false;
+      var f=fit(c), g=f.g, w=f.w, h=f.h, T=th(), z=pesZ(), peaks=pesPeaks(z), hidden=PE.guess&&!PE.guess.done;
+      g.clearRect(0,0,w,h); g.font="500 14px Archivo, sans-serif";
+      var x0=48, x1=w-20, y0=34, y1=h-52, lo=Math.log10(0.1), hi=Math.log10(Math.max(2000,peaks[0].mj*1.6));
+      var X=function(mj){ return x1-(x1-x0)*(Math.log10(mj)-lo)/(hi-lo); };   /* the convention: the most tightly bound on the left */
+      var mx=Math.max.apply(null,peaks.map(function(p){ return p.count; }));
+      g.strokeStyle=T.ink3; g.lineWidth=1; g.beginPath(); g.moveTo(x0,y1); g.lineTo(x1,y1); g.stroke();
+      [0.1,1,10,100,1000,10000].forEach(function(t){ if(Math.log10(t)>hi) return; var x=X(t); g.strokeStyle=T.ink3; g.globalAlpha=0.35; g.beginPath(); g.moveTo(x,y0); g.lineTo(x,y1); g.stroke(); g.globalAlpha=1; g.fillStyle=T.ink2; label(g,String(t),x,y1+20,T); });
+      g.fillStyle=T.ink2; label(g,"energy to remove the electron, MJ/mol (log scale)",(x0+x1)/2,h-8,T);
+      peaks.forEach(function(p){ var x=X(p.mj), ph=(y1-y0-26)*p.count/mx, k=col(["s","p","d","f"][p.l])||T.ink;
+        g.fillStyle=k; g.fillRect(x-4,y1-ph,8,ph);
+        g.fillStyle=T.ink; label(g,hidden?String(p.count):p.name+" ×"+p.count,x,y1-ph-8,T); });
+      g.fillStyle=T.ink; label(g,hidden?"A mystery element: read its shells, then name it":nm(z)+": "+configStr(z,true).replace(/<sup>(\d+)<\/sup>/g,function(m0,d){ return supNum(d); }).replace(/<[^>]+>/g,""),(x0+x1)/2,y0-14,T);
+      return false;
+    }
+    function pesSay(){
+      var P=pane("pes"), z=pesZ(), peaks=pesPeaks(z), top=peaks[0], last=peaks[peaks.length-1];
+      P.querySelector(".lb-psay").innerHTML='<b>'+esc(nm(z))+':</b> '+peaks.length+' peak'+(peaks.length>1?'s':'')+', one per subshell. '+
+        'The tallest-energy peak is '+top.name+' at about '+fmt(top.mj,top.mj>=10?0:1)+' MJ/mol ('+fmt(top.eV,0)+' eV): its '+top.count+' electron'+(top.count>1?'s':'')+' sit'+(top.count>1?'':'s')+' closest to the nucleus. '+
+        'The easiest to remove is '+last.name+' at about '+fmt(last.mj,2)+' MJ/mol'+(IE1[z-1]?' (measured: '+fmt(IE1[z-1]*EV_MJ,2)+' MJ/mol)':'')+'. A peak’s height is how many electrons share that energy; its position is how tightly they are held.';
+    }
+    function pesGuessNew(){
+      var pool=[], z, opts; for(z=3;z<=36;z++) pool.push(z);
+      z=pool[Math.floor(Math.random()*pool.length)]; opts=[z];
+      while(opts.length<4){ var o=pool[Math.floor(Math.random()*pool.length)]; if(opts.indexOf(o)<0&&configOf(o).length===configOf(z).length) opts.push(o); if(opts.length<4&&Math.random()<0.02) opts.push(pool[Math.floor(Math.random()*pool.length)]); }
+      opts=opts.filter(function(v,i,a){ return a.indexOf(v)===i; }).slice(0,4); while(opts.length<4){ var o2=pool[Math.floor(Math.random()*pool.length)]; if(opts.indexOf(o2)<0) opts.push(o2); }
+      opts.sort(function(a,b){ return a-b; }); PE.guess={z:z, opts:opts, done:false}; pesRenderGuess(); dirty=true; ev("pes:guess");
+    }
+    function pesRenderGuess(){
+      var P=pane("pes"), g=P.querySelector(".lb-pguess"), G=PE.guess;
+      if(!G){ g.innerHTML=''; return; }
+      g.innerHTML='<p class="lb-qtext">Count the electrons in each peak, from the left. Which element is it?</p><div class="lb-choices">'+G.opts.map(function(z){ return '<button type="button" class="lb-choice" data-pgz="'+z+'"'+(G.done?' disabled':'')+'>'+esc(nm(z))+'</button>'; }).join('')+'</div>'+
+        (G.done?'<div class="lb-row"><button type="button" class="lb-btn go" data-pp="guess">Another one</button><span class="lb-score">'+PE.right+' of '+PE.tries+' right</span></div>':'');
+    }
+    BUILD.pes=function(P){
+      PE.z=PE.z||Z||1;
+      P.innerHTML=elDatalist()+'<div class="lb-pes">'+
+        '<p class="lb-note">Photoelectron spectroscopy: X-rays knock electrons out of the atoms, and each one leaves with the X-ray’s energy minus the energy that held it. Count the electrons by that energy and the shells appear as peaks: one per subshell, as tall as the number of electrons in it, farther left the more tightly they are held. It is how the shell structure of the table was confirmed, and a core skill in AP Chemistry (Unit 1.6).</p>'+
+        '<div class="lb-row"><label class="lb-field">Element<input class="lb-input" data-pz list="'+dlId+'" autocomplete="off" spellcheck="false"></label>'+
+        '<button type="button" class="lb-btn" data-pp="guess">Mystery element</button><button type="button" class="lb-btn ghost" data-pp="follow" hidden>Follow the table</button></div>'+
+        '<div class="lb-stagewrap pes"><canvas class="lb-cv" data-c="pes" role="img" aria-label="The element’s photoelectron spectrum: one peak per subshell"></canvas></div>'+
+        '<div class="lb-pguess" aria-live="polite"></div><p class="lb-say lb-psay" aria-live="polite"></p>'+
+        '<p class="lb-note">The energies are Slater’s estimates, the same rule of thumb the rest of Atom uses, so they are only roughly right: good for the inner shells and for outer s electrons, two to four times too high for outer p electrons (Trends, under Explore, shows that gap). Read the pattern: how many peaks, how tall, in what order.</p></div>';
+      var zi=P.querySelector("[data-pz]");
+      function setZ(){ var z=zOf(zi.value); if(!z){ if(zi.value.trim()) zi.setAttribute("aria-invalid","true"); return; } PE.follow=false; PE.guess=null; pesRenderGuess(); PE.z=z; REFRESH.pes(); ev("pes:z:"+z); }
+      zi.addEventListener("change",setZ); zi.addEventListener("keydown",function(e){ zi.removeAttribute("aria-invalid"); if(e.key==="Enter"){ e.preventDefault(); setZ(); } });
+      P.addEventListener("click",function(e){ var p=e.target.closest("[data-pp]"), gz=e.target.closest("[data-pgz]");
+        if(gz&&PE.guess&&!PE.guess.done){ var G=PE.guess, pick=+gz.getAttribute("data-pgz"), ok=pick===G.z; G.done=true; PE.tries++; if(ok) PE.right++;
+          pesRenderGuess(); [].forEach.call(P.querySelectorAll("[data-pgz]"),function(b){ var v=+b.getAttribute("data-pgz"); if(v===G.z) b.classList.add("ok"); else if(v===pick) b.classList.add("bad"); });
+          P.querySelector(".lb-psay").textContent=(ok?"Right: ":"It was ")+lc(G.z)+(ok?".":", not "+lc(pick)+".")+" Its peaks, from the left, hold "+pesPeaks(G.z).map(function(q){ return q.count+" ("+q.name+")"; }).join(", ")+": "+G.z+" electrons in all.";
+          if(ok){ var got=Progress.mark("seen",G.z); celebrate(got); } ev("pes:guess:"+(ok?"right":"wrong")); dirty=true; return; }
+        if(!p) return; var k=p.getAttribute("data-pp");
+        if(k==="guess") pesGuessNew();
+        if(k==="follow"){ PE.follow=true; PE.z=Z; REFRESH.pes(); } });
+      REFRESH.pes();
+    };
+    REFRESH.pes=function(){ var P=pane("pes"); if(!P||!built.pes) return; var z=pesZ(), inp=P.querySelector("[data-pz]"); if(inp&&D.activeElement!==inp) inp.value=nm(z);
+      var fb=P.querySelector("[data-pp='follow']"); if(fb) fb.hidden=!!PE.follow; if(!PE.guess) pesSay(); dirty=true; };
+
+    /* ======================================================== The Sun
+       The Sun's light, with its dark lines: light that the atoms in the Sun's
+       atmosphere take out on the way up. Overlay an element's own bright
+       lines and see whether they land on dark ones. That is how, by 1860,
+       people knew what the Sun is made of without going there, and how helium
+       was found there before it was found on Earth. */
+    var FRAUN=[["K",393.366,20],["H",396.847,20],["h",410.174,1],["G",430.790,26],["Hγ",434.047,1],["e",438.355,26],["d",466.814,26],["F",486.134,1],["c",495.761,26],["b4",516.733,12],["b2",517.270,12],["b1",518.362,12],["E",527.039,26],["D2",588.995,11],["D1",589.592,11],["C",656.281,1],["B",686.719,0],["A",759.370,0]];
+    var SUN_POOL=[1,2,3,11,12,19,20,26,10];   /* the candidates: five are in the Sun's dark lines, helium is the famous exception */
+    var SN={pick:0, found:{}, tried:{}};
+    function vacNm(wAir){ var s=1000/wAir, s2=s*s; return wAir*(1+0.0000834254+0.02406147/(130-s2)+0.00015998/(38.9-s2)); }   /* Edlen's air to vacuum */
+    function sunMatches(z){ var L=PTable.lineList(z); if(!L) return {lines:[],hits:[]}; var hits=[];
+      L.lines.forEach(function(p){ FRAUN.forEach(function(fr){ if(fr[2]===z&&Math.abs(vacNm(fr[1])-p[0])<0.35) hits.push(fr); }); });
+      return {lines:L.lines, hits:hits.filter(function(v,i,a){ return a.indexOf(v)===i; })}; }
+    function drawSun(now){
+      var c=host.querySelector('[data-c="sun"]'); if(!c||!c.offsetParent) return false;
+      var f=fit(c), g=f.g, w=f.w, h=f.h, T=th(); g.clearRect(0,0,w,h); g.font="500 14px Archivo, sans-serif";
+      var x0=16, x1=w-16, y0=28, y1=Math.round(h*0.52), y2=y1+18, y3=h-40, span=VIS1+10-VIS0, X=function(wl){ return x0+(x1-x0)*(wl-VIS0)/span; };
+      /* the Sun's continuum, then the dark lines cut into it */
+      for(var x=x0;x<x1;x++){ var wl=VIS0+(x-x0)*span/(x1-x0); g.fillStyle=wlRGB(wl); g.fillRect(x,y0,1,y1-y0); }
+      var lastLx=-99, groups={b:"b (Mg)",D:"D (Na)"};
+      FRAUN.forEach(function(fr){ var x=X(fr[1]); g.fillStyle="#000"; g.globalAlpha=fr[2]?0.92:0.6; g.fillRect(x-1,y0,fr[2]===11||fr[2]===12||fr[2]===20||fr[2]===1?2.5:1.5,y1-y0); g.globalAlpha=1; });
+      FRAUN.forEach(function(fr){ var x=X(fr[1]), key=fr[0].charAt(0), name=groups[key]&&/^[bD]\d$/.test(fr[0])?groups[key]:fr[0];
+        if(x-lastLx<16){ if(groups[key]&&/^[bD]\d$/.test(fr[0])) return; } /* one name per cluster */
+        g.fillStyle=T.ink2; g.font="500 11px Archivo, sans-serif"; g.textAlign="center"; g.fillText(name,x,x-lastLx<30?y0-18:y0-6); lastLx=x; });
+      g.font="500 14px Archivo, sans-serif";
+      /* the chosen element's bright lines, underneath, on black */
+      g.fillStyle="#000"; g.fillRect(x0,y2,x1-x0,y3-y2);
+      if(SN.pick){ var M=sunMatches(SN.pick);
+        M.lines.forEach(function(p){ if(p[0]<VIS0||p[0]>VIS1+10) return; var x=X(p[0]), hit=M.hits.some(function(fr){ return Math.abs(vacNm(fr[1])-p[0])<0.35; });
+          g.fillStyle=wlRGB(p[0]); g.globalAlpha=0.5+0.5*Math.min(1,p[1]); g.fillRect(x-1.5,y2,3,y3-y2); g.globalAlpha=1;
+          if(hit){ g.strokeStyle=T.light?"#111":"#fff"; g.lineWidth=1.5; g.beginPath(); g.moveTo(x,y1); g.lineTo(x,y2); g.stroke(); } });
+        g.fillStyle=T.ink; label(g,nm(SN.pick)+"'s own light",(x0+x1)/2,y3+20,T); }
+      else { g.fillStyle=T.ink2; label(g,"Pick an element below to lay its lines under the Sun's",(x0+x1)/2,y3+20,T); }
+      g.fillStyle=T.ink2; g.textAlign="left"; g.fillText(VIS0+" nm",x0,y1+13); g.textAlign="right"; g.fillText((VIS1+10)+" nm",x1,y1+13);
+      return false;
+    }
+    function sunSay(){
+      var P=pane("sun"), z=SN.pick, say=P.querySelector(".lb-ssay"), foundN=Object.keys(SN.found).length, inSun=[1,11,12,20,26];
+      if(!z){ say.textContent=""; return; }
+      var M=sunMatches(z), own=FRAUN.filter(function(fr){ return fr[2]===z; });
+      if(z===2) say.innerHTML="<b>Helium:</b> no dark line. Its strongest yellow line, D3 at 587.6 nm, sits right beside sodium's pair but the Sun's quiet surface is too cool to take it out of the light. Helium was found in 1868 as a <i>bright</i> line in the Sun's chromosphere during an eclipse, 27 years before it was found on Earth, and named for the Sun (helios).";
+      else if(own.length) say.innerHTML="<b>"+esc(nm(z))+": in the Sun.</b> "+M.hits.length+" of its line"+(M.hits.length>1?"s":"")+" land"+(M.hits.length>1?"":"s")+" on dark lines: "+M.hits.map(function(fr){ return fr[0]+" ("+fmt(fr[1],1)+" nm)"; }).join(", ")+". "+esc(nm(z))+" atoms in the Sun's atmosphere absorb exactly the colors they would emit.";
+      else say.innerHTML="<b>"+esc(nm(z))+":</b> none of its lines land on the Sun's dark lines"+(M.lines.length?"":" (and Atom has no measured spectrum for it)")+". That does not prove it is absent, only that it is too rare or too cool here to leave a mark.";
+      P.querySelector(".lb-sfound").textContent="Found in the Sun so far: "+(foundN?inSun.filter(function(k){ return SN.found[k]; }).map(function(k){ return nm(k); }).join(", "):"nothing yet")+" ("+foundN+" of "+inSun.length+").";
+      if(foundN===inSun.length&&!SN.doneSaid){ SN.doneSaid=true; toast("All five found. That is the Sun's recipe, read from its light."); ev("sun:all"); }
+    }
+    BUILD.sun=function(P){
+      P.innerHTML='<div class="lb-sun"><p class="lb-note">Spread the Sun’s light into a rainbow and it is cut by thin dark lines: colors that atoms in the Sun’s atmosphere swallow on the way out. Fraunhofer mapped them in 1814 and gave them letters. Pick an element and its own bright lines appear underneath; where they line up with dark lines, that element is in the Sun. (A and B are oxygen in Earth’s air, not the Sun.)</p>'+
+        '<div class="lb-stagewrap sun"><canvas class="lb-cv" data-c="sun" role="img" aria-label="The Sun’s spectrum with its dark lines, and the chosen element’s bright lines beneath"></canvas></div>'+
+        '<div class="lb-chips lb-schips">'+SUN_POOL.map(function(z){ return '<button type="button" data-sz="'+z+'" aria-pressed="false">'+el(z)[1]+' <span>'+nm(z)+'</span></button>'; }).join('')+'</div>'+
+        '<p class="lb-say lb-ssay" aria-live="polite"></p><p class="lb-note lb-sfound">Found in the Sun so far: nothing yet (0 of 5).</p></div>';
+      P.addEventListener("click",function(e){ var b=e.target.closest("[data-sz]"); if(!b) return; var z=+b.getAttribute("data-sz"); SN.pick=z; SN.tried[z]=1;
+        if(sunMatches(z).hits.length) SN.found[z]=1;
+        [].forEach.call(P.querySelectorAll("[data-sz]"),function(x){ x.setAttribute("aria-pressed",+x.getAttribute("data-sz")===z?"true":"false"); });
+        sunSay(); dirty=true; ev("sun:"+z); if(sunMatches(z).hits.length){ var got=Progress.mark("heard",z); celebrate(got); } });
+      sunSay();
+    };
+    REFRESH.sun=function(){ dirty=true; };
+
     /* ======================================================== The math */
     /* Ten steps through the atom you pick, from the outside in, each with the
        classical picture or the quantum one, the equations, the numbers for
@@ -1700,7 +1906,8 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
           facts:[["Electron",sub],["Shielding S",nf(sl.S,2)],["Charge it feels",nf(sl.Zeff,2)+" of "+z],["Estimate to remove it",nf(o.ieEst,2)+" eV"]],
           check:{q:"Use n = "+o.sn+" instead of Slater's n* = "+nf(o.nstar,1)+". What does the estimate to remove a "+sub+" electron become, in eV?", a:MK.Ry*Math.pow(sl.Zeff/o.sn,2), tol:0.02, unit:"eV",
             why:"13.606 × ("+nf(sl.Zeff,2)+" ÷ "+o.sn+")² = "+nf(MK.Ry*Math.pow(sl.Zeff/o.sn,2),2)+" eV. "+(o.nstar<o.sn?"Slater shrank n to n* = "+nf(o.nstar,1)+" because his estimates came out too small for big shells.":"For n up to 3, n* is n, so the estimate does not change.")},
-          limit:"Slater's rules are a rule of thumb from 1930: estimates within 20 to 50 percent are normal. Modern calculations (Hartree–Fock and beyond) solve for all the electrons together.",
+          limit:(o.sl===1?"Slater's rules are a rule of thumb from 1930, and this is where they break: for a p electron the estimate comes out two to four times too high, because his rules give s and p electrons of the same shell one shielding value, as if a p electron were held as tightly as an s. For the outer s electrons of most elements they land within about 20 percent. Trends, under Explore, draws the estimate against the measured value for every element.":
+                 "Slater's rules are a rule of thumb from 1930: for an outer s electron like this one, the estimate usually lands within about 20 percent of the measured value (p electrons come out far worse). Modern calculations (Hartree–Fock and beyond) solve for all the electrons together. Trends, under Explore, draws the estimate against the measured value for every element.")+"",
           alt:cap(E)+"'s electrons in their shells, with the "+sub+" electrons highlighted and the inner electrons shielding the nucleus."};
       }
       if(id==="rel"){
@@ -1810,7 +2017,8 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       P.innerHTML=elDatalist()+'<div class="lb-math">'+
         '<div class="lb-mtop"><div class="lb-mpick"><span class="lb-mtile" aria-hidden="true"></span><label class="lb-field">Element<input class="lb-input" data-mz list="'+dlId+'" autocomplete="off" spellcheck="false"></label>'+
         '<button type="button" class="lb-btn ghost" data-mfollow hidden title="Go back to the element picked in the table">Follow the table</button>'+
-        '<button type="button" class="lb-btn ghost" data-mlink title="A link that opens this element at this step">Copy link</button></div>'+
+        '<button type="button" class="lb-btn ghost" data-mlink title="A link that opens this element at this step">Copy link</button>'+
+        '<button type="button" class="lb-btn ghost" data-msheet title="A printable worksheet: the ten questions for this element, with the answer key on its own page">Worksheet</button></div>'+
         '<ol class="lb-msteps" aria-label="Steps">'+MCH.map(function(c,i){ return '<li><button type="button" data-mch="'+i+'" data-kind="'+c.kind.toLowerCase()+'"><b>'+(i+1)+'</b> <span>'+esc(c.short)+'</span></button></li>'; }).join('')+'</ol></div>'+
         '<div class="lb-cols lb-mcols"><div class="lb-mleft"><div class="lb-stagewrap lb-mstage"><canvas class="lb-cv" data-c="math" role="img" aria-label=""></canvas></div>'+
         '<div class="lb-mctl"></div></div>'+
@@ -1840,6 +2048,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
           lk=e.target.closest("[data-mlink]"), fo=e.target.closest("[data-mfollow]");
         if(c){ mathGo(+c.getAttribute("data-mch")); return; }
         if(lk){ var url=labLink({lab:"math",z:mz(),step:MA.ch}); copyText(url,null,function(ok){ toast(ok?"Link copied: "+url:"Could not copy. The link is "+url); }); ev("math:link"); return; }
+        if(e.target.closest("[data-msheet]")){ printHTML(mathSheetHTML()); ev("math:sheet"); return; }
         if(fo){ MA.follow=true; mathSetZ(Z); ev("math:follow"); return; }
         if(nv){ var dn=+nv.getAttribute("data-mnav"); mathGo(dn>0&&MA.ch===MCH.length-1?0:MA.ch+dn); var tgt=pane("math").querySelector(".lb-mright"); if(tgt) try{ tgt.scrollIntoView({block:"nearest",behavior:opt.calm?"auto":"smooth"}); }catch(er){} return; }
         if(w){ MA.waves=+w.getAttribute("data-mw"); var rr=pane("math").querySelector('input[data-mv="waves"]'); if(rr) rr.value=MA.waves; mathRender(false); return; }
@@ -1875,6 +2084,24 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       if(a!==0&&Math.abs(v-a)<=Math.abs(a)*0.12) return "Close: within 12 percent. Carry more digits through, or reread which value the step uses.";
       if(a!==0&&(Math.abs(v)>Math.abs(a)*100||Math.abs(v)<Math.abs(a)/100)) return "Far off, by more than a hundred times. Start again from the equation above.";
       return "Try again, or press Show me.";
+    }
+    /* a worksheet: the ten questions for the element on the screen, each with
+       the step's key equation and the numbers it needs, an answer line, and
+       the answer key with the working on a page of its own, so a teacher can
+       print the first pages for the class and keep the last */
+    function mathSheetHTML(){
+      var o=mathNums(), z=o.z, E=nm(z), rows=[], key=[];
+      MCH.forEach(function(ch,i){ var t=mathText(ch.id,o);
+        rows.push('<section class="lb-sheet-q"><h2>'+(i+1)+'. '+esc(t.title)+'</h2><p>'+esc(t.idea)+'</p>'+
+          '<p class="lb-sheet-eq">'+t.eqs[0][0]+'</p>'+
+          '<p><i>Given:</i> '+t.facts.map(function(f2){ return esc(f2[0])+' = '+esc(f2[1]); }).join(' · ')+'</p>'+
+          '<p><b>Q'+(i+1)+'.</b> '+esc(t.check.q)+'</p><p class="lb-sheet-ans">Answer: ______________________ '+esc(t.check.unit)+'</p></section>');
+        key.push('<li><b>Q'+(i+1)+'.</b> '+esc(ckAns(t.check))+'. '+esc(t.check.why)+'</li>'); });
+      return '<h1>Atom: the math of '+esc(E)+'</h1><p>Name: ______________________ &nbsp; Date: ______________</p>'+
+        '<p>Ten steps from the outside of the atom in. Each question uses the step\'s equation and the numbers given; work it on paper, then check it in Atom at '+esc(labLink({lab:"math",z:z,step:0}))+'.</p>'+
+        rows.join('')+
+        '<section class="lb-sheet-key"><h1>Answer key: the math of '+esc(E)+'</h1><ol>'+key.join('')+'</ol>'+
+        '<p>Answers within 1 to 3 percent count; the working in Atom shows the exact figures. Constants: CODATA 2022; binding energies: AME2020; ionization energies: NIST.</p></section>';
     }
     function ckAns(ck){ var a=ck.a; return (ck.tol===0?String(Math.round(a)):(Math.abs(a)>=100?nf(a,0):(Math.abs(a)>=10?nf(a,1):nf(a,Math.abs(a)>=1?2:3))))+(ck.unit?" "+ck.unit:""); }
     REFRESH.math=function(){ var P=pane("math"); if(P){ var s=P.querySelector(".lb-mzname"); if(s) s.textContent=lc(mz()); } mathRender(false); };
@@ -2290,7 +2517,18 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
           if(k==="print") printHTML(progressHTML());
           if(k==="reset"){ askReset=true; REFRESH.you(); var y=P.querySelector('[data-ya="reset-yes"]'); if(y) y.focus(); }
           if(k==="reset-no"){ askReset=false; REFRESH.you(); var r=P.querySelector('[data-ya="reset"]'); if(r) r.focus(); }
-          if(k==="reset-yes"){ askReset=false; Progress.reset(); toast("Your progress on this device is erased."); } } });
+          if(k==="reset-yes"){ askReset=false; Progress.reset(); toast("Your progress on this device is erased."); }
+          if(k==="export"){ var ta=P.querySelector("[data-yexport]"); ta.hidden=false; ta.value=Progress.exportJSON(); ta.focus(); ta.select();
+            try{ var blob=new Blob([ta.value],{type:"application/json"}), a2=D.createElement("a"); a2.href=URL.createObjectURL(blob); a2.download="atom-progress-"+new Date().toISOString().slice(0,10)+".json"; D.body.appendChild(a2); a2.click(); setTimeout(function(){ URL.revokeObjectURL(a2.href); a2.remove(); },2000); }catch(e){}
+            copyText(ta.value,ta,function(ok){ toast(ok?"Your progress is copied, and a file was offered. Paste or open it in Atom on another device.":"Select the text and copy it, or use the file."); }); }
+          if(k==="import"){ var ti=P.querySelector("[data-yimport]"); ti.hidden=false; ti.focus(); }
+          if(k==="import-go"){ var tv=P.querySelector("[data-yimport]").value, err=Progress.importJSON(tv,true); toast(err||"Progress merged in. Nothing you had here was lost."); if(!err) REFRESH.you(); }
+          if(k==="code"){ var cd=Progress.code(); copyText(cd,null,function(ok){ toast(ok?"Turn-in code copied: "+cd:"Your code is "+cd); }); }
+          if(k==="read"){ var rt=P.querySelector("[data-yread]"), rows=rt.value.split(/\s+/).filter(Boolean).map(function(c){ return [c,Progress.readCode(c)]; });
+            P.querySelector(".lb-ytable").innerHTML=rows.length?'<table class="lb-table"><thead><tr><th>Code from</th><th>Explored</th><th>Built</th><th>Mastered</th><th>Right</th><th>Streak</th><th>Mastered elements</th></tr></thead><tbody>'+
+              rows.map(function(r){ var s=r[1]; return s?'<tr><td>'+esc(s.date)+'</td><td>'+s.seen+'</td><td>'+s.built+'</td><td>'+s.mastered+'</td><td>'+s.right+'</td><td>'+s.streak+'</td><td>'+esc(s.mastList.map(function(z){ return el(z)[1]; }).join(" ")||"none")+'</td></tr>':'<tr><td colspan="7">Not a valid code: '+esc(r[0].slice(0,24))+'</td></tr>'; }).join('')+'</tbody></table>':''; } } });
+      P.addEventListener("change",function(e){ var fi=e.target.closest("[data-yfile]"); if(!fi||!fi.files||!fi.files[0]) return;
+        var rd=new FileReader(); rd.onload=function(){ var err=Progress.importJSON(rd.result,true); toast(err||"Progress merged in from the file."); if(!err) REFRESH.you(); }; rd.readAsText(fi.files[0]); });
       /* your table is one stop for the Tab key; the arrow keys move inside it */
       P.addEventListener("keydown",function(e){ var t=e.target.closest&&e.target.closest("[data-yz]"); if(!t) return;
         var d={ArrowLeft:[0,-1],ArrowRight:[0,1],ArrowUp:[-1,0],ArrowDown:[1,0]}[e.key]; if(!d) return; e.preventDefault();
@@ -2320,7 +2558,16 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
           '<div class="lb-row lb-youfoot"><button type="button" class="lb-btn" data-ya="print">Print my progress</button>'+
           (askReset?'<span class="lb-confirm" role="group" aria-label="Erase your progress?"><b>Erase everything on this device? This can\'t be undone.</b> <button type="button" class="lb-btn sm" data-ya="reset-yes">Yes, erase it</button><button type="button" class="lb-btn sm go" data-ya="reset-no">Keep it</button></span>':
             '<button type="button" class="lb-btn ghost" data-ya="reset">Erase my progress</button>')+'</div>'+
-          '<p class="lb-note">Your progress stays on this device. Nothing is sent anywhere.</p></section>';
+          '<p class="lb-note">Your progress stays on this device. Nothing is sent anywhere.</p></section>'+
+        '<section class="lb-carry"><h3 class="lb-h">Take it with you</h3>'+
+          '<p class="lb-note">On a shared computer, save your progress before you leave and bring it back next time. A turn-in code is a one-line summary, with no name, that a teacher can read in this same tab.</p>'+
+          '<div class="lb-row"><button type="button" class="lb-btn" data-ya="export">Save my progress</button><button type="button" class="lb-btn" data-ya="import">Bring progress back</button><button type="button" class="lb-btn go" data-ya="code">Copy my turn-in code</button></div>'+
+          '<textarea class="lb-input lb-yta" data-yexport hidden readonly aria-label="Your progress as text, to copy or save" rows="3"></textarea>'+
+          '<div data-yimport-wrap><textarea class="lb-input lb-yta" data-yimport hidden aria-label="Paste a saved progress file here" rows="3" placeholder="Paste a saved progress file here, or choose the file"></textarea>'+
+          '<div class="lb-row lb-yimp"><button type="button" class="lb-btn sm go" data-ya="import-go">Merge it in</button><label class="lb-btn sm">Choose a file<input type="file" accept=".json,application/json" data-yfile hidden></label></div></div>'+
+          '<h4 class="lb-h">For teachers: read turn-in codes</h4>'+
+          '<textarea class="lb-input lb-yta" data-yread aria-label="Paste turn-in codes, one per line" rows="3" placeholder="Paste codes here, one per line"></textarea>'+
+          '<div class="lb-row"><button type="button" class="lb-btn sm" data-ya="read">Read the codes</button></div><div class="lb-ytable"></div></section>';
       refreshDue();
     };
 
@@ -2331,7 +2578,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       if(!dirty&&!anim) return;
       dirty=false;
       anim=cur==="build"?(bmode==="atom"?drawBuild(now):(bmode==="molecule"?drawMol(now):false)):(cur==="calc"?drawCalc(now):(cur==="hear"?drawHear(now):
-        (cur==="trends"?drawTrend(now):(cur==="nuclides"?drawNuc(now):(cur==="math"?drawMath(now):false)))));
+        (cur==="trends"?drawTrend(now):(cur==="nuclides"?drawNuc(now):(cur==="math"?drawMath(now):(cur==="pes"?drawPes(now):(cur==="sun"?drawSun(now):false)))))));
     };
     api.show=function(t,z){ if(z) api.setElement(z); if(t==="compare"&&z){ CMP.a=z; if(!CMP.b||CMP.b===z) CMP.b=partner(z); CMP.follow=true; } show(t||cur); };
     /* the table picked an element: the labs follow it, except where you chose
@@ -2343,6 +2590,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       if(built.trends) renderTrends();
       if(NU.follow&&NU.map){ NU.z=z; NU.n=commonA(z)-z; if(built.nuclides) renderNuc(); }
       if(MA.follow){ if(built.math) mathSetZ(z); else MA.z=z; }
+      if(PE.follow&&!PE.guess){ PE.z=z; if(built.pes) REFRESH.pes(); }
       dirty=true; };
     api.build=function(z){ B.p=z; B.n=commonA(z)-z; B.e=z; show("build"); setBMode("atom"); changed(); };
     api.quiz=function(z){ if(z) Z=z; Qs.mode="this"; show("predict"); nextQuestion(true); };
@@ -2371,6 +2619,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       if(t==="trends"&&a.prop){ if(TPROPS[a.prop]) TR.p=a.prop; if(a.line==="period"||a.line==="group") TR.line=a.line; show("trends"); var sel=pane("trends").querySelector("[data-tp]"); if(sel) sel.value=TR.p; renderTrends(); return; }
       if(t==="nuclides"&&a.z!=null){ show("nuclides"); nuSet(a.z,(a.a||commonA(a.z))-a.z); return; }
       if(t==="math"){ if(a.z){ MA.follow=false; MA.z=a.z; } show("math"); if(a.step!=null){ MA.ch=a.step; } if(built.math) mathRender(true); else MA.pending=true; return; }
+      if(t==="pes"){ if(a.z){ PE.follow=false; PE.z=a.z; PE.guess=null; } show("pes"); if(built.pes) REFRESH.pes(); return; }
       if(t==="molecule"){ show("build"); setBMode("molecule"); if(a.mol){ var mb=pane("build").querySelector('[data-mp="'+a.mol+'"]'); if(mb) mb.click(); } return; }
       show(t);
     };
@@ -2487,12 +2736,37 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     t("links: #lab=math&z=79&step=8 opens gold at step 8, a bad z, step, or lab is dropped",
       l1&&l1.act.lab==="math"&&l1.act.z===79&&l1.act.step===7&&l2&&l2.act.pair.join("-")==="79-47"&&l3&&l3.act.z==null&&l3.act.step==null&&l3.act.prop==null&&l4===null,
       JSON.stringify([l1,l2,l3,l4]));
+    /* against outside data, not the code against itself: NIST's measured
+       first ionization energies (eV), typed here from the NIST Atomic Spectra
+       Database, and the AME2020 binding energies the app carries */
+    var NIST={1:13.598434,2:24.587389,3:5.391715,10:21.564540,11:5.139077,26:7.902468,55:3.893906,79:9.225554};
+    var nistBad=Object.keys(NIST).filter(function(z){ return Math.abs(IE1[z-1]-NIST[z])>0.0006; });
+    t("data: the stored first ionization energies match NIST for H, He, Li, Ne, Na, Fe, Cs, and Au to 0.0005 eV", nistBad.length===0, nistBad.join(" "));
+    /* the liquid-drop formula against every measured binding energy Atom has:
+       within 3 percent from oxygen-16 up, and useless below lithium-6 */
+    var semfMax=0, semfLight=1e9;
+    Object.keys(BA_MEAS).forEach(function(k){ var p=k.split("-"), z0=+p[0], A0=+p[1], e=Math.abs(bindingSEMF(z0,A0)/A0-BA_MEAS[k])/BA_MEAS[k];
+      if(A0>=16) semfMax=Math.max(semfMax,e); if(A0<=6) semfLight=Math.min(semfLight,e); });
+    t("data: the liquid-drop formula is within 3 percent of AME2020 for every nucleus from oxygen-16 up, and off by 9 percent or more for every one up to lithium-6", semfMax<0.03&&semfLight>0.09, (semfMax*100).toFixed(2)+"% "+(semfLight*100).toFixed(1)+"%");
+    /* Slater's estimate of the energy to remove the outer electron against
+       NIST: the median s-electron estimate within 25 percent, every p-electron
+       estimate at least twice the measured value, which is what step 7 warns */
+    var sErr=[], pLow=[];
+    for(var zs=1;zs<=118;zs++){ var ie0=IE1[zs-1]; if(!ie0) continue; var ob=outerSub(zs), sp=slaterParts(zs,ob[0],ob[1]), est=MK.Ry*Math.pow(sp.Zeff/(NSTAR[ob[0]]||ob[0]),2), rel=(est-ie0)/ie0;
+      if(ob[1]===0) sErr.push(Math.abs(rel)); else if(ob[1]===1&&zs<=86&&rel<1) pLow.push(zs); }   /* lawrencium's lone 7p is the one exception, and its value is a single 2015 measurement */
+    sErr.sort(function(a,b){ return a-b; });
+    t("data: Slater's estimate lands within 25 percent (median) for outer s electrons and at least twice too high for every outer p electron up to radon, as step 7 says", sErr[Math.floor(sErr.length/2)]<0.25&&pLow.length===0, (sErr[Math.floor(sErr.length/2)]*100).toFixed(0)+"% "+pLow.join(" "));
+    /* the common-mistake questions: for every element each claims, it builds,
+       and exactly one of its choices is right */
+    var misBad=[]; for(var zq=1;zq<=118&&misBad.length<5;zq++) for(var qi=0;qi<6;qi++){ var qq=makeQ("w:"+zq+":"+qi); if(!qq){ if(QTYPES.w.ok(zq)&&MIS[qi].ok(zq)) misBad.push("w:"+zq+":"+qi+" did not build"); continue; }
+      var okN=qq.choices.filter(function(c){ return qq.check(c.v).ok; }).length; if(okN!==1) misBad.push("w:"+zq+":"+qi+" has "+okN+" right choices"); }
+    t("predict: every common-mistake question builds for every element it claims, with exactly one right choice", misBad.length===0, misBad.join("; "));
     t("links: the link The math copies reads back as the same element and step", (function(){ var u=labLink({lab:"math",z:26,step:3}), h=u.slice(u.indexOf("#")), r=fromHash(h); return r&&r.act.z===26&&r.act.step===3; })(), labLink({lab:"math",z:26,step:3}));
     return out;
   }
 
   return {mount:mount, progress:Progress, search:search, nuclide:nuclide, parseFormula:parseFormula, zOf:zOf, sound:Sound, cardActions:cardActions, selfTest:selfTest,
-    fromHash:fromHash, challengeParse:challengeParse};
+    fromHash:fromHash, challengeParse:challengeParse, makeQ:makeQ};
 })();
 
 /* ATOM-LABS END */

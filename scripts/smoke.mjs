@@ -46,6 +46,14 @@ await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const ORIGIN = `http://127.0.0.1:${server.address().port}`;
 
 const failures = [];
+// the service worker's cache is named for the release: the two versions must agree
+{
+  const vf = [path.join(ROOT, "..", "VERSION"), path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "VERSION")].find((f) => fs.existsSync(f));
+  const v = vf ? fs.readFileSync(vf, "utf8").trim() : null;
+  const m = /var VERSION = "([^"]+)"/.exec(fs.readFileSync(path.join(ROOT, "sw.js"), "utf8"));
+  if (v && (!m || m[1] !== v)) { console.log(`  FAIL sw.js says ${m ? m[1] : "nothing"} but VERSION says ${v}`); process.exit(1); }
+  console.log(`  ok   sw.js cache version ${m ? m[1] : "?"}${v ? "" : " (VERSION file not found here, not compared)"}`);
+}
 const fail = (where, what) => { failures.push(`${where}: ${what}`); console.log(`  FAIL ${where}: ${what}`); };
 const ok = (where, what) => console.log(`  ok   ${where}: ${what}`);
 
@@ -107,6 +115,17 @@ await visit("site", `${BASE}`, async (page, n) => {
   // back to the top with everything loaded, so the accessibility pass that
   // follows sees the table's bar (Today's element, the lenses) as a reader would
   await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(400);
+  // offline: once the worker has the site, the page loads with the network cut
+  const swOk = await page.evaluate(() => navigator.serviceWorker ? navigator.serviceWorker.ready.then(() => true).catch(() => false) : false).catch(() => false);
+  if (swOk) {
+    await page.waitForTimeout(1500);
+    const ctx = page.context();
+    await ctx.setOffline(true);
+    let loaded = false;
+    try { const r = await page.reload({ waitUntil: "load", timeout: 15000 }); await page.waitForTimeout(3000); loaded = !!r && (await page.locator(".pt-el").count()) === 118; } catch (e) { loaded = false; }
+    await ctx.setOffline(false);
+    loaded ? ok(n, "loads offline from the service worker (118 squares)") : fail(n, "did not load offline");
+  } else fail(n, "the service worker did not register");
 });
 
 await visit("site, phone", `${BASE}?el=Fe`, async (page, n) => {
@@ -144,6 +163,14 @@ await visit("app in the browser", `${BASE}app/`, async (page, n) => {
   });
   mathBad.length ? fail(n, "The math: " + mathBad.join(", ")) : ok(n, "The math: 6 elements × 10 steps render cleanly");
 }, { wait: 9000, viewport: { width: 1440, height: 960 } });
+
+await visit("teachers", `${BASE}teachers.html`, async (page, n) => {
+  const links = await page.$$eval("main a[href^='./#lab=']", (as) => as.map((a) => a.getAttribute("href")));
+  links.length >= 9 ? ok(n, `${links.length} lab links`) : fail(n, `${links.length} lab links`);
+  const unknown = links.map((h) => (/#lab=([a-z]+)/.exec(h) || [])[1]).filter((p) => !/^(build|boxes|molecule|compare|trends|nuclides|hear|pes|sun|math|predict|calc|bench|you)$/.test(p));
+  unknown.length ? fail(n, "links to labs that do not exist: " + unknown.join(", ")) : ok(n, "every lab link names a real lab");
+  (await page.locator("table").count()) >= 2 ? ok(n, "the link table and the standards table") : fail(n, "a table is missing");
+}, { wait: 1500 });
 
 await visit("404", `${BASE}no-such-page`, async (page, n) => {
   (await page.locator("a[href]").count()) > 0 ? ok(n, "the 404 page links home") : fail(n, "no link home");

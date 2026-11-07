@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atom for teachers: assign any lab in one link</title>
+<meta name="description" content="How to use Atom in a chemistry or physics class: a link for every lab, step, and element; worksheets with answer keys; turn-in codes; and a map to NGSS and AP Chemistry.">
+<link rel="canonical" href="https://normansrule.github.io/atom/teachers.html">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<link rel="icon" href="assets/favicon-64.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  @font-face{font-family:"Archivo";src:url(assets/fonts/archivo-var.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+  :root{color-scheme:dark light;--bg:#0b0c0d;--bg2:#141618;--line:#2b3034;--ink:#f2f3f1;--ink2:#c9ced2;--ink3:#8d959b;--acc:#ffb020;--onacc:#141005;--link:#8fd3ff}
+  @media (prefers-color-scheme:light){:root{--bg:#f3f1ec;--bg2:#ffffff;--line:#d9d4c9;--ink:#101312;--ink2:#2f3633;--ink3:#5c655f;--acc:#643c00;--onacc:#ffffff;--link:#0b4f8a}}
+  html{background:var(--bg)}
+  body{margin:0;color:var(--ink);font:17px/1.55 "Archivo",system-ui,-apple-system,sans-serif}
+  header{display:flex;align-items:center;gap:20px;padding:14px 24px;border-bottom:1px solid var(--line)}
+  .wordmark{font-weight:300;font-stretch:125%;font-size:22px;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+  header nav a{color:var(--ink2);text-decoration:none;margin-right:16px}
+  header nav a:hover,header nav a:focus-visible{color:var(--ink)}
+  main{max-width:46rem;margin:0 auto;padding:40px 24px 80px}
+  h1{font-size:clamp(36px,6vw,56px);font-weight:260;font-stretch:120%;letter-spacing:-.03em;line-height:1;margin:0 0 16px}
+  h2{font-size:26px;font-weight:600;font-stretch:96%;letter-spacing:-.01em;margin:44px 0 10px}
+  h3{font-size:19px;font-weight:650;margin:24px 0 6px}
+  p,li{color:var(--ink2)} b{color:var(--ink)}
+  .lede{font-size:21px;line-height:1.45;color:var(--ink);max-width:40rem}
+  a{color:var(--link)} a:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em;background:var(--bg2);border:1px solid var(--line);padding:1px 6px;border-radius:4px;color:var(--ink)}
+  table{border-collapse:collapse;width:100%;font-size:15.5px;margin:12px 0 4px}
+  th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--ink3);font-weight:600}
+  td a{white-space:nowrap}
+  .act{border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0;background:var(--bg2)}
+  .act h3{margin-top:0}
+  .act p{margin:6px 0}
+  .act .meta{color:var(--ink3);font-size:14.5px}
+  .btn{display:inline-block;background:var(--acc);color:var(--onacc);font-weight:700;text-decoration:none;padding:12px 20px;margin:8px 8px 0 0}
+  .fine{font-size:14.5px;color:var(--ink3)}
+  @media print{ header{display:none} body{font-size:12pt} .act{break-inside:avoid} a{color:inherit} }
+</style>
+</head>
+<body>
+<header>
+  <a class="wordmark" href="./">Atom</a>
+  <nav aria-label="Atom"><a href="./">The table</a><a href="./#labs">Labs</a><a href="app/">The app</a></nav>
+</header>
+<main id="main">
+  <h1>Atom for teachers</h1>
+  <p class="lede">Atom is a free, open-source periodic table that computes every element from the equations and lets students build, predict, and work through the physics of any atom. There are no accounts, no servers, and nothing is sent anywhere. It runs in any modern browser, works offline after the first visit (Chromebook carts and iPads included), and every lab can be assigned with one link.</p>
+
+  <h2>Assign anything with a link</h2>
+  <p>Paste a link into your LMS, a slide, or a worksheet. It opens the lab on the element and step you chose. Students need nothing but a browser.</p>
+  <table>
+    <thead><tr><th>Link</th><th>What opens</th></tr></thead>
+    <tbody>
+      <tr><td><a href="./#lab=math&amp;z=79&amp;step=8">#lab=math&amp;z=79&amp;step=8</a></td><td>The math: gold at step 8 (relativity). Any element, steps 1 to 10.</td></tr>
+      <tr><td><a href="./#lab=build&amp;z=6&amp;a=14">#lab=build&amp;z=6&amp;a=14</a></td><td>Build: carbon-14, ready to change.</td></tr>
+      <tr><td><a href="./#lab=compare&amp;pair=79-47">#lab=compare&amp;pair=79-47</a></td><td>Compare: gold and silver, side by side.</td></tr>
+      <tr><td><a href="./#lab=trends&amp;prop=ie">#lab=trends&amp;prop=ie</a></td><td>Trends: the energy to remove an electron, with Slater's estimate drawn against the measured values.</td></tr>
+      <tr><td><a href="./#lab=nuclides&amp;z=6&amp;a=14">#lab=nuclides&amp;z=6&amp;a=14</a></td><td>The chart of the nuclides, on carbon-14.</td></tr>
+      <tr><td><a href="./#lab=pes&amp;z=26">#lab=pes&amp;z=26</a></td><td>Electron energies (photoelectron spectroscopy) for iron.</td></tr>
+      <tr><td><a href="./#lab=sun">#lab=sun</a></td><td>The Sun: find which elements are in its light.</td></tr>
+      <tr><td><a href="./#lab=predict&amp;z=26">#lab=predict&amp;z=26</a></td><td>Predict: questions about iron.</td></tr>
+      <tr><td><a href="./#lab=you">#lab=you</a></td><td>You: progress, turn-in codes, and the reader for them.</td></tr>
+      <tr><td><a href="./#challenge=A1.empty.6.w.Fe">#challenge=A1.empty.6.w.Fe</a></td><td>A challenge: the six "common mistakes" questions on iron, in a fixed order, for the whole class.</td></tr>
+    </tbody>
+  </table>
+  <p>Inside The math, the <b>Copy link</b> button makes the link for whatever is on the screen, and <b>Worksheet</b> prints the ten questions for that element with the answer key on its own last page. In Predict, a <b>challenge</b> is a short code (such as <code>A1.k3j9.10.nqcsb.H-He-Li-C</code>) that gives everyone the same questions in the same order; the <b>Make a challenge</b> panel builds one from the elements and question types you check, "Common mistakes" included.</p>
+
+  <h2>Six twenty-minute activities</h2>
+
+  <div class="act">
+    <h3>1. Read the shells from a spectrum</h3>
+    <p class="meta">Electron energies (PES) · AP Chemistry 1.5 and 1.6 · NGSS HS-PS1-1</p>
+    <p>Open <a href="./#lab=pes&amp;z=11">sodium</a>. Students count the electrons in each peak from the left, write the configuration, then press <b>Mystery element</b> and identify five elements from their spectra alone. Collect: the five configurations, written out.</p>
+    <p>Say plainly that the peak positions are estimates (Slater's rules); the pattern is the point. Then open <a href="./#lab=trends&amp;prop=ie">Trends</a> and ask where the dashed estimate leaves the measured line, and why (p electrons).</p>
+  </div>
+
+  <div class="act">
+    <h3>2. What is the Sun made of?</h3>
+    <p class="meta">The Sun · NGSS HS-PS4-3, HS-ESS1-3</p>
+    <p>Open <a href="./#lab=sun">The Sun</a>. Students try each element and record which ones leave dark lines. Ask why helium gives no dark line even though it is the Sun's second ingredient (the surface is too cool for helium to absorb; it was found in 1868 as a bright line in an eclipse, 27 years before it was found on Earth). Collect: the list of five, and one sentence on how we know what a star is made of without going there.</p>
+  </div>
+
+  <div class="act">
+    <h3>3. The empty atom</h3>
+    <p class="meta">The math, step 1 and step 9 · Predict, "Common mistakes" · NGSS HS-PS1-1</p>
+    <p>Open <a href="./#lab=math&amp;z=26&amp;step=9">iron at step 9</a> and have students read the nucleus radius, then step 1 for the atom's. Ask for the ratio before showing it. Then the <a href="./#challenge=A1.empty.6.w.Fe">iron challenge</a>: six "common mistakes" questions, one of which asks the same thing with a 1-meter nucleus. Collect: a turn-in code (below).</p>
+  </div>
+
+  <div class="act">
+    <h3>4. Why the orbit cannot last</h3>
+    <p class="meta">The math, steps 2 and 3 · NGSS HS-PS4-3 · AP Chemistry 1.5</p>
+    <p>Open <a href="./#lab=math&amp;z=1&amp;step=2">hydrogen at step 2</a>. Students read the orbit's speed and period, then step 3: an accelerating charge radiates, and the atom would collapse in about 16 picoseconds. Ask what a theory has to add to stop that (step 4: Bohr's rule), and what Bohr could not explain (step 5). Collect: the worksheet for hydrogen, questions 2 to 4.</p>
+  </div>
+
+  <div class="act">
+    <h3>5. Mass that disappears</h3>
+    <p class="meta">The math, step 9 · Nuclides · NGSS HS-PS1-8</p>
+    <p>Open <a href="./#lab=math&amp;z=26&amp;step=9">iron-56 at step 9</a>: the five pieces of its binding energy, and the 0.5 u that is missing when the nucleus forms. Then <a href="./#lab=math&amp;z=1&amp;step=9">hydrogen</a>, where the formula fails and says so. Finish on the <a href="./#lab=nuclides&amp;z=26&amp;a=56">chart of the nuclides</a>: which way does iron's neighborhood decay? Collect: question 9 from each worksheet.</p>
+  </div>
+
+  <div class="act">
+    <h3>6. Which electrons leave first?</h3>
+    <p class="meta">Build, Predict · AP Chemistry 1.5 and 1.8 · NGSS HS-PS1-1</p>
+    <p>Open <a href="./#lab=build&amp;z=26">Build on iron</a> and remove two electrons; the configuration readout shows which ones went. The <a href="./#challenge=A1.empty.6.w.Fe">iron challenge</a> asks it directly (question 4 of six). Collect: a turn-in code.</p>
+  </div>
+
+  <h2>Collecting work without accounts</h2>
+  <p>Atom keeps progress in the browser only. For a class, use one of these:</p>
+  <ul>
+    <li><b>Turn-in codes.</b> In <a href="./#lab=you">You</a>, a student presses <b>Copy my turn-in code</b> and pastes it into your form or LMS. The code is one line with the date, the counts (explored, built, mastered, right answers, streak), and which elements, with a check digit and no name. Paste a class's codes into <b>Read the codes</b> on the same tab for a table.</li>
+    <li><b>Worksheets.</b> The math's <b>Worksheet</b> prints ten questions for the chosen element; the answer key is the last page, so print all but the last for students.</li>
+    <li><b>Print my progress.</b> One page with everything a student has done, from the You tab.</li>
+    <li><b>Shared computers.</b> <b>Save my progress</b> downloads (and copies) a small file; <b>Bring progress back</b> merges it in on the next machine.</li>
+  </ul>
+
+  <h2>Standards</h2>
+  <p>Where each lab lands. NGSS performance expectations are quoted from the standards; AP Chemistry topic numbers follow the College Board's course and exam description.</p>
+  <table>
+    <thead><tr><th>Lab</th><th>NGSS</th><th>AP Chemistry</th></tr></thead>
+    <tbody>
+      <tr><td>Build; Predict; Trends; the table's lenses</td><td><b>HS-PS1-1</b> Use the periodic table as a model to predict the relative properties of elements based on the patterns of electrons in the outermost energy level of atoms.</td><td>1.5 Atomic structure and electron configuration; 1.7 Periodic trends; 1.8 Valence electrons and ionic compounds</td></tr>
+      <tr><td>Electron energies (PES); The math, step 7</td><td>HS-PS1-1</td><td><b>1.6 Photoelectron spectroscopy</b>; 1.5</td></tr>
+      <tr><td>Nuclides; Calculate (decay); Workbench (fusion); The math, step 9; the nucleus scene</td><td><b>HS-PS1-8</b> Develop models to illustrate the changes in the composition of the nucleus of the atom and the energy released during the processes of fission, fusion, and radioactive decay.</td><td>(outside the AP Chemistry framework; AP Physics 2 covers nuclear physics)</td></tr>
+      <tr><td>Hear; The Sun; Calculate (light); The math, steps 4 and 5; the light scene</td><td><b>HS-PS4-3</b> Evaluate the claims, evidence, and reasoning behind the idea that electromagnetic radiation can be described either by a wave model or a particle model, and that for some situations one model is more useful than the other.</td><td>1.5 (line spectra as evidence for energy levels)</td></tr>
+      <tr><td>The Sun; the Origins lens; the Missions "Light a star" and "Forge gold"</td><td><b>HS-ESS1-3</b> Communicate scientific ideas about the way stars, over their life cycle, produce elements.</td><td></td></tr>
+      <tr><td>Build: a molecule</td><td>HS-PS1-1; HS-PS1-3 (bulk properties from the forces between particles)</td><td>2.1 Types of chemical bonds; 2.5 Lewis diagrams; 2.7 VSEPR and bond hybridization</td></tr>
+      <tr><td>The math, steps 1 to 3 and 8 (Coulomb's law, orbits, relativity)</td><td>HS-PS2-4 (Coulomb's law) and HS-PS4-3</td><td>1.5 and 1.7, with the reasoning behind them</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What is computed and what is measured</h2>
+  <p>Atom tells students which is which, and the labs are built to show the seams. Electron clouds are computed from the Schrödinger equation for one electron with Slater's effective charge; the measured first ionization energies are from NIST, and <a href="./#lab=trends&amp;prop=ie">Trends</a> draws Slater's estimate against them so the gap is visible. The binding energies in step 9 use the liquid-drop formula where no measurement exists and the AME2020 measured value where one does, and the step says so. Spectral lines are NIST measurements; hydrogen's are computed from the Rydberg formula. Every constant is CODATA 2022, and the full source list is at the bottom of <a href="./#sourceList">the main page</a>.</p>
+
+  <h2>Privacy</h2>
+  <p>Atom makes no network requests after it loads and keeps no accounts. Progress, the theme, and the picture-quality choice live in the student's own browser. A link or a turn-in code carries only what it shows. The code is open: <a href="https://github.com/Normansrule/atom">github.com/Normansrule/atom</a>, MIT License.</p>
+
+  <p><a class="btn" href="./">Open Atom</a> <a class="btn" href="./#lab=pes&amp;z=11">Start with activity 1</a></p>
+  <p class="fine">Made by Thomas J. Norman, California State University, Dominguez Hills. Corrections and requests are welcome as issues on GitHub.</p>
+</main>
+</body>
+</html>
