@@ -52,6 +52,8 @@ lipo -create -output "$APP/Contents/MacOS/Atom" "$DIST/atom-arm64" "$DIST/atom-x
 rm -f "$DIST/atom-arm64" "$DIST/atom-x86_64"
 
 cp "$SRC" "$APP/Contents/Resources/index.html"
+# the language packs, one file per language, beside the page
+if [ -d "$HERE/app/i18n" ]; then mkdir -p "$APP/Contents/Resources/i18n"; cp "$HERE/app/i18n/"*.js "$APP/Contents/Resources/i18n/"; fi
 # the typeface inside the page is Archivo, under the SIL Open Font License; its
 # license travels with every copy, and so does the app's own
 cp "$HERE/docs/assets/fonts/OFL.txt" "$APP/Contents/Resources/Archivo-OFL.txt"

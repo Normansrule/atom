@@ -15,3 +15,5 @@ desktop/app/
 desktop/build/
 desktop/icon.png
 desktop/LICENSE.txt
+# python caches
+__pycache__/

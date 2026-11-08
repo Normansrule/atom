@@ -17,6 +17,8 @@ region(){ # region NAME: the lines between /* NAME BEGIN */ and /* NAME END */
 }
 need(){ grep -q "$1 END" "$2" || { echo "$1 markers missing" >&2; exit 1; }; }
 
+# the languages: T(), the pack loader, the language menu; loaded before anything else
+region ATOM-I18N > "$OUT/atom-i18n.js"; need ATOM-I18N "$OUT/atom-i18n.js"
 # the shared engines, exactly as the app ships them
 region ATOM-ENGINES > "$OUT/atom-engines.js"; need ATOM-ENGINES "$OUT/atom-engines.js"
 # the table, the sky, the sims, and the missions, with the labs cut out: the

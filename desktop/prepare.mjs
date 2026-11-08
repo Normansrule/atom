@@ -9,8 +9,11 @@ const ROOT = path.resolve(HERE, "..");
 const copy = (from, to) => { fs.mkdirSync(path.dirname(to), { recursive: true }); fs.copyFileSync(from, to); };
 
 copy(path.join(ROOT, "app", "atom.html"), path.join(HERE, "app", "index.html"));
+// the language packs sit beside the page, one file per language
+const packs = path.join(ROOT, "app", "i18n");
+if (fs.existsSync(packs)) for (const f of fs.readdirSync(packs)) if (f.endsWith(".js")) copy(path.join(packs, f), path.join(HERE, "app", "i18n", f));
 copy(path.join(ROOT, "docs", "assets", "fonts", "OFL.txt"), path.join(HERE, "app", "Archivo-OFL.txt"));
 copy(path.join(ROOT, "LICENSE"), path.join(HERE, "LICENSE.txt"));
 copy(path.join(ROOT, "mac", "icon.png"), path.join(HERE, "icon.png"));            // the window icon
 copy(path.join(ROOT, "mac", "icon.png"), path.join(HERE, "build", "icon.png"));   // the installer and file icons
-console.log("prepared the app, its icon, and its licenses");
+console.log("prepared the app, its language packs, its icon, and its licenses");

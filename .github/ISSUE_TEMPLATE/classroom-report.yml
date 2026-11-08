@@ -1,0 +1,70 @@
+name: Classroom report
+description: You tried Atom with a class. Six questions about how it went, so the next teacher has it easier. Nothing about students, only about the software.
+title: "Classroom report: [grade and subject]"
+labels: ["classroom report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for trying Atom with real students. Please keep students out of this form: no names, no scores, no photos. Everything here is public.
+  - type: input
+    id: setting
+    attributes:
+      label: Grade and subject
+      description: 'For example "10th grade chemistry", "AP Chemistry", "8th grade physical science", "college prep physics".'
+      placeholder: 10th grade chemistry
+    validations:
+      required: true
+  - type: input
+    id: class
+    attributes:
+      label: Class size and devices
+      description: "How many students, and on what: Chromebooks, iPads, phones, a projector only, a mix."
+      placeholder: 32 students on a Chromebook cart, one per pair
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      description: The language the class used Atom in.
+      options:
+        - English
+        - Spanish
+        - Both
+        - Another language (say which below)
+    validations:
+      required: true
+  - type: textarea
+    id: used
+    attributes:
+      label: What you used
+      description: Which labs, lesson path, challenge, or page, and for how long. A link you assigned is perfect.
+      placeholder: |
+        The first lesson from the teacher guide, then #lab=build&z=26 and the iron challenge. About 45 minutes.
+    validations:
+      required: true
+  - type: textarea
+    id: worked
+    attributes:
+      label: What worked
+      description: What students got out of it, what you would do again.
+    validations:
+      required: true
+  - type: textarea
+    id: broke
+    attributes:
+      label: What did not work, or confused students
+      description: Anything slow, broken, unclear, or wrong. If a translation read oddly, paste the sentence. If a number looked wrong, say which.
+    validations:
+      required: true
+  - type: textarea
+    id: wish
+    attributes:
+      label: What you wish it did
+      description: Optional. The one thing that would make it more useful in your room.
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device, if something broke
+      description: 'Optional. For example "Chrome on a Dell Chromebook 3100", "Safari on an iPad (9th gen)".'

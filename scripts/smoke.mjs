@@ -104,9 +104,9 @@ await visit("site", `${BASE}`, async (page, n) => {
   // the labs arrive on their own once a reader heads for them
   await page.keyboard.press("Escape");
   await page.evaluate(() => document.getElementById("labs").scrollIntoView());
-  await page.waitForFunction(() => window.AtomLabs && document.querySelectorAll("#labsHost [role=tab]").length === 6, null, { timeout: 15000 }).catch(() => {});
+  await page.waitForFunction(() => window.AtomLabs && document.querySelectorAll("#labsHost [role=tab]").length === 7, null, { timeout: 15000 }).catch(() => {});
   const tabs = await page.locator("#labsHost [role=tab]").count();
-  tabs === 6 ? ok(n, "the labs load on approach, six tabs") : fail(n, `the labs did not load (${tabs} tabs)`);
+  tabs === 7 ? ok(n, "the labs load on approach, seven tabs") : fail(n, `the labs did not load (${tabs} tabs)`);
   const labBad = await page.evaluate(() => window.AtomLabs ? AtomLabs.selfTest().filter((x) => !x[1]).map((x) => x[0]) : ["no AtomLabs"]);
   labBad.length ? fail(n, "labs self-test on the site: " + labBad.join("; ")) : ok(n, "labs self-test passes on the site");
   await page.evaluate(() => document.getElementById("lbTab-math").click()); await page.waitForTimeout(400);
@@ -164,12 +164,61 @@ await visit("app in the browser", `${BASE}app/`, async (page, n) => {
   mathBad.length ? fail(n, "The math: " + mathBad.join(", ")) : ok(n, "The math: 6 elements × 10 steps render cleanly");
 }, { wait: 9000, viewport: { width: 1440, height: 960 } });
 
+// every language pack: the page comes up in that language, the labs load, no
+// English sentence is left where the pack has a translation, and axe still passes
+for (const code of ["es"]) {
+  await visit(`site in ${code}`, `${BASE}?lang=${code}`, async (page, n) => {
+    const lang = await page.evaluate(() => document.documentElement.lang);
+    lang === code ? ok(n, `html lang="${code}"`) : fail(n, `html lang="${lang}"`);
+    const badge = await page.evaluate(() => (document.querySelector(".lang-wrap") || {}).getAttribute?.("data-code"));
+    badge === code.toUpperCase() ? ok(n, "the language badge shows it") : fail(n, `badge ${badge}`);
+    const left = await page.evaluate(() => AtomI18N.missing.length);
+    left === 0 ? ok(n, "every string the page asked for is in the pack") : fail(n, `${left} strings missing from the pack: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
+    const fe = await page.evaluate(() => ELEMENTS[25][2]);
+    fe !== "Iron" ? ok(n, `element names localized (${fe})`) : fail(n, "element names still English");
+    await page.evaluate(() => document.getElementById("labs").scrollIntoView());
+    await page.waitForFunction(() => window.AtomLabs && document.querySelectorAll("#labsHost [role=tab]").length === 7, null, { timeout: 15000 }).catch(() => {});
+    const tabs = await page.locator("#labsHost [role=tab]").count();
+    tabs === 7 ? ok(n, "the labs load, seven tabs") : fail(n, `the labs did not load (${tabs} tabs)`);
+    const left2 = await page.evaluate(() => AtomI18N.missing.length);
+    left2 === 0 ? ok(n, "the labs' strings are all in the pack") : fail(n, `${left2} lab strings missing: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
+    await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(400);
+  });
+  await visit(`app in ${code}`, `${BASE}app/?lang=${code}`, async (page, n) => {
+    const lang = await page.evaluate(() => document.documentElement.lang);
+    lang === code ? ok(n, `html lang="${code}"`) : fail(n, `html lang="${lang}"`);
+    const left = await page.evaluate(async () => { const wait = (ms) => new Promise((r) => setTimeout(r, ms)); frontLabs("build", 26); await wait(400); frontLabs("math", 26); await wait(400); frontLabs("lessons"); await wait(400); return AtomI18N.missing.length; });
+    left === 0 ? ok(n, "build, The math and the lessons ask for nothing the pack lacks") : fail(n, `${left} strings missing: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
+  }, { wait: 7000, viewport: { width: 1440, height: 960 } });
+}
+
 await visit("teachers", `${BASE}teachers.html`, async (page, n) => {
   const links = await page.$$eval("main a[href^='./#lab=']", (as) => as.map((a) => a.getAttribute("href")));
   links.length >= 9 ? ok(n, `${links.length} lab links`) : fail(n, `${links.length} lab links`);
-  const unknown = links.map((h) => (/#lab=([a-z]+)/.exec(h) || [])[1]).filter((p) => !/^(build|boxes|molecule|compare|trends|nuclides|hear|pes|sun|math|predict|calc|bench|you)$/.test(p));
+  const unknown = links.map((h) => (/#lab=([a-z]+)/.exec(h) || [])[1]).filter((p) => !/^(build|boxes|molecule|compare|trends|nuclides|hear|pes|sun|math|predict|calc|bench|lessons|you)$/.test(p));
   unknown.length ? fail(n, "links to labs that do not exist: " + unknown.join(", ")) : ok(n, "every lab link names a real lab");
   (await page.locator("table").count()) >= 2 ? ok(n, "the link table and the standards table") : fail(n, "a table is missing");
+}, { wait: 1500 });
+
+await visit("handout", `${BASE}handout.html`, async (page, n) => {
+  (await page.locator("svg.qr path").count()) === 1 ? ok(n, "the QR code is drawn") : fail(n, "no QR code");
+  (await page.locator("main section").count()) === 3 ? ok(n, "three columns: students, teachers, families") : fail(n, "the three sections are not all there");
+  const badge = await page.evaluate(() => (document.querySelector(".lang-wrap") || {}).getAttribute?.("data-code"));
+  badge === "EN" ? ok(n, "the language menu mounted on its own") : fail(n, `language badge: ${badge}`);
+}, { wait: 1500 });
+
+await visit("handout in es", `${BASE}handout.html?lang=es`, async (page, n) => {
+  const h1 = await page.evaluate(() => document.querySelector("h1").textContent);
+  /periódica/.test(h1) ? ok(n, `Spanish title: ${h1}`) : fail(n, `title still English: ${h1}`);
+  const left = await page.evaluate(() => AtomI18N.missing.length);
+  left === 0 ? ok(n, "every string on the page is in the pack") : fail(n, `${left} missing: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
+}, { wait: 1500 });
+
+await visit("teachers in es", `${BASE}teachers.html?lang=es`, async (page, n) => {
+  const left = await page.evaluate(() => AtomI18N.missing.length);
+  left === 0 ? ok(n, "every string on the page is in the pack") : fail(n, `${left} missing: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
+  const badge = await page.evaluate(() => (document.querySelector(".lang-wrap") || {}).getAttribute?.("data-code"));
+  badge === "ES" ? ok(n, "the language menu shows ES") : fail(n, `language badge: ${badge}`);
 }, { wait: 1500 });
 
 await visit("404", `${BASE}no-such-page`, async (page, n) => {

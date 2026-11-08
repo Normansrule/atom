@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i>Atom: a one-page handout for students, teachers, and families</title>
+<meta name="description" data-i-attr="content" content="One printable page about Atom, the free periodic table that computes every element: how to start, how it is assigned, how progress is collected, and what it keeps private. In English and Spanish.">
+<link rel="canonical" href="https://normansrule.github.io/atom/handout.html">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<link rel="icon" href="assets/favicon-64.png" type="image/png">
+<link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+<script src="assets/atom-i18n.js"></script>
+<style>
+  @font-face{font-family:"Archivo";src:url(assets/fonts/archivo-var.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+  :root{color-scheme:light dark;--bg:#f3f1ec;--bg2:#ffffff;--line:#d9d4c9;--ink:#101312;--ink2:#2f3633;--ink3:#5c655f;--acc:#643c00;--onacc:#ffffff;--link:#0b4f8a}
+  @media (prefers-color-scheme:dark){:root{--bg:#0b0c0d;--bg2:#141618;--line:#2b3034;--ink:#f2f3f1;--ink2:#c9ced2;--ink3:#8d959b;--acc:#ffb020;--onacc:#141005;--link:#8fd3ff}}
+  html{background:var(--bg)}
+  body{margin:0;color:var(--ink);font:15px/1.45 "Archivo",system-ui,-apple-system,sans-serif}
+  header{display:flex;align-items:center;gap:20px;padding:14px 24px;border-bottom:1px solid var(--line)}
+  .wordmark{font-weight:300;font-stretch:125%;font-size:22px;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+  header nav a{color:var(--ink2);text-decoration:none;margin-right:16px}
+  header .lang-wrap{margin-left:auto}
+  .lang-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;padding:0 10px;box-shadow:inset 0 0 0 1px var(--line);color:var(--ink2);font:600 13px/1 "Archivo",sans-serif;letter-spacing:.06em;cursor:pointer}
+  .lang-wrap::before{content:attr(data-code)}
+  .lang-wrap:focus-within{box-shadow:inset 0 0 0 2px var(--acc);color:var(--ink)}
+  .lang-pick{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;border:0;font:inherit}
+  .lang-pick option{color:#111;background:#fff}
+  .tools{max-width:52rem;margin:18px auto 0;padding:0 24px;display:flex;gap:12px;align-items:center;color:var(--ink3);font-size:14px}
+  .btn{display:inline-block;background:var(--acc);color:var(--onacc);font-weight:700;text-decoration:none;padding:10px 16px;border:0;font:inherit;font-weight:700;cursor:pointer}
+  .sheet{max-width:52rem;margin:16px auto 60px;padding:28px 32px;background:var(--bg2);border:1px solid var(--line)}
+  .top{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px}
+  h1{font-size:34px;font-weight:260;font-stretch:120%;letter-spacing:-.03em;line-height:1.02;margin:0 0 8px}
+  .lede{font-size:17px;line-height:1.4;color:var(--ink);margin:0;max-width:34rem}
+  .url{display:block;margin-top:10px;font-weight:650;color:var(--ink);text-decoration:none;font-size:17px}
+  .qrbox{text-align:center;color:var(--ink);font-size:12.5px}
+  .qrbox .qr{display:block;margin:0 auto 4px;width:112px;height:112px}
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  h2{font-size:16px;font-weight:700;letter-spacing:-.005em;margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--acc)}
+  .cols p,.cols li{color:var(--ink2);margin:0 0 7px;font-size:13.8px;line-height:1.42}
+  .cols ul{padding-left:18px;margin:0}
+  .cols b{color:var(--ink)}
+  .cols code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;color:var(--ink)}
+  .links{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);gap:14px;font-size:13px}
+  .links p{margin:0;color:var(--ink2);word-break:break-all}
+  .links b{color:var(--ink);font-weight:650}
+  .fine{margin-top:14px;color:var(--ink3);font-size:12px}
+  a{color:var(--link)}
+  @media (max-width:760px){ .cols,.links{grid-template-columns:1fr} .top{grid-template-columns:1fr} .sheet{padding:20px} }
+  @media print{
+    @page{size:letter;margin:0.5in}
+    header,.tools{display:none} html,body{background:#fff} :root{--bg:#fff;--bg2:#fff;--line:#bbb;--ink:#000;--ink2:#222;--ink3:#555;--acc:#000;--link:#000}
+    .sheet{max-width:none;margin:0;padding:0;border:0} body{font-size:12.5px}
+    .cols p,.cols li{font-size:11.6px} .links{font-size:11px} a{text-decoration:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a data-i class="wordmark" href="./">Atom</a>
+  <nav data-i-attr="aria-label" aria-label="Atom"><a data-i href="./">The table</a><a data-i href="./#labs">Labs</a><a data-i href="teachers.html">Teachers</a><a data-i href="app/">The app</a></nav>
+  <span id="langHost"></span>
+</header>
+<p data-i class="tools">One page. Print it as it is, or switch the language in the top bar first.</p>
+<main class="sheet" id="main">
+  <div class="top">
+    <div>
+      <h1 data-i>Atom: the periodic table, computed</h1>
+      <p data-i class="lede">A free periodic table that calculates every element from the equations and lets you build, predict, and work through the physics of any atom. No accounts, no servers, nothing sent anywhere. It works in any browser, offline after the first visit, in English and Spanish.</p>
+      <a class="url" href="https://normansrule.github.io/atom/">normansrule.github.io/atom</a>
+    </div>
+    <div class="qrbox"><svg class="qr" viewBox="0 0 33 33" width="128" height="128" role="img" aria-label="QR code for normansrule.github.io/atom" shape-rendering="crispEdges"><path fill="currentColor" d="M2 2h7v1h-7zM10 2h1v1h-1zM14 2h4v1h-4zM19 2h1v1h-1zM24 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM11 3h4v1h-4zM17 3h1v1h-1zM20 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM30 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM10 4h6v1h-6zM19 4h4v1h-4zM24 4h1v1h-1zM26 4h3v1h-3zM30 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM12 5h1v1h-1zM17 5h1v1h-1zM19 5h3v1h-3zM24 5h1v1h-1zM26 5h3v1h-3zM30 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM12 6h1v1h-1zM17 6h2v1h-2zM20 6h1v1h-1zM24 6h1v1h-1zM26 6h3v1h-3zM30 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h2v1h-2zM14 7h3v1h-3zM18 7h1v1h-1zM22 7h1v1h-1zM24 7h1v1h-1zM30 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h7v1h-7zM15 9h1v1h-1zM17 9h2v1h-2zM21 9h2v1h-2zM2 10h1v1h-1zM4 10h1v1h-1zM8 10h2v1h-2zM11 10h1v1h-1zM13 10h3v1h-3zM18 10h1v1h-1zM21 10h2v1h-2zM25 10h1v1h-1zM28 10h1v1h-1zM30 10h1v1h-1zM3 11h4v1h-4zM9 11h1v1h-1zM12 11h2v1h-2zM17 11h1v1h-1zM20 11h3v1h-3zM24 11h2v1h-2zM29 11h2v1h-2zM2 12h1v1h-1zM4 12h2v1h-2zM8 12h3v1h-3zM12 12h6v1h-6zM19 12h1v1h-1zM21 12h4v1h-4zM26 12h3v1h-3zM30 12h1v1h-1zM5 13h3v1h-3zM9 13h2v1h-2zM16 13h1v1h-1zM18 13h1v1h-1zM20 13h4v1h-4zM25 13h3v1h-3zM2 14h1v1h-1zM4 14h5v1h-5zM12 14h1v1h-1zM14 14h3v1h-3zM18 14h1v1h-1zM22 14h1v1h-1zM24 14h2v1h-2zM30 14h1v1h-1zM2 15h4v1h-4zM7 15h1v1h-1zM9 15h1v1h-1zM11 15h2v1h-2zM15 15h4v1h-4zM21 15h1v1h-1zM24 15h2v1h-2zM29 15h2v1h-2zM6 16h1v1h-1zM8 16h1v1h-1zM10 16h3v1h-3zM17 16h1v1h-1zM20 16h2v1h-2zM25 16h1v1h-1zM30 16h1v1h-1zM2 17h2v1h-2zM7 17h1v1h-1zM9 17h1v1h-1zM11 17h1v1h-1zM15 17h1v1h-1zM17 17h2v1h-2zM22 17h1v1h-1zM24 17h1v1h-1zM3 18h3v1h-3zM7 18h2v1h-2zM10 18h2v1h-2zM15 18h1v1h-1zM18 18h1v1h-1zM20 18h3v1h-3zM24 18h1v1h-1zM30 18h1v1h-1zM4 19h1v1h-1zM7 19h1v1h-1zM10 19h4v1h-4zM17 19h3v1h-3zM21 19h5v1h-5zM28 19h3v1h-3zM2 20h2v1h-2zM5 20h1v1h-1zM7 20h7v1h-7zM15 20h4v1h-4zM21 20h4v1h-4zM27 20h1v1h-1zM30 20h1v1h-1zM4 21h1v1h-1zM6 21h1v1h-1zM10 21h1v1h-1zM16 21h1v1h-1zM18 21h1v1h-1zM22 21h5v1h-5zM2 22h2v1h-2zM8 22h6v1h-6zM15 22h3v1h-3zM22 22h6v1h-6zM29 22h1v1h-1zM10 23h3v1h-3zM15 23h5v1h-5zM22 23h1v1h-1zM26 23h3v1h-3zM30 23h1v1h-1zM2 24h7v1h-7zM10 24h1v1h-1zM13 24h2v1h-2zM17 24h1v1h-1zM19 24h2v1h-2zM22 24h1v1h-1zM24 24h1v1h-1zM26 24h1v1h-1zM30 24h1v1h-1zM2 25h1v1h-1zM8 25h1v1h-1zM15 25h1v1h-1zM20 25h3v1h-3zM26 25h1v1h-1zM29 25h2v1h-2zM2 26h1v1h-1zM4 26h3v1h-3zM8 26h1v1h-1zM14 26h2v1h-2zM17 26h2v1h-2zM21 26h7v1h-7zM29 26h2v1h-2zM2 27h1v1h-1zM4 27h3v1h-3zM8 27h1v1h-1zM11 27h3v1h-3zM15 27h1v1h-1zM17 27h3v1h-3zM21 27h1v1h-1zM23 27h1v1h-1zM26 27h3v1h-3zM30 27h1v1h-1zM2 28h1v1h-1zM4 28h3v1h-3zM8 28h1v1h-1zM10 28h2v1h-2zM13 28h1v1h-1zM15 28h1v1h-1zM17 28h1v1h-1zM22 28h1v1h-1zM26 28h1v1h-1zM29 28h2v1h-2zM2 29h1v1h-1zM8 29h1v1h-1zM13 29h1v1h-1zM15 29h1v1h-1zM17 29h2v1h-2zM20 29h3v1h-3zM26 29h2v1h-2zM2 30h7v1h-7zM10 30h4v1h-4zM16 30h1v1h-1zM18 30h1v1h-1zM20 30h1v1h-1zM22 30h2v1h-2zM27 30h1v1h-1zM30 30h1v1h-1z"/></svg><span data-i>Scan to open</span></div>
+  </div>
+  <div class="cols">
+    <section>
+      <h2 data-i>For students</h2>
+      <p data-i><b>Start anywhere.</b> Click an element. Scroll to fall into it: its electron cloud, its light, the empty space, its nucleus, a proton, and the quarks you can try to pull out.</p>
+      <p data-i><b>The labs.</b> Build an atom or a molecule. Predict, and the questions you miss come back later until you get them right. Work through The math of any atom, ten steps from the outside in. Hear an element's light. Run a fusion reaction or build a battery.</p>
+      <p data-i><b>Your progress</b> stays on your device, in your browser. On a shared computer, press <b>Save my progress</b> before you leave and <b>Bring progress back</b> next time.</p>
+      <p data-i><b>Reading help.</b> Under Learning settings, <b>Simpler</b> rewrites the explanations in plainer words, <b>Term help</b> explains the science words when you tap them, and <b>Listen</b> reads a passage aloud.</p>
+    </section>
+    <section>
+      <h2 data-i>For teachers</h2>
+      <p data-i><b>Assign anything with a link.</b> Every lab, element, and step has its own address, like <code>#lab=build&amp;z=26</code>. Paste it into your LMS or a slide. <code>?lang=es</code> opens it in Spanish.</p>
+      <p data-i><b>Five lesson paths</b> of about 45 minutes, each ending in an exit check of six fixed questions, the same for the whole class. They map to NGSS HS-PS1-1, HS-PS1-8, HS-PS4-3, HS-ESS1-3, and AP Chemistry units 1 and 2.</p>
+      <p data-i><b>Collect work without accounts.</b> Students copy a one-line <b>turn-in code</b> from the You tab and paste it into your form. It holds the date, their counts, their exit-check scores, and no name. Paste a class's codes into <b>Read the codes</b> for a table. Worksheets print with the answer key on the last page.</p>
+      <p data-i><b>The teacher guide</b> at <code>/atom/teachers.html</code> has a first lesson minute by minute, the standards map, and a short report form for pilots.</p>
+    </section>
+    <section>
+      <h2 data-i>For families</h2>
+      <p data-i><b>It is free</b> and open source (MIT License), made by a professor at California State University, Dominguez Hills. It costs nothing and sells nothing.</p>
+      <p data-i><b>It is private.</b> Atom has no accounts and makes no network requests after it loads. Nothing a student does leaves the device. There is no chat, no sharing, and no advertising.</p>
+      <p data-i><b>It works on what you have:</b> a phone, a tablet, a Chromebook, or a desktop, in any modern browser, and it keeps working without Wi-Fi after the first visit. Desktop apps for Mac, Windows, and Linux are on the site.</p>
+      <p data-i><b>In Spanish, too.</b> The language menu is in the top bar of every page. Term help shows the English word beside the Spanish one, so a student can learn the science in both languages at once.</p>
+    </section>
+  </div>
+  <div class="links">
+    <div><p data-i><b>The table and the labs</b></p><p>normansrule.github.io/atom</p></div>
+    <div><p data-i><b>For teachers</b></p><p>normansrule.github.io/atom/teachers.html</p></div>
+    <div><p data-i><b>In Spanish</b></p><p>normansrule.github.io/atom/?lang=es</p></div>
+  </div>
+  <p data-i class="fine">Made by Thomas J. Norman. Constants are CODATA 2022, quark masses PDG 2026, spectral lines NIST. Corrections and requests are welcome as issues on GitHub: github.com/Normansrule/atom.</p>
+</main>
+</body>
+</html>

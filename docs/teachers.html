@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Atom for teachers: assign any lab in one link</title>
-<meta name="description" content="How to use Atom in a chemistry or physics class: a link for every lab, step, and element; worksheets with answer keys; turn-in codes; and a map to NGSS and AP Chemistry.">
+<title data-i>Atom for teachers: assign any lab in one link</title>
+<meta name="description" data-i-attr="content" content="How to use Atom in a chemistry or physics class: a link for every lab, step, and element; worksheets with answer keys; turn-in codes; five lesson paths with exit checks; Spanish and reading supports; and a map to NGSS and AP Chemistry.">
 <link rel="canonical" href="https://normansrule.github.io/atom/teachers.html">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <link rel="icon" href="assets/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+<script src="assets/atom-i18n.js"></script>
 <style>
   @font-face{font-family:"Archivo";src:url(assets/fonts/archivo-var.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
   :root{color-scheme:dark light;--bg:#0b0c0d;--bg2:#141618;--line:#2b3034;--ink:#f2f3f1;--ink2:#c9ced2;--ink3:#8d959b;--acc:#ffb020;--onacc:#141005;--link:#8fd3ff}
@@ -21,6 +22,15 @@
   .wordmark{font-weight:300;font-stretch:125%;font-size:22px;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
   header nav a{color:var(--ink2);text-decoration:none;margin-right:16px}
   header nav a:hover,header nav a:focus-visible{color:var(--ink)}
+  header .lang-wrap{margin-left:auto}
+  .lang-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;padding:0 10px;box-shadow:inset 0 0 0 1px var(--line);color:var(--ink2);font:600 13px/1 "Archivo",sans-serif;letter-spacing:.06em;cursor:pointer}
+  .lang-wrap::before{content:attr(data-code)}
+  .lang-wrap:focus-within{box-shadow:inset 0 0 0 2px var(--acc);color:var(--ink)}
+  .lang-pick{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;border:0;font:inherit}
+  .lang-pick option{color:#111;background:#fff}
+  .minutes{list-style:none;padding:0;margin:10px 0}
+  .minutes li{display:grid;grid-template-columns:4.6rem 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .minutes b{color:var(--acc);font-variant-numeric:tabular-nums}
   main{max-width:46rem;margin:0 auto;padding:40px 24px 80px}
   h1{font-size:clamp(36px,6vw,56px);font-weight:260;font-stretch:120%;letter-spacing:-.03em;line-height:1;margin:0 0 16px}
   h2{font-size:26px;font-weight:600;font-stretch:96%;letter-spacing:-.01em;margin:44px 0 10px}
@@ -44,103 +54,142 @@
 </head>
 <body>
 <header>
-  <a class="wordmark" href="./">Atom</a>
-  <nav aria-label="Atom"><a href="./">The table</a><a href="./#labs">Labs</a><a href="app/">The app</a></nav>
+  <a data-i class="wordmark" href="./">Atom</a>
+  <nav data-i-attr="aria-label" aria-label="Atom"><a data-i href="./">The table</a><a data-i href="./#labs">Labs</a><a data-i href="app/">The app</a></nav>
+  <span id="langHost"></span>
 </header>
 <main id="main">
-  <h1>Atom for teachers</h1>
-  <p class="lede">Atom is a free, open-source periodic table that computes every element from the equations and lets students build, predict, and work through the physics of any atom. There are no accounts, no servers, and nothing is sent anywhere. It runs in any modern browser, works offline after the first visit (Chromebook carts and iPads included), and every lab can be assigned with one link.</p>
+  <h1 data-i>Atom for teachers</h1>
+  <p data-i class="lede">Atom is a free, open-source periodic table that computes every element from the equations and lets students build, predict, and work through the physics of any atom. There are no accounts, no servers, and nothing is sent anywhere. It runs in any modern browser, works offline after the first visit (Chromebook carts and iPads included), and every lab can be assigned with one link.</p>
 
-  <h2>Assign anything with a link</h2>
-  <p>Paste a link into your LMS, a slide, or a worksheet. It opens the lab on the element and step you chose. Students need nothing but a browser.</p>
+  <h2 data-i>Assign anything with a link</h2>
+  <p data-i>Paste a link into your LMS, a slide, or a worksheet. It opens the lab on the element and step you chose. Students need nothing but a browser.</p>
   <table>
-    <thead><tr><th>Link</th><th>What opens</th></tr></thead>
+    <thead><tr><th data-i>Link</th><th data-i>What opens</th></tr></thead>
     <tbody>
-      <tr><td><a href="./#lab=math&amp;z=79&amp;step=8">#lab=math&amp;z=79&amp;step=8</a></td><td>The math: gold at step 8 (relativity). Any element, steps 1 to 10.</td></tr>
-      <tr><td><a href="./#lab=build&amp;z=6&amp;a=14">#lab=build&amp;z=6&amp;a=14</a></td><td>Build: carbon-14, ready to change.</td></tr>
-      <tr><td><a href="./#lab=compare&amp;pair=79-47">#lab=compare&amp;pair=79-47</a></td><td>Compare: gold and silver, side by side.</td></tr>
-      <tr><td><a href="./#lab=trends&amp;prop=ie">#lab=trends&amp;prop=ie</a></td><td>Trends: the energy to remove an electron, with Slater's estimate drawn against the measured values.</td></tr>
-      <tr><td><a href="./#lab=nuclides&amp;z=6&amp;a=14">#lab=nuclides&amp;z=6&amp;a=14</a></td><td>The chart of the nuclides, on carbon-14.</td></tr>
-      <tr><td><a href="./#lab=pes&amp;z=26">#lab=pes&amp;z=26</a></td><td>Electron energies (photoelectron spectroscopy) for iron.</td></tr>
-      <tr><td><a href="./#lab=sun">#lab=sun</a></td><td>The Sun: find which elements are in its light.</td></tr>
-      <tr><td><a href="./#lab=predict&amp;z=26">#lab=predict&amp;z=26</a></td><td>Predict: questions about iron.</td></tr>
-      <tr><td><a href="./#lab=you">#lab=you</a></td><td>You: progress, turn-in codes, and the reader for them.</td></tr>
-      <tr><td><a href="./#challenge=A1.empty.6.w.Fe">#challenge=A1.empty.6.w.Fe</a></td><td>A challenge: the six "common mistakes" questions on iron, in a fixed order, for the whole class.</td></tr>
+      <tr><td><a href="./#lab=math&amp;z=79&amp;step=8">#lab=math&amp;z=79&amp;step=8</a></td><td data-i>The math: gold at step 8 (relativity). Any element, steps 1 to 10.</td></tr>
+      <tr><td><a href="./#lab=build&amp;z=6&amp;a=14">#lab=build&amp;z=6&amp;a=14</a></td><td data-i>Build: carbon-14, ready to change.</td></tr>
+      <tr><td><a href="./#lab=compare&amp;pair=79-47">#lab=compare&amp;pair=79-47</a></td><td data-i>Compare: gold and silver, side by side.</td></tr>
+      <tr><td><a href="./#lab=trends&amp;prop=ie">#lab=trends&amp;prop=ie</a></td><td data-i>Trends: the energy to remove an electron, with Slater's estimate drawn against the measured values.</td></tr>
+      <tr><td><a href="./#lab=nuclides&amp;z=6&amp;a=14">#lab=nuclides&amp;z=6&amp;a=14</a></td><td data-i>The chart of the nuclides, on carbon-14.</td></tr>
+      <tr><td><a href="./#lab=pes&amp;z=26">#lab=pes&amp;z=26</a></td><td data-i>Electron energies (photoelectron spectroscopy) for iron.</td></tr>
+      <tr><td><a href="./#lab=sun">#lab=sun</a></td><td data-i>The Sun: find which elements are in its light.</td></tr>
+      <tr><td><a href="./#lab=predict&amp;z=26">#lab=predict&amp;z=26</a></td><td data-i>Predict: questions about iron.</td></tr>
+      <tr><td><a href="./#lab=you">#lab=you</a></td><td data-i>You: progress, turn-in codes, and the reader for them.</td></tr>
+      <tr><td><a href="./#challenge=A1.empty.6.w.Fe">#challenge=A1.empty.6.w.Fe</a></td><td data-i>A challenge: the six "common mistakes" questions on iron, in a fixed order, for the whole class.</td></tr>
     </tbody>
   </table>
-  <p>Inside The math, the <b>Copy link</b> button makes the link for whatever is on the screen, and <b>Worksheet</b> prints the ten questions for that element with the answer key on its own last page. In Predict, a <b>challenge</b> is a short code (such as <code>A1.k3j9.10.nqcsb.H-He-Li-C</code>) that gives everyone the same questions in the same order; the <b>Make a challenge</b> panel builds one from the elements and question types you check, "Common mistakes" included.</p>
+  <p data-i>Inside The math, the <b>Copy link</b> button makes the link for whatever is on the screen, and <b>Worksheet</b> prints the ten questions for that element with the answer key on its own last page. In Predict, a <b>challenge</b> is a short code (such as <code>A1.k3j9.10.nqcsb.H-He-Li-C</code>) that gives everyone the same questions in the same order; the <b>Make a challenge</b> panel builds one from the elements and question types you check, "Common mistakes" included.</p>
 
-  <h2>Six twenty-minute activities</h2>
+  <h2 data-i>Six twenty-minute activities</h2>
 
   <div class="act">
-    <h3>1. Read the shells from a spectrum</h3>
-    <p class="meta">Electron energies (PES) · AP Chemistry 1.5 and 1.6 · NGSS HS-PS1-1</p>
-    <p>Open <a href="./#lab=pes&amp;z=11">sodium</a>. Students count the electrons in each peak from the left, write the configuration, then press <b>Mystery element</b> and identify five elements from their spectra alone. Collect: the five configurations, written out.</p>
-    <p>Say plainly that the peak positions are estimates (Slater's rules); the pattern is the point. Then open <a href="./#lab=trends&amp;prop=ie">Trends</a> and ask where the dashed estimate leaves the measured line, and why (p electrons).</p>
+    <h3 data-i>1. Read the shells from a spectrum</h3>
+    <p data-i class="meta">Electron energies (PES) · AP Chemistry 1.5 and 1.6 · NGSS HS-PS1-1</p>
+    <p data-i>Open <a href="./#lab=pes&amp;z=11">sodium</a>. Students count the electrons in each peak from the left, write the configuration, then press <b>Mystery element</b> and identify five elements from their spectra alone. Collect: the five configurations, written out.</p>
+    <p data-i>Say plainly that the peak positions are estimates (Slater's rules); the pattern is the point. Then open <a href="./#lab=trends&amp;prop=ie">Trends</a> and ask where the dashed estimate leaves the measured line, and why (p electrons).</p>
   </div>
 
   <div class="act">
-    <h3>2. What is the Sun made of?</h3>
-    <p class="meta">The Sun · NGSS HS-PS4-3, HS-ESS1-3</p>
-    <p>Open <a href="./#lab=sun">The Sun</a>. Students try each element and record which ones leave dark lines. Ask why helium gives no dark line even though it is the Sun's second ingredient (the surface is too cool for helium to absorb; it was found in 1868 as a bright line in an eclipse, 27 years before it was found on Earth). Collect: the list of five, and one sentence on how we know what a star is made of without going there.</p>
+    <h3 data-i>2. What is the Sun made of?</h3>
+    <p data-i class="meta">The Sun · NGSS HS-PS4-3, HS-ESS1-3</p>
+    <p data-i>Open <a href="./#lab=sun">The Sun</a>. Students try each element and record which ones leave dark lines. Ask why helium gives no dark line even though it is the Sun's second ingredient (the surface is too cool for helium to absorb; it was found in 1868 as a bright line in an eclipse, 27 years before it was found on Earth). Collect: the list of five, and one sentence on how we know what a star is made of without going there.</p>
   </div>
 
   <div class="act">
-    <h3>3. The empty atom</h3>
-    <p class="meta">The math, step 1 and step 9 · Predict, "Common mistakes" · NGSS HS-PS1-1</p>
-    <p>Open <a href="./#lab=math&amp;z=26&amp;step=9">iron at step 9</a> and have students read the nucleus radius, then step 1 for the atom's. Ask for the ratio before showing it. Then the <a href="./#challenge=A1.empty.6.w.Fe">iron challenge</a>: six "common mistakes" questions, one of which asks the same thing with a 1-meter nucleus. Collect: a turn-in code (below).</p>
+    <h3 data-i>3. The empty atom</h3>
+    <p data-i class="meta">The math, step 1 and step 9 · Predict, "Common mistakes" · NGSS HS-PS1-1</p>
+    <p data-i>Open <a href="./#lab=math&amp;z=26&amp;step=9">iron at step 9</a> and have students read the nucleus radius, then step 1 for the atom's. Ask for the ratio before showing it. Then the <a href="./#challenge=A1.empty.6.w.Fe">iron challenge</a>: six "common mistakes" questions, one of which asks the same thing with a 1-meter nucleus. Collect: a turn-in code (below).</p>
   </div>
 
   <div class="act">
-    <h3>4. Why the orbit cannot last</h3>
-    <p class="meta">The math, steps 2 and 3 · NGSS HS-PS4-3 · AP Chemistry 1.5</p>
-    <p>Open <a href="./#lab=math&amp;z=1&amp;step=2">hydrogen at step 2</a>. Students read the orbit's speed and period, then step 3: an accelerating charge radiates, and the atom would collapse in about 16 picoseconds. Ask what a theory has to add to stop that (step 4: Bohr's rule), and what Bohr could not explain (step 5). Collect: the worksheet for hydrogen, questions 2 to 4.</p>
+    <h3 data-i>4. Why the orbit cannot last</h3>
+    <p data-i class="meta">The math, steps 2 and 3 · NGSS HS-PS4-3 · AP Chemistry 1.5</p>
+    <p data-i>Open <a href="./#lab=math&amp;z=1&amp;step=2">hydrogen at step 2</a>. Students read the orbit's speed and period, then step 3: an accelerating charge radiates, and the atom would collapse in about 16 picoseconds. Ask what a theory has to add to stop that (step 4: Bohr's rule), and what Bohr could not explain (step 5). Collect: the worksheet for hydrogen, questions 2 to 4.</p>
   </div>
 
   <div class="act">
-    <h3>5. Mass that disappears</h3>
-    <p class="meta">The math, step 9 · Nuclides · NGSS HS-PS1-8</p>
-    <p>Open <a href="./#lab=math&amp;z=26&amp;step=9">iron-56 at step 9</a>: the five pieces of its binding energy, and the 0.5 u that is missing when the nucleus forms. Then <a href="./#lab=math&amp;z=1&amp;step=9">hydrogen</a>, where the formula fails and says so. Finish on the <a href="./#lab=nuclides&amp;z=26&amp;a=56">chart of the nuclides</a>: which way does iron's neighborhood decay? Collect: question 9 from each worksheet.</p>
+    <h3 data-i>5. Mass that disappears</h3>
+    <p data-i class="meta">The math, step 9 · Nuclides · NGSS HS-PS1-8</p>
+    <p data-i>Open <a href="./#lab=math&amp;z=26&amp;step=9">iron-56 at step 9</a>: the five pieces of its binding energy, and the 0.5 u that is missing when the nucleus forms. Then <a href="./#lab=math&amp;z=1&amp;step=9">hydrogen</a>, where the formula fails and says so. Finish on the <a href="./#lab=nuclides&amp;z=26&amp;a=56">chart of the nuclides</a>: which way does iron's neighborhood decay? Collect: question 9 from each worksheet.</p>
   </div>
 
   <div class="act">
-    <h3>6. Which electrons leave first?</h3>
-    <p class="meta">Build, Predict · AP Chemistry 1.5 and 1.8 · NGSS HS-PS1-1</p>
-    <p>Open <a href="./#lab=build&amp;z=26">Build on iron</a> and remove two electrons; the configuration readout shows which ones went. The <a href="./#challenge=A1.empty.6.w.Fe">iron challenge</a> asks it directly (question 4 of six). Collect: a turn-in code.</p>
+    <h3 data-i>6. Which electrons leave first?</h3>
+    <p data-i class="meta">Build, Predict · AP Chemistry 1.5 and 1.8 · NGSS HS-PS1-1</p>
+    <p data-i>Open <a href="./#lab=build&amp;z=26">Build on iron</a> and remove two electrons; the configuration readout shows which ones went. The <a href="./#challenge=A1.empty.6.w.Fe">iron challenge</a> asks it directly (question 4 of six). Collect: a turn-in code.</p>
   </div>
 
-  <h2>Collecting work without accounts</h2>
-  <p>Atom keeps progress in the browser only. For a class, use one of these:</p>
+  <h2 data-i>A first lesson, minute by minute</h2>
+  <p data-i>Forty-five minutes on iron, for a class that has never opened Atom. Everything students need is one link; the lesson is also built in, under <a href="./#lab=lessons">Lessons</a>, as "Atoms are mostly empty", with the same steps and an exit check at the end.</p>
+  <ul class="minutes">
+    <li data-i><b>0 to 5</b><span>Open <a href="./">the table</a> on the projector. Click iron. Scroll once: the cloud, then the light, then the empty space. Ask: if the nucleus were a marble on your desk, how far away would the electrons be? Take guesses and write three on the board.</span></li>
+    <li data-i><b>5 to 15</b><span>Students open <a href="./#lab=build&amp;z=26">Build on iron</a>. Add and remove protons, neutrons, and electrons and read what changes: the element, the isotope, the charge. Ask each pair to make a stable isotope, a radioactive one, and an ion, and to write the three names down.</span></li>
+    <li data-i><b>15 to 25</b><span>Open <a href="./#lab=math&amp;z=26&amp;step=9">The math at step 9</a>. Read the nucleus radius out loud, then step 1 for the atom's. Have students compute the ratio before Atom shows it, then scale the nucleus to a marble and check the board's guesses. A one-centimeter marble puts the electrons about 300 meters away, three football fields; the exit check asks the same with a one-meter nucleus, and the answer is 30 kilometers.</span></li>
+    <li data-i><b>25 to 35</b><span>Open <a href="./#lab=predict&amp;z=26">Predict on iron</a> and let students work through a few questions. Wrong answers come back on their own ten minutes later, so a student who misses one gets a second try without being told to.</span></li>
+    <li data-i><b>35 to 42</b><span>The exit check: the <a href="./#challenge=A1.empty.6.w.Fe">iron challenge</a>, six "common mistakes" questions in a fixed order, the same for everyone. Students press <b>Copy my turn-in code</b> under <a href="./#lab=you">You</a> and paste it into your form or LMS.</span></li>
+    <li data-i><b>42 to 45</b><span>Ask the class for the one thing that surprised them. The usual answers are the emptiness, that the electron has no path, and that the nucleus weighs less than its parts. All three are where the next lessons go.</span></li>
+  </ul>
+  <p data-i class="fine">If devices are short, the first fifteen minutes work on a projector alone; Build and Predict want one screen per pair.</p>
+
+  <h2 data-i>Five lesson paths with exit checks</h2>
+  <p data-i>The <a href="./#lab=lessons">Lessons</a> tab holds five paths of about 45 minutes each. Every step opens the lab it needs and is ticked when a student finishes it; the last step is an exit check, a fixed set of six questions, the same for the whole class, whose score is written into the student's turn-in code. The paths follow the standards table below.</p>
+  <table>
+    <thead><tr><th data-i>Lesson</th><th data-i>Minutes</th><th data-i>Standards</th><th data-i>What students do</th></tr></thead>
+    <tbody>
+      <tr><td data-i>Atoms are mostly empty</td><td>45</td><td>HS-PS1-1 · AP 1.5</td><td data-i>Build an atom, measure how empty it is, and meet the questions people get wrong.</td></tr>
+      <tr><td data-i>Where the electrons live</td><td>45</td><td>HS-PS1-1 · AP 1.5, 1.6</td><td data-i>Orbital boxes, the photoelectron spectrum, and reading a configuration off the peaks.</td></tr>
+      <tr><td data-i>Light from atoms</td><td>40</td><td>HS-PS4-3 · HS-ESS1-3 · AP 1.5</td><td data-i>Hear hydrogen's lines, compute one, and find five elements in the Sun's light.</td></tr>
+      <tr><td data-i>The nucleus and the mass that disappears</td><td>45</td><td>HS-PS1-8</td><td data-i>Carbon-14 on the chart of the nuclides, binding energy in iron, radioactive decay, and fusion.</td></tr>
+      <tr><td data-i>The table predicts</td><td>40</td><td>HS-PS1-1 · AP 1.7, 1.8</td><td data-i>Size, ions, and reactivity, read off the table before you look them up.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 data-i>Languages and reading support</h2>
+  <p data-i>Atom is in English and Spanish, with more languages on the way. The language menu is in the top bar of every page, and a link can carry the choice: <a href="./?lang=es">?lang=es</a> opens the site in Spanish, <a href="./?lang=es#lab=build&amp;z=26">?lang=es#lab=build&amp;z=26</a> opens a lab in Spanish. Element names, every lab, every question, and The math are translated; the measured data and the references stay as they are.</p>
+  <p data-i>Under <b>Learning settings</b> in the labs, three helps can be turned on for a student or a class, and each one stays on in that browser:</p>
   <ul>
-    <li><b>Turn-in codes.</b> In <a href="./#lab=you">You</a>, a student presses <b>Copy my turn-in code</b> and pastes it into your form or LMS. The code is one line with the date, the counts (explored, built, mastered, right answers, streak), and which elements, with a check digit and no name. Paste a class's codes into <b>Read the codes</b> on the same tab for a table.</li>
-    <li><b>Worksheets.</b> The math's <b>Worksheet</b> prints ten questions for the chosen element; the answer key is the last page, so print all but the last for students.</li>
-    <li><b>Print my progress.</b> One page with everything a student has done, from the You tab.</li>
-    <li><b>Shared computers.</b> <b>Save my progress</b> downloads (and copies) a small file; <b>Bring progress back</b> merges it in on the next machine.</li>
+    <li data-i><b>Simpler</b> rewrites the explanations in shorter sentences and plainer words, with the same facts and the same numbers. Good for younger readers and for students reading in their second language.</li>
+    <li data-i><b>Term help</b> underlines the science words. Tapping one shows a one-line meaning; in Spanish, it shows the English word too, so a bilingual class builds vocabulary in both languages at once. <b>Vocabulary</b> prints the words on the current page in both languages for a word wall or a glossary sheet.</li>
+    <li data-i><b>Listen</b> buttons read the explanations aloud with the device's own voice, in the page's language. Sound is off until a button is pressed.</li>
+  </ul>
+  <p data-i class="fine">Found a translation that reads wrong? Every string lives in <code>app/i18n/es.js</code> on GitHub, and a corrected line is a one-line pull request.</p>
+
+  <h2 data-i>Piloting Atom in your class</h2>
+  <p data-i>If you try Atom with a class, a short report helps the next teacher. The <a href="handout.html">one-page handout</a> prints what students and families need to know. After a lesson, the <a href="https://github.com/Normansrule/atom/issues/new?template=classroom-report.yml">classroom report form</a> on GitHub asks six questions: grade and subject, class size and devices, which labs or lesson you used, what worked, what did not, and anything that confused students. Nothing about students goes in it; it is about the software. Reports are read, and they shape what gets built next.</p>
+
+  <h2 data-i>Collecting work without accounts</h2>
+  <p data-i>Atom keeps progress in the browser only. For a class, use one of these:</p>
+  <ul>
+    <li data-i><b>Turn-in codes.</b> In <a href="./#lab=you">You</a>, a student presses <b>Copy my turn-in code</b> and pastes it into your form or LMS. The code is one line with the date, the counts (explored, built, mastered, right answers, streak), which elements, and which lessons were finished with their exit-check scores, with a check digit and no name. Paste a class's codes into <b>Read the codes</b> on the same tab for a table.</li>
+    <li data-i><b>Worksheets.</b> The math's <b>Worksheet</b> prints ten questions for the chosen element; the answer key is the last page, so print all but the last for students.</li>
+    <li data-i><b>Print my progress.</b> One page with everything a student has done, from the You tab.</li>
+    <li data-i><b>Shared computers.</b> <b>Save my progress</b> downloads (and copies) a small file; <b>Bring progress back</b> merges it in on the next machine.</li>
   </ul>
 
-  <h2>Standards</h2>
-  <p>Where each lab lands. NGSS performance expectations are quoted from the standards; AP Chemistry topic numbers follow the College Board's course and exam description.</p>
+  <h2 data-i>Standards</h2>
+  <p data-i>Where each lab lands. NGSS performance expectations are quoted from the standards; AP Chemistry topic numbers follow the College Board's course and exam description.</p>
   <table>
-    <thead><tr><th>Lab</th><th>NGSS</th><th>AP Chemistry</th></tr></thead>
+    <thead><tr><th data-i>Lab</th><th>NGSS</th><th data-i>AP Chemistry</th></tr></thead>
     <tbody>
-      <tr><td>Build; Predict; Trends; the table's lenses</td><td><b>HS-PS1-1</b> Use the periodic table as a model to predict the relative properties of elements based on the patterns of electrons in the outermost energy level of atoms.</td><td>1.5 Atomic structure and electron configuration; 1.7 Periodic trends; 1.8 Valence electrons and ionic compounds</td></tr>
-      <tr><td>Electron energies (PES); The math, step 7</td><td>HS-PS1-1</td><td><b>1.6 Photoelectron spectroscopy</b>; 1.5</td></tr>
-      <tr><td>Nuclides; Calculate (decay); Workbench (fusion); The math, step 9; the nucleus scene</td><td><b>HS-PS1-8</b> Develop models to illustrate the changes in the composition of the nucleus of the atom and the energy released during the processes of fission, fusion, and radioactive decay.</td><td>(outside the AP Chemistry framework; AP Physics 2 covers nuclear physics)</td></tr>
-      <tr><td>Hear; The Sun; Calculate (light); The math, steps 4 and 5; the light scene</td><td><b>HS-PS4-3</b> Evaluate the claims, evidence, and reasoning behind the idea that electromagnetic radiation can be described either by a wave model or a particle model, and that for some situations one model is more useful than the other.</td><td>1.5 (line spectra as evidence for energy levels)</td></tr>
-      <tr><td>The Sun; the Origins lens; the Missions "Light a star" and "Forge gold"</td><td><b>HS-ESS1-3</b> Communicate scientific ideas about the way stars, over their life cycle, produce elements.</td><td></td></tr>
-      <tr><td>Build: a molecule</td><td>HS-PS1-1; HS-PS1-3 (bulk properties from the forces between particles)</td><td>2.1 Types of chemical bonds; 2.5 Lewis diagrams; 2.7 VSEPR and bond hybridization</td></tr>
-      <tr><td>The math, steps 1 to 3 and 8 (Coulomb's law, orbits, relativity)</td><td>HS-PS2-4 (Coulomb's law) and HS-PS4-3</td><td>1.5 and 1.7, with the reasoning behind them</td></tr>
+      <tr><td data-i>Build; Predict; Trends; the table's lenses</td><td data-i><b>HS-PS1-1</b> Use the periodic table as a model to predict the relative properties of elements based on the patterns of electrons in the outermost energy level of atoms.</td><td data-i>1.5 Atomic structure and electron configuration; 1.7 Periodic trends; 1.8 Valence electrons and ionic compounds</td></tr>
+      <tr><td data-i>Electron energies (PES); The math, step 7</td><td>HS-PS1-1</td><td data-i><b>1.6 Photoelectron spectroscopy</b>; 1.5</td></tr>
+      <tr><td data-i>Nuclides; Calculate (decay); Workbench (fusion); The math, step 9; the nucleus scene</td><td data-i><b>HS-PS1-8</b> Develop models to illustrate the changes in the composition of the nucleus of the atom and the energy released during the processes of fission, fusion, and radioactive decay.</td><td data-i>(outside the AP Chemistry framework; AP Physics 2 covers nuclear physics)</td></tr>
+      <tr><td data-i>Hear; The Sun; Calculate (light); The math, steps 4 and 5; the light scene</td><td data-i><b>HS-PS4-3</b> Evaluate the claims, evidence, and reasoning behind the idea that electromagnetic radiation can be described either by a wave model or a particle model, and that for some situations one model is more useful than the other.</td><td data-i>1.5 (line spectra as evidence for energy levels)</td></tr>
+      <tr><td data-i>The Sun; the Origins lens; the Missions "Light a star" and "Forge gold"</td><td data-i><b>HS-ESS1-3</b> Communicate scientific ideas about the way stars, over their life cycle, produce elements.</td><td></td></tr>
+      <tr><td data-i>Build: a molecule</td><td data-i>HS-PS1-1; HS-PS1-3 (bulk properties from the forces between particles)</td><td data-i>2.1 Types of chemical bonds; 2.5 Lewis diagrams; 2.7 VSEPR and bond hybridization</td></tr>
+      <tr><td data-i>The math, steps 1 to 3 and 8 (Coulomb's law, orbits, relativity)</td><td data-i>HS-PS2-4 (Coulomb's law) and HS-PS4-3</td><td data-i>1.5 and 1.7, with the reasoning behind them</td></tr>
     </tbody>
   </table>
 
-  <h2>What is computed and what is measured</h2>
-  <p>Atom tells students which is which, and the labs are built to show the seams. Electron clouds are computed from the Schrödinger equation for one electron with Slater's effective charge; the measured first ionization energies are from NIST, and <a href="./#lab=trends&amp;prop=ie">Trends</a> draws Slater's estimate against them so the gap is visible. The binding energies in step 9 use the liquid-drop formula where no measurement exists and the AME2020 measured value where one does, and the step says so. Spectral lines are NIST measurements; hydrogen's are computed from the Rydberg formula. Every constant is CODATA 2022, and the full source list is at the bottom of <a href="./#sourceList">the main page</a>.</p>
+  <h2 data-i>What is computed and what is measured</h2>
+  <p data-i>Atom tells students which is which, and the labs are built to show the seams. Electron clouds are computed from the Schrödinger equation for one electron with Slater's effective charge; the measured first ionization energies are from NIST, and <a href="./#lab=trends&amp;prop=ie">Trends</a> draws Slater's estimate against them so the gap is visible. The binding energies in step 9 use the liquid-drop formula where no measurement exists and the AME2020 measured value where one does, and the step says so. Spectral lines are NIST measurements; hydrogen's are computed from the Rydberg formula. Every constant is CODATA 2022, and the full source list is at the bottom of <a href="./#sourceList">the main page</a>.</p>
 
-  <h2>Privacy</h2>
-  <p>Atom makes no network requests after it loads and keeps no accounts. Progress, the theme, and the picture-quality choice live in the student's own browser. A link or a turn-in code carries only what it shows. The code is open: <a href="https://github.com/Normansrule/atom">github.com/Normansrule/atom</a>, MIT License.</p>
+  <h2 data-i>Privacy</h2>
+  <p data-i>Atom makes no network requests after it loads and keeps no accounts. Progress, the theme, and the picture-quality choice live in the student's own browser. A link or a turn-in code carries only what it shows. The code is open: <a href="https://github.com/Normansrule/atom">github.com/Normansrule/atom</a>, MIT License.</p>
 
-  <p><a class="btn" href="./">Open Atom</a> <a class="btn" href="./#lab=pes&amp;z=11">Start with activity 1</a></p>
-  <p class="fine">Made by Thomas J. Norman, California State University, Dominguez Hills. Corrections and requests are welcome as issues on GitHub.</p>
+  <p><a data-i class="btn" href="./">Open Atom</a> <a data-i class="btn" href="./#lab=pes&amp;z=11">Start with activity 1</a></p>
+  <p data-i class="fine">Made by Thomas J. Norman, California State University, Dominguez Hills. Corrections and requests are welcome as issues on GitHub.</p>
 </main>
 </body>
 </html>

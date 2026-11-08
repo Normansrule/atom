@@ -4,11 +4,12 @@
    release; a new release replaces the whole set on its next load. The
    version below is checked against VERSION by scripts/smoke.mjs, so a
    release cannot ship with a stale cache name. */
-var VERSION = "1.6.0";
+var VERSION = "1.7.0";
 var CACHE = "atom-" + VERSION;
 var CORE = [
-  "./", "index.html", "404.html", "teachers.html", "manifest.webmanifest",
+  "./", "index.html", "404.html", "teachers.html", "handout.html", "manifest.webmanifest",
   "assets/site.css", "assets/atom-labs.css",
+  "assets/atom-i18n.js", "assets/i18n/en.js", "assets/i18n/es.js",
   "assets/atom-data.js", "assets/atom-engines.js", "assets/atom-ptable.js", "assets/atom-labs.js", "assets/site.js",
   "assets/fonts/archivo-var.woff2",
   "assets/favicon-64.png", "assets/apple-touch-icon.png", "assets/icon-192.png", "assets/icon-512.png"

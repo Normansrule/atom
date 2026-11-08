@@ -2,6 +2,28 @@
 
 Atom follows [semantic versioning](https://semver.org). The newest release is at the top.
 
+## [1.7.0] - 2026-11-07
+
+Atom in Spanish, from the first square to the last citation, with a language engine built for nineteen more; four learning helps for a classroom (lessons with exit checks, read-aloud, term help in two languages, a simpler reading level); and a kit for piloting Atom in a class: a one-page handout, a first lesson written out minute by minute, and a report form.
+
+### Languages
+- **Spanish, all of it.** Every element name, every lab, every question and its explanation, every step of The math, the cards, the missions, the workbench, the chamber, the site, the teacher guide, the handout, and the 404 page: 3,380 strings and 41,700 words, written in the tú form with the numbers in Mexican Spanish notation. Measured data and the references stay as they are. The language menu is in the top bar of every page; `?lang=es` opens any link in Spanish (`?lang=es#lab=build&z=26`), and the choice is kept on the device. Switching takes one reload and nothing else; progress, missions, and settings carry over. The Mac, Windows, and Linux apps carry the packs beside the page.
+- **Built to add languages.** Every sentence Atom shows goes through one template function with plurals and selects (`{n, plural, one {# proton} other {# protons}}`), element names and their articles come from the pack, numbers are formatted for the pack's locale, and a pack declares its script, direction, and voice, so right-to-left languages and non-Latin scripts need no code. Twenty languages are declared; the next nine (Chinese, Hindi, Arabic, French, Bengali, Portuguese, Russian, Urdu, Indonesian) are in progress for 1.8.0 and the last ten for 1.9.0.
+- **Checked by machine.** `scripts/i18n/` extracts the English catalog from the pages and checks every pack against it: a missing or stale key, a placeholder that does not match, a tag that does not close, or an untranslated sentence fails the check, and CI runs it on every push along with a test that the committed catalog matches the pages. A render test in Spanish compares every captured text with the English capture and fails on any English sentence, and on any short English fragment ("0 of 3", "low / medium / high") inside a translated one.
+
+### Learning helps
+- **Lessons.** A new tab in the labs with five paths of about 45 minutes each (atoms are mostly empty; where the electrons live; light from atoms; the nucleus and the mass that disappears; the table predicts), mapped to NGSS HS-PS1-1, HS-PS1-8, HS-PS4-3, and HS-ESS1-3 and to AP Chemistry units 1 and 2. Each step opens the lab it needs and is marked done when the student finishes it; the last step is an exit check, a fixed set of six questions, the same for the whole class, whose score goes into the student's turn-in code.
+- **Listen.** A button after every explanation reads it aloud with the device's own voice, in the page's language. Nothing plays until it is pressed.
+- **Term help.** Underlines the science words; a tap or a hover shows a one-line meaning, and in Spanish the English word beside it, so a bilingual class builds vocabulary in both languages at once. **Vocabulary** prints the words on the current page in both languages for a word wall. 109 terms.
+- **Simpler.** A second telling of the long explanations in shorter sentences and plainer words, with the same facts and the same numbers: 131 passages, in both languages. For younger readers and for students reading in their second language.
+- The three settings sit beside the labs' tabs and stay on in that browser.
+
+### For teachers
+- **A one-page handout** at `handout.html`, for students, teachers, and families, with a QR code to the site; print it in English or switch the language first.
+- **A first lesson, minute by minute**, on iron, in the teacher guide, with what to ask and what to collect; it is also built into Lessons as "Atoms are mostly empty."
+- **A classroom report form** (a GitHub issue template) with six questions about the software and none about students, so one teacher's pilot helps the next.
+- The teacher guide gains sections on the five lesson paths, the languages and reading supports, and piloting Atom in a class; the Read the codes table shows the lesson exit scores.
+
 ## [1.6.0] - 2026-11-07
 
 A release for the classroom: two new labs (electron energies and the Sun's light), a guide for teachers mapped to the standards, worksheets with answer keys, turn-in codes that need no accounts, a website that works with no connection at all, and tests that check Atom's numbers against outside data.

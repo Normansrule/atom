@@ -3,3 +3,6 @@ contact_links:
   - name: Security problem
     url: https://github.com/normansrule/atom/security/advisories/new
     about: Please report security problems privately.
+  - name: Teacher guide
+    url: https://normansrule.github.io/atom/teachers.html
+    about: A link for every lab, a first lesson minute by minute, worksheets, turn-in codes, and the standards map.

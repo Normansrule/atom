@@ -36,7 +36,7 @@ if (!app.requestSingleInstanceLock()) {
     try { fs.writeFileSync(stateFile(), JSON.stringify({ ...win.getNormalBounds(), maximized: win.isMaximized() })); } catch { /* not worth failing over */ }
   };
   const openExternal = (url) => { if (EXTERNAL.test(url)) shell.openExternal(url); };
-  const isOwnPage = (url) => url.split("#")[0] === PAGE_URL;
+  const isOwnPage = (url) => url.split("#")[0].split("?")[0] === PAGE_URL;   // the page may carry ?lang=; a reload keeps it
 
   function createWindow() {
     const s = readState();

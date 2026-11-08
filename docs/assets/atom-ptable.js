@@ -52,7 +52,7 @@ var PTable=(function(){
   }
   function tileFormula(u){ return u[2].length<=7 ? u[2] : (u[3].length<=9 ? u[3] : u[2]); }
   function icon(name, cls){
-    return '<svg class="'+(cls||"pt-ic")+'" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="'+(ICONS[name]||"")+'"/></svg>';
+    return "<svg class=\""+((((((cls||"pt-ic"))))))+"\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\""+((((((ICONS[name]||""))))))+"\"/>"+"</svg>";
   }
   function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 
@@ -61,7 +61,7 @@ var PTable=(function(){
     var host=opt.host, D=host.ownerDocument||document;
     var wrap=D.createElement("div"); wrap.className="pt-wrap";
     var grid=D.createElement("div"); grid.className="pt-grid"; grid.setAttribute("role","group");
-    grid.setAttribute("aria-label","The periodic table. Arrow keys move between elements; Enter opens one.");
+    grid.setAttribute("aria-label",TT("The periodic table. Arrow keys move between elements; Enter opens one."));
     var cv=D.createElement("canvas"); cv.className="pt-gl"; cv.setAttribute("aria-hidden","true");
     wrap.appendChild(cv); wrap.appendChild(grid);
     if(opt.slot){ opt.slot.classList.add("pt-slot"); grid.appendChild(opt.slot); }
@@ -74,10 +74,10 @@ var PTable=(function(){
       var f=tileFormula(u), cn=u[2]?(u[3]||u[2]):"";
       /* the name starts with exactly what the square shows (number, symbol, formula),
          so speech input and screen readers agree with the eye (WCAG 2.5.3) */
-      b.setAttribute("aria-label", Z+" "+e[1]+(f?" "+f:"")+": "+e[2]+". You meet it in "+u[1]+(cn&&cn!==u[1]&&cn!==f?", "+cn:"")+".");
+      b.setAttribute("aria-label", TT("{Z} {e}{f}: {e2}. You meet it in {u}{cn}.",{Z:Z,e:e[1],f:(f?" "+f:""),e2:e[2],u:u[1],cn:(cn&&cn!==u[1]&&cn!==f?", "+cn:"")}));
       var om=ORIGIN[Z-1], dom=AtomWorld.dominant(om), ob='', fr=FRONTIER[Z-1][0], td='';
-      for(var ok in ORIGIN_KINDS) if(om[ok]) ob+='<i style="flex-basis:'+(om[ok]*100).toFixed(0)+'%;background:var(--o-'+ok+')"></i>';
-      fr.forEach(function(tg){ td+='<i style="background:var(--t-'+tg+')"></i>'; });
+      for(var ok in ORIGIN_KINDS) if(om[ok]) ob+="<i style=\"flex-basis:"+((((om[ok]*100).toFixed(0))))+"%;background:var(--o-"+(((ok)))+")\"></i>";
+      fr.forEach(function(tg){ td+="<i style=\"background:var(--t-"+((tg))+")\"></i>"; });
       b.style.setProperty("--orig","var(--o-"+dom+")");
       b.innerHTML='<span class="pt-z">'+Z+'</span> '+icon(u[0])+'<span class="pt-s">'+e[1]+'</span>'+   /* the spaces keep "1 H H₂O" readable as text; a grid ignores them */
         (f?' <span class="pt-f">'+f+'</span>':'')+'<span class="pt-orig" aria-hidden="true">'+ob+'</span>'+
@@ -188,7 +188,7 @@ var PTable=(function(){
       for(z=1;z<=118;z++){
         var tgt=(z===api.hover?1:(z===api.sel?0.55:0)), p=pop[z];
         if(Math.abs(tgt-p)>0.002){ pop[z]=p+(tgt-p)*Math.min(1,dt*0.014); popping.push(z);
-          tiles[z].style.transform=pop[z]>0.004?"scale("+(1+0.16*pop[z]).toFixed(4)+")":""; tiles[z].style.zIndex=pop[z]>0.01?3:""; }
+          tiles[z].style.transform=pop[z]>0.004?TT("scale({v})",{v:(1+0.16*pop[z]).toFixed(4)}):""; tiles[z].style.zIndex=pop[z]>0.01?3:""; }
         else if(p!==tgt){ pop[z]=tgt; popping.push(z); }
       }
       var th=opt.theme(), w=api.cw, h=api.ch;
@@ -225,27 +225,27 @@ var PTable=(function(){
   }
 
   /* ------------------------------------------------------------------ the element, in full */
-  function num(x, d){ return x===null||x===undefined||isNaN(x) ? "unknown" : (+x).toLocaleString("en-US",{maximumFractionDigits:d===undefined?2:d}); }
+  function num(x, d){ return x===null||x===undefined||isNaN(x) ? "unknown" : AtomI18N.N(x, d===undefined?2:d, true); }
   function tempStr(K){ if(K===null||K===undefined) return "unknown"; return num(K,1)+" K ("+num(K-273.15,1)+" °C)"; }
   function yearStr(e){ var y=e[12]; if(y===null) return e[13]; if(y<0) return e[13].charAt(0).toUpperCase()+e[13].slice(1); return y+", "+e[13]; }
   function sup(n){ var m={"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
     return String(n).split("").map(function(c){ return m[c]||c; }).join(""); }
   function abundanceBar(ppm, label){
-    if(ppm===null||ppm===undefined) return '<div class="pd-ab"><span>'+label+'</span><b>not measured</b></div>';
+    if(ppm===null||ppm===undefined) return "<div class=\"pd-ab\">"+TT("<span>{label}</span><b>not measured</b>",{label:label})+"</div>";
     var lg=Math.log10(Math.max(ppm,1e-9)), w=Math.max(2,Math.min(100,(lg+9)/(6+9)*100));
-    var txt=ppm>=1?num(ppm,ppm<10?2:0)+" ppm":(ppm*1000>=1?num(ppm*1000,2)+" ppb":"1 part in 10"+sup(Math.round(-lg+6)));
-    return '<div class="pd-ab"><span>'+label+'</span><i style="--w:'+w.toFixed(1)+'%"></i><b>'+txt+'</b></div>';
+    var txt=ppm>=1?num(ppm,ppm<10?2:0)+" ppm":(ppm*1000>=1?num(ppm*1000,2)+" ppb":TT("1 part in 10{sup}",{sup:sup(Math.round(-lg+6))}));
+    return "<div class=\"pd-ab\">"+"<span>"+(((((label)))))+"</span><i style=\"--w:"+(((((w.toFixed(1))))))+"%\"></i><b>"+(((((txt)))))+"</b>"+"</div>";
   }
   /* a shell map: where the electrons are counted, not where they are */
   function bohr(Z){
     /* each shell is its own small picture, turned as a whole by the
        compositor: spinning a group inside one SVG made the browser lay the
        card out again on every frame, which is what made the card stutter */
-    var sh=shellsOf(Z), n=sh.length, R0=13, R1=92, VB=' viewBox="-100 -100 200 200"', rings=[], orbits=[];
+    var sh=shellsOf(Z), n=sh.length, R0=13, R1=92, VB=" viewBox=\"-100 -100 200 200\"", rings=[], orbits=[];
     for(var i=0;i<n;i++){
-      var r=R0+(R1-R0)*(i+1)/n, k=sh[i], dur=(6+i*5), o=['<i class="pd-orbit" style="animation-duration:'+dur+'s"><svg'+VB+'>'];
-      rings.push('<circle class="pd-ring" r="'+r.toFixed(1)+'"/>');
-      for(var j=0;j<k;j++){ var a=j/k*6.2832+i*0.7; o.push('<circle class="pd-e" r="2.6" cx="'+(r*Math.cos(a)).toFixed(1)+'" cy="'+(r*Math.sin(a)).toFixed(1)+'"/>'); }
+      var r=R0+(R1-R0)*(i+1)/n, k=sh[i], dur=(6+i*5), o=["<i class=\"pd-orbit\" style=\"animation-duration:"+(((((dur)))))+"s\"><svg"+(((((VB)))))+">"];
+      rings.push("<circle class=\"pd-ring\" r=\""+(((r.toFixed(1))))+"\"/>");
+      for(var j=0;j<k;j++){ var a=j/k*6.2832+i*0.7; o.push("<circle class=\"pd-e\" r=\"2.6\" cx=\""+((((r*Math.cos(a)).toFixed(1))))+"\" cy=\""+((((r*Math.sin(a)).toFixed(1))))+"\"/>"); }
       o.push('</svg></i>'); orbits.push(o.join(""));
     }
     return '<div class="pd-bohr" aria-hidden="true"><svg'+VB+'><circle class="pd-nuc" r="9"/>'+rings.join("")+'</svg>'+orbits.join("")+'</div>';
@@ -272,73 +272,55 @@ var PTable=(function(){
   }
   /* the card is five short tabs instead of one long scroll; the tab you were
      reading stays open as you move from element to element */
-  var PD_TABS=[["overview","Overview"],["electrons","Electrons"],["nucleus","Nucleus"],["origin","Origin"],["future","Future"]], pdTab="overview";
+  var PD_TABS=[["overview",TT("Overview")],["electrons",TT("Electrons")],["nucleus",TT("Nucleus")],["origin",TT("Origin")],["future",TT("Future")]], pdTab="overview";
   function detailTab(t){ if(t&&PD_TABS.some(function(x){ return x[0]===t; })) pdTab=t; return pdTab; }
   function detail(Z){
     var e=ELEMENTS[Z-1], u=USES[Z-1], v=valence(Z), A=e[16], N=A-Z, cat=CAT[e[5]][0], o=[], head=o, SEC={overview:[],electrons:[],nucleus:[],origin:[],future:[]};
-    var blk=blockOf(Z), grp=e[6]?"group "+e[6]:(e[5]==="ln"?"lanthanide":"actinide");
-    o.push('<header class="pd-head"><div class="pd-sym" style="--cat:'+CAT[e[5]][1]+'"><span>'+Z+'</span><b>'+e[1]+'</b></div>');
-    o.push('<div><h2 class="pd-name" id="pdName">'+e[2]+'</h2><p class="pd-kind">'+cat+' · '+blk+'-block · '+grp+', period '+e[7]+' · '+e[8]+' at room temperature</p></div></header>');
+    var blk=blockOf(Z), grp=e[6]?TT("group {n}",{n:e[6]}):(e[5]==="ln"?TT("lanthanide",{}):TT("actinide",{}));
+    o.push("<header class=\"pd-head\">"+"<div class=\"pd-sym\" style=\"--cat:"+(((CAT[e[5]][1])))+"\"><span>"+(((Z)))+"</span><b>"+(((e[1])))+"</b>"+"</div>");
+    o.push("<div>"+"<h2 class=\"pd-name\" id=\"pdName\">"+(e[2])+"</h2>"+"<p class=\"pd-kind\">"+TT("{cat} · {blk}-block · {grp}, period {e} · {e2} at room temperature",{cat:cat,blk:blk,grp:grp,e:e[7],e2:({solid:TT("solid",{}),liquid:TT("liquid",{}),gas:TT("gas",{})}[e[8]]||e[8])})+"</p>"+"</div>"+"</header>");
     o=SEC.overview;
-    o.push('<div class="pd-meet">'+icon(u[0],"pd-ic")+'<div><span>You meet it in</span><b>'+esc(u[1])+'</b></div>'+
-      (u[2]?'<div><span>Best-known compound</span><b>'+u[2]+'</b>'+(u[3]&&u[3]!==u[2]?'<i>'+esc(u[3])+'</i>':'')+'</div>':
-        '<div><span>Compounds</span><b>'+(u[3]?esc(u[3]):(e[5]==="ng"?"almost none":"none known"))+'</b></div>')+'</div>');
+    o.push("<div class=\"pd-meet\">"+(icon(u[0],"pd-ic"))+"<div>"+TT("<span>You meet it in</span><b>{u}</b>",{u:esc(u[1])})+"</div>"+((u[2]?"<div>"+TT("<span>Best-known compound</span><b>{u}</b>{u2}",{u:u[2],u2:(u[3]&&u[3]!==u[2]?'<i>'+esc(u[3])+'</i>':'')})+"</div>":
+        "<div>"+TT("<span>Compounds</span><b>{u}</b>",{u:(u[3]?esc(u[3]):(e[5]==="ng"?TT("almost none"):TT("none known")))})+"</div>"))+"</div>");
     /* where it was made, and what it is building */
     var om=ORIGIN[Z-1], ks=Object.keys(om).sort(function(a,b){ return om[b]-om[a]; }); o=SEC.origin;
-    o.push('<section class="pd-sec pd-origin"><h3>Where it was made</h3><div class="pd-obar" role="img" aria-label="'+
-      ks.map(function(k){ return Math.round(om[k]*100)+" percent "+ORIGIN_KINDS[k].name.toLowerCase(); }).join(", ")+'">'+
-      ks.map(function(k){ return '<i style="flex-basis:'+(om[k]*100).toFixed(0)+'%;background:var(--o-'+k+')"></i>'; }).join('')+'</div>'+
-      '<ul class="pd-olist">'+ks.map(function(k){ return '<li><i style="background:var(--o-'+k+')"></i>'+ORIGIN_KINDS[k].name+' <b>'+Math.round(om[k]*100)+'%</b></li>'; }).join('')+'</ul>'+
-      (ORIGIN_NOTE[Z]?'<p>'+ORIGIN_NOTE[Z]+'</p>':'')+
-      '<p class="pd-fine">Approximate shares of the Solar System&rsquo;s supply, after Johnson (2019). Neutron-star mergers stand in for all rapid neutron capture; rare supernovae may make some of it.</p></section>');
+    o.push("<section class=\"pd-sec pd-origin\">"+"<h3>"+((TT("Where it was made")))+"</h3>"+"<div class=\"pd-obar\" role=\"img\" aria-label=\""+(((ks.map(function(k){ return Math.round(om[k]*100)+" percent "+ORIGIN_KINDS[k].name.toLowerCase(); }).join(", "))))+"\">"+(((ks.map(function(k){ return "<i style=\"flex-basis:"+((((om[k]*100).toFixed(0))))+"%;background:var(--o-"+(((k)))+")\"></i>"; }).join(''))))+"</div>"+"<ul class=\"pd-olist\">"+(((ks.map(function(k){ return "<li>"+"<i style=\"background:var(--o-"+((k))+")\"></i>"+((ORIGIN_KINDS[k].name))+" <b>"+((Math.round(om[k]*100)))+"%</b>"+"</li>"; }).join(''))))+"</ul>"+((((ORIGIN_NOTE[Z]?'<p>'+ORIGIN_NOTE[Z]+'</p>':''))))+"<p class=\"pd-fine\">"+((TT("Approximate shares of the Solar System&rsquo;s supply, after Johnson (2019). Neutron-star mergers stand in for all rapid neutron capture; rare supernovae may make some of it.")))+"</p>"+"</section>");
     var fr=FRONTIER[Z-1]; o=SEC.future;
-    o.push('<section class="pd-sec pd-future"><h3>Building the future</h3>'+
-      (fr[0].length?'<p class="pd-tags">'+fr[0].map(function(t){ return '<span style="--tc:var(--t-'+t+')">'+TECH_KINDS[t].name+'</span>'; }).join('')+'</p>':'')+
-      '<p>'+esc(fr[1])+(fr[3]?' <a class="pd-src" href="'+fr[3]+'" target="_blank" rel="noopener">Source</a>':'')+'</p>'+
-      '<div class="pd-problem"><span>Open problem</span><p>'+esc(fr[2])+'</p></div></section>');
+    o.push("<section class=\"pd-sec pd-future\">"+"<h3>"+TT("Building the future")+"</h3>"+((fr[0].length?'<p class="pd-tags">'+fr[0].map(function(t){ return "<span style=\"--tc:var(--t-"+((t))+")\">"+((TECH_KINDS[t].name))+"</span>"; }).join('')+'</p>':''))+"<p>"+(esc(fr[1]))+((fr[3]?TT(" <a class=\"pd-src\" href=\"{fr}\" target=\"_blank\" rel=\"noopener\">Source</a>",{fr:fr[3]}):''))+"</p>"+"<div class=\"pd-problem\">"+TT("<span>Open problem</span>")+"<p>"+(esc(fr[2]))+"</p>"+"</div>"+"</section>");
     /* the electrons */
     o=SEC.electrons;
-    o.push('<section class="pd-sec"><h3>Its electrons</h3><div class="pd-elec">'+bohr(Z)+'<div>');
+    o.push("<section class=\"pd-sec\">"+"<h3>"+TT("Its electrons")+"</h3>"+"<div class=\"pd-elec\">"+(bohr(Z))+"<div>");
     o.push('<p class="pd-config">'+configStr(Z).replace(/([spdf])(\d+)/g,"$1<sup>$2</sup>")+'</p>');
-    o.push('<p class="pd-shells">'+Z+' electron'+(Z>1?'s':'')+' in shells of '+shellsOf(Z).join(", ")+'</p>'+boxes(Z));
-    if(EXCEPT_WHY[Z]) o.push('<p class="pd-note">It breaks the filling rule: '+EXCEPT_WHY[Z]+'.</p>');
+    o.push("<p class=\"pd-shells\">"+TT("{Z} electron{Z2} in shells of {shellsOf}",{Z:Z,Z2:(Z>1?'s':''),shellsOf:shellsOf(Z).join(", ")})+"</p>"+(boxes(Z)));
+    if(EXCEPT_WHY[Z]) o.push("<p class=\"pd-note\">"+TT("It breaks the filling rule: {EXCEPT_WHY}.",{EXCEPT_WHY:EXCEPT_WHY[Z]})+"</p>");
     o.push('</div></div>');
     var S=Z-v.Ze;
-    o.push('<p>The electron that puts it in the '+blk+' block sits in a <b>'+orbName(v,true)+'</b> orbital'+(v.full?', a filled subshell, which is perfectly round':'')+
-      '. The inner electrons shield it from the nucleus, so it feels a smaller charge (Slater&rsquo;s rules, an estimate):</p>');
-    o.push('<p class="pd-eq">Z<sub>eff</sub> = Z − S = '+Z+' − '+num(S,2)+' = '+num(v.Ze,2)+'</p>');
-    o.push('<dl class="pd-dl"><div><dt>Atomic radius</dt><dd>'+(ARAD[Z-1]?ARAD[Z-1]+' pm':'not measured')+'</dd></div><div><dt>Atomic mass</dt><dd>'+(e[4]?"["+e[3]+"]":num(e[3],4))+' u</dd></div></dl></section>');
+    o.push("<p>"+TT("The electron that puts it in the {blk} block sits in a <b>{orbName}</b> orbital{v}. The inner electrons shield it from the nucleus, so it feels a smaller charge (Slater&rsquo;s rules, an estimate):",{blk:blk,orbName:orbName(v,true),v:(v.full?TT(", a filled subshell, which is perfectly round"):'')})+"</p>");
+    o.push("<p class=\"pd-eq\">"+TT("Z<sub>eff</sub> = Z − S = {Z} − {num} = {num2}",{Z:Z,num:num(S,2),num2:num(v.Ze,2)})+"</p>");
+    o.push("<dl class=\"pd-dl\">"+"<div>"+"<dt>"+TT("Atomic radius")+"</dt>"+"<dd>"+((ARAD[Z-1]?ARAD[Z-1]+' pm':TT("not measured")))+"</dd>"+"</div>"+"<div>"+"<dt>"+TT("Atomic mass")+"</dt>"+"<dd>"+((e[4]?"["+e[3]+"]":num(e[3],4)))+" u"+"</dd>"+"</div>"+"</dl>"+"</section>");
     /* the nucleus */
     o=SEC.nucleus;
     var T=semfTerms(Z,A), meas=BA_MEAS[Z+"-"+A], Rn=1.2*Math.pow(A,1/3), magicZ=isMagic(Z), magicN=isMagic(N);
-    o.push('<section class="pd-sec"><h3>Its nucleus</h3><p>'+(Z===1&&A===1?'One proton, nothing else.':Z+' protons and '+N+' neutrons'+(e[4]?' in its longest-lived form':' in its most common form')+', '+e[1]+'-'+A+'.')+
-      (magicZ&&magicN?' Both numbers are <b>magic</b>: a doubly closed nuclear shell.':(magicZ||magicN?' '+(magicZ?'Its proton':'Its neutron')+' count is a <b>magic number</b>, a closed nuclear shell.':''))+'</p>');
-    o.push('<p class="pd-eq">R = r<sub>0</sub>A<sup>1/3</sup> = 1.2 fm <span class="pd-x">×</span> '+A+'<sup>1/3</sup> = '+num(Rn,2)+' fm</p>');
+    o.push("<section class=\"pd-sec\">"+"<h3>"+TT("Its nucleus")+"</h3>"+"<p>"+((Z===1&&A===1?TT("One proton, nothing else."):TT("{Z} protons and {N} neutrons{e}, {e2}-{A}.",{Z:Z,N:N,e:(e[4]?TT(" in its longest-lived form"):TT(" in its most common form")),e2:e[1],A:A})))+((magicZ&&magicN?TT(" Both numbers are <b>magic</b>: a doubly closed nuclear shell."):(magicZ||magicN?TT(" {magicZ} count is a <b>magic number</b>, a closed nuclear shell.",{magicZ:(magicZ?TT("Its proton"):TT("Its neutron"))}):'')))+"</p>");
+    o.push("<p class=\"pd-eq\">"+TT("R = r<sub>0</sub>A<sup>1/3</sup> = 1.2 fm <span class=\"pd-x\">×</span> {A}<sup>1/3</sup> = {num} fm",{A:A,num:num(Rn,2)})+"</p>");
     if(A>1){
       o.push('<p class="pd-eq pd-semf">B = a<sub>V</sub>A − a<sub>S</sub>A<sup>2/3</sup> − a<sub>C</sub>Z(Z−1)/A<sup>1/3</sup> − a<sub>A</sub>(A−2Z)²/A '+(T.d>=0?'+':'−')+' δ<br>= '+
         num(T.v,1)+' − '+num(T.s,1)+' − '+num(T.c,1)+' − '+num(T.a,1)+' '+(T.d>=0?'+':'−')+' '+num(Math.abs(T.d),1)+' = <b>'+num(T.B,1)+' MeV</b></p>');
-      o.push('<p>That is '+num(T.B/A,2)+' MeV per nucleon from the liquid-drop formula'+(meas?'; measured: '+num(meas,3)+' MeV':'')+
-        '. Building it released that energy, so the nucleus weighs '+num(100*T.B/(A*QM.C.u),3)+'% less than its loose parts: E = mc².</p>');
+      o.push("<p>"+TT("That is {num} MeV per nucleon from the liquid-drop formula{meas}. Building it released that energy, so the nucleus weighs {num2}% less than its loose parts: E = mc².",{num:num(T.B/A,2),meas:(meas?TT("; measured: {num} MeV",{num:num(meas,3)}):''),num2:num(100*T.B/(A*QM.C.u),3)})+"</p>");
     }
     o.push('</section>');
     /* the light */
     var L=lineList(Z); o=SEC.electrons;
-    if(L){ o.push('<section class="pd-sec"><h3>Its light</h3><div class="pd-spec" aria-hidden="true">');
+    if(L){ o.push("<section class=\"pd-sec\">"+"<h3>"+TT("Its light")+"</h3>"+"<div class=\"pd-spec\" aria-hidden=\"true\">");
       L.lines.forEach(function(p){ if(p[0]<380||p[0]>780) return; var x=(p[0]-380)/400*100;
-        o.push('<i style="left:'+x.toFixed(2)+'%;--a:'+(0.45+0.55*p[1]).toFixed(2)+';--c:'+(wlColor(p[0]))+'"></i>'); });
-      o.push('</div><p class="pd-fine">'+(L.computed?'Computed from the Rydberg formula, in vacuum.':'Measured lines from the NIST Atomic Spectra Database, converted to vacuum wavelengths.')+' 380 to 780 nm.</p></section>'); }
+        o.push("<i style=\"left:"+(((x.toFixed(2))))+"%;--a:"+((((0.45+0.55*p[1]).toFixed(2))))+";--c:"+((((wlColor(p[0])))))+"\"></i>"); });
+      o.push("</div>"+"<p class=\"pd-fine\">"+TT("{L} 380 to 780 nm.",{L:(L.computed?TT("Computed from the Rydberg formula, in vacuum."):TT("Measured lines from the NIST Atomic Spectra Database, converted to vacuum wavelengths."))})+"</p>"+"</section>"); }
     /* the material */
     o=SEC.overview;
-    o.push('<section class="pd-sec"><h3>As a material</h3><dl class="pd-dl">'+
-      '<div><dt>Density</dt><dd>'+(e[9]===null?'unknown':num(e[9],e[9]<0.01?6:3)+' g/cm³')+'</dd></div>'+
-      '<div><dt>Melts</dt><dd>'+tempStr(e[10])+'</dd></div><div><dt>Boils</dt><dd>'+tempStr(e[11])+'</dd></div>'+
-      '<div><dt>Discovered</dt><dd>'+esc(yearStr(e))+'</dd></div></dl>'+
-      abundanceBar(e[14],"Earth&rsquo;s crust")+abundanceBar(e[15],"The universe")+'</section>');
-    o.push('<section class="pd-sec pd-story"><h3>Where it comes from</h3><p>'+esc(e[17])+'</p><p>'+esc(e[18])+'</p>'+
-      '<h3>What it is used for</h3><p>'+esc(e[19])+'</p><h3>Worth knowing</h3><p>'+esc(e[20])+'</p></section>');
-    return head.join("")+'<div class="pd-tabs" role="tablist" aria-label="About '+esc(e[2].toLowerCase())+'">'+PD_TABS.map(function(t){ var on=t[0]===pdTab;
-        return '<button type="button" role="tab" id="pdT-'+t[0]+'" data-pdt="'+t[0]+'" aria-controls="pdP-'+t[0]+'" aria-selected="'+on+'" tabindex="'+(on?0:-1)+'">'+t[1]+'</button>'; }).join('')+'</div>'+
-      PD_TABS.map(function(t){ return '<div class="pd-pane" role="tabpanel" id="pdP-'+t[0]+'" aria-labelledby="pdT-'+t[0]+'"'+(t[0]===pdTab?'':' hidden')+'>'+SEC[t[0]].join("")+'</div>'; }).join('');
+    o.push("<section class=\"pd-sec\">"+"<h3>"+TT("As a material")+"</h3>"+"<dl class=\"pd-dl\">"+"<div>"+"<dt>"+TT("Density")+"</dt>"+"<dd>"+((e[9]===null?'unknown':TT("{num} g/cm³",{num:num(e[9],e[9]<0.01?6:3)})))+"</dd>"+"</div>"+"<div>"+"<dt>"+TT("Melts")+"</dt>"+"<dd>"+(tempStr(e[10]))+"</dd>"+"</div>"+"<div>"+"<dt>"+TT("Boils")+"</dt>"+"<dd>"+(tempStr(e[11]))+"</dd>"+"</div>"+"<div>"+"<dt>"+TT("Discovered")+"</dt>"+"<dd>"+(esc(yearStr(e)))+"</dd>"+"</div>"+"</dl>"+(abundanceBar(e[14],TT("Earth&rsquo;s crust")))+(abundanceBar(e[15],TT("The universe")))+"</section>");
+    o.push("<section class=\"pd-sec pd-story\">"+"<h3>"+TT("Where it comes from")+"</h3>"+"<p>"+(esc(e[17]))+"</p>"+"<p>"+(esc(e[18]))+"</p>"+"<h3>"+TT("What it is used for")+"</h3>"+"<p>"+(esc(e[19]))+"</p>"+"<h3>"+TT("Worth knowing")+"</h3>"+"<p>"+(esc(e[20]))+"</p>"+"</section>");
+    return (((head.join(""))))+"<div class=\"pd-tabs\" role=\"tablist\" aria-label=\"About "+(((esc(AtomI18N.elWord(Z)))))+"\">"+(((PD_TABS.map(function(t){ var on=t[0]===pdTab;
+        return "<button type=\"button\" role=\"tab\" id=\"pdT-"+(((((t[0])))))+"\" data-pdt=\""+(((((t[0])))))+"\" aria-controls=\"pdP-"+(((((t[0])))))+"\" aria-selected=\""+(((((on)))))+"\" tabindex=\""+((((((on?0:-1))))))+"\">"+(((((t[1])))))+"</button>"; }).join(''))))+"</div>"+(((PD_TABS.map(function(t){ return "<div class=\"pd-pane\" role=\"tabpanel\" id=\"pdP-"+(((((t[0])))))+"\" aria-labelledby=\"pdT-"+(((((t[0])))))+"\""+((((((t[0]===pdTab?'':' hidden'))))))+">"+(((((SEC[t[0]].join(""))))))+"</div>"; }).join(''))));
   }
   /* the host calls this once: clicks and arrow keys on the card's tabs */
   function wireDetail(host, onTab){
@@ -591,21 +573,21 @@ var AtomSims=(function(){
     fe56:{Z:26,A:56,s:"Fe-56"}, te112:{Z:52,A:112,s:"Te-112"}, ep:{Z:0,A:0,s:"e⁺"}, nu:{Z:0,A:0,s:"ν"} };
   var REACT=[
     {id:"dt",  label:"D + T",     a:["d","t"],   b:["he4","n"], el:1,
-     note:"The easiest fusion reaction to light, and the fuel of ITER, the National Ignition Facility, and nearly every power-plant design."},
+     note:TT("The easiest fusion reaction to light, and the fuel of ITER, the National Ignition Facility, and nearly every power-plant design.")},
     {id:"dd",  label:"D + D",     a:["d","d"],   b:["he3","n"], el:1,
-     note:"Seawater holds enough deuterium for billions of years. Half the time this makes helium-3 and a neutron, half the time tritium and a proton."},
+     note:TT("Seawater holds enough deuterium for billions of years. Half the time this makes helium-3 and a neutron, half the time tritium and a proton.")},
     {id:"dhe3",label:"D + He-3",  a:["d","he3"], b:["he4","p"], el:2,
-     note:"Almost no neutrons, but helium-3 is scarce on Earth, one reason people talk about mining the Moon for it."},
+     note:TT("Almost no neutrons, but helium-3 is scarce on Earth, one reason people talk about mining the Moon for it.")},
     {id:"pb11",label:"p + B-11",  a:["p","b11"], b:["he4","he4","he4"], el:5,
-     note:"Aneutronic: the products are three charged helium nuclei. The catch is a barrier five times taller than D + T's."},
+     note:TT("Aneutronic: the products are three charged helium nuclei. The catch is a barrier five times taller than D + T's.")},
     {id:"pp",  label:"p + p",     a:["p","p"],   b:["d","ep","nu"], el:1,
-     note:"How the Sun begins. The weak force has to turn a proton into a neutron mid-collision, so a proton in the Sun's core waits billions of years on average."},
+     note:TT("How the Sun begins. The weak force has to turn a proton into a neutron mid-collision, so a proton in the Sun's core waits billions of years on average.")},
     {id:"nli6",label:"n + Li-6",  a:["n","li6"], b:["t","he4"], el:3,
-     note:"Breeding: a fusion plant's lithium blanket turns its own neutrons into new tritium. A neutron has no charge, so there is no barrier at all."},
+     note:TT("Breeding: a fusion plant's lithium blanket turns its own neutrons into new tritium. A neutron has no charge, so there is no barrier at all.")},
     {id:"aaa", label:"3 He-4",    a:["he4","he4","he4"], b:["c12"], el:6,
-     note:"The triple-alpha process, the way red giants make the carbon in you. Two helium nuclei must meet a third within about 10⁻¹⁶ seconds."},
+     note:TT("The triple-alpha process, the way red giants make the carbon in you. Two helium nuclei must meet a third within about 10⁻¹⁶ seconds.")},
     {id:"fefe",label:"Fe + Fe",   a:["fe56","fe56"], b:["te112"], el:26,
-     note:"Past iron, fusion stops paying. This one would absorb energy instead of releasing it, which is why stars that build iron cores collapse."}
+     note:TT("Past iron, fusion stops paying. This one would absorb energy instead of releasing it, which is why stars that build iron cores collapse.")}
   ];
   var MEV_PER_U_TO_J_PER_KG=9.6485e13, GASOLINE=4.6e7;
   function mass(k){ return NUC[k].A||0.000549; }
@@ -620,7 +602,7 @@ var AtomSims=(function(){
   function gamowE(a,b){ var A=NUC[a], B=NUC[b]; if(!A.Z||!B.Z) return 0;
     var mu=A.A*B.A/(A.A+B.A)*931.494, x=Math.PI*A.Z*B.Z/137.036; return 2*mu*x*x*1000; }    /* keV */
 
-  function fmt(x,d){ return (+x).toLocaleString("en-US",{maximumFractionDigits:d,minimumFractionDigits:d}); }
+  function fmt(x,d){ return AtomI18N.N(x,d).replace(/^−/,"-"); }
   function sci(x){ if(!isFinite(x)||x<=0) return "0"; var e=Math.floor(Math.log10(x)), m=x/Math.pow(10,e);
     return (Math.abs(e)<3?fmt(x,e<0?3:1):fmt(m,1)+" × 10"+String(e).split("").map(function(c){ return "⁻⁰¹²³⁴⁵⁶⁷⁸⁹"["-0123456789".indexOf(c)]; }).join("")); }
   function sup(n){ return String(n).split("").map(function(c){ return "⁻⁰¹²³⁴⁵⁶⁷⁸⁹".charAt("-0123456789".indexOf(c)); }).join(""); }
@@ -647,30 +629,22 @@ var AtomSims=(function(){
   function Fuse(root, ctx){
     var st={r:REACT[0], kT:10, fire:-1e9, shots:0};
     root.innerHTML=
-      '<div class="sb-controls"><div class="sb-pick" role="radiogroup" aria-label="Choose a reaction">'+
-        REACT.map(function(r,i){ return '<button type="button" role="radio" aria-checked="'+(i?"false":"true")+'" data-r="'+r.id+'">'+r.label+'</button>'; }).join('')+
-      '</div><label class="sb-slider"><span>Temperature <b data-o="T"></b></span><input type="range" min="0" max="1000" value="120" data-i="T" aria-label="Plasma temperature"></label>'+
-      '<button type="button" class="sb-go" data-i="fire">Fire</button></div>'+
-      '<div class="sb-stage"><canvas class="sb-cv" data-c="anim" aria-hidden="true"></canvas><canvas class="sb-cv" data-c="gamow" aria-hidden="true"></canvas></div>'+
-      '<dl class="sb-read"><div><dt>Energy released, Q</dt><dd data-o="Q"></dd></div><div><dt>Coulomb barrier</dt><dd data-o="B"></dd></div>'+
-      '<div><dt>Where reactions happen</dt><dd data-o="E0"></dd></div><div><dt>Chance to tunnel there</dt><dd data-o="P"></dd></div>'+
-      '<div><dt>Per kilogram of fuel</dt><dd data-o="kg"></dd></div></dl>'+
-      '<p class="sb-note" data-o="note"></p><p class="sb-out" data-o="out" aria-live="polite"></p>';
+      "<div class=\"sb-controls\">"+"<div class=\"sb-pick\" role=\"radiogroup\" aria-label=\""+((TT("Choose a reaction")))+"\">"+(((REACT.map(function(r,i){ return "<button type=\"button\" role=\"radio\" aria-checked=\""+((((((i?"false":"true"))))))+"\" data-r=\""+(((((r.id)))))+"\">"+(((((r.label)))))+"</button>"; }).join(''))))+"</div>"+"<label class=\"sb-slider\">"+((TT("<span>Temperature <b data-o=\"T\"></b></span>")))+"<input type=\"range\" min=\"0\" max=\"1000\" value=\"120\" data-i=\"T\" aria-label=\""+((TT("Plasma temperature")))+"\">"+"</label>"+"<button type=\"button\" class=\"sb-go\" data-i=\"fire\">"+((TT("Fire")))+"</button>"+"</div>"+"<div class=\"sb-stage\">"+"<canvas class=\"sb-cv\" data-c=\"anim\" aria-hidden=\"true\">"+"</canvas>"+"<canvas class=\"sb-cv\" data-c=\"gamow\" aria-hidden=\"true\">"+"</canvas>"+"</div>"+"<dl class=\"sb-read\">"+"<div>"+"<dt>"+((TT("Energy released, Q")))+"</dt>"+"<dd data-o=\"Q\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Coulomb barrier")))+"</dt>"+"<dd data-o=\"B\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Where reactions happen")))+"</dt>"+"<dd data-o=\"E0\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Chance to tunnel there")))+"</dt>"+"<dd data-o=\"P\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Per kilogram of fuel")))+"</dt>"+"<dd data-o=\"kg\">"+"</dd>"+"</div>"+"</dl>"+"<p class=\"sb-note\" data-o=\"note\">"+"</p>"+"<p class=\"sb-out\" data-o=\"out\" aria-live=\"polite\">"+"</p>";
     var $=function(s){ return root.querySelector(s); };
     function T(){ var v=+$('[data-i="T"]').value/1000; return Math.pow(10, v*2.5); }   /* 1 to 316 keV */
     function readout(){
       var r=st.r, Q=Qof(r), a=r.a[0], b=r.a[1], B=barrier(a,b), EG=gamowE(a,b), kT=st.kT;
       var E0=EG?Math.pow(EG*kT*kT/4,1/3):0, P=EG?Math.exp(-Math.sqrt(EG/E0)):1, mIn=0; r.a.forEach(function(k){ mIn+=mass(k); });
       var perkg=Q/mIn*MEV_PER_U_TO_J_PER_KG;
-      ctx.set($('[data-o="T"]'), fmt(kT,kT<10?1:0)+" keV, "+sci(kT*1.1605e7)+" K");
-      ctx.set($('[data-o="Q"]'), (Q>=0?"+":"")+fmt(Q,2)+" MeV"+(r.id==="fefe"?" (liquid-drop estimate)":""));
-      ctx.set($('[data-o="B"]'), B?bstr(B):"none");
-      ctx.set($('[data-o="E0"]'), EG?fmt(E0,1)+" keV":"any energy");
+      ctx.set($('[data-o="T"]'), TT("{kT} keV, {kT2} K",{kT:fmt(kT,kT<10?1:0),kT2:sci(kT*1.1605e7)}));
+      ctx.set($('[data-o="Q"]'), (Q>=0?"+":"")+fmt(Q,2)+" MeV"+(r.id==="fefe"?TT(" (liquid-drop estimate)"):""));
+      ctx.set($('[data-o="B"]'), B?bstr(B):TT("none",{}));
+      ctx.set($('[data-o="E0"]'), EG?fmt(E0,1)+" keV":TT("any energy"));
       /* past about 1 in 10^15 the odds are written as a power of ten, which also
          keeps iron on iron (1 in 10^430 or so) from underflowing to "1 in 0" */
       var lx=EG?Math.sqrt(EG/E0)/Math.LN10:0;
       ctx.set($('[data-o="P"]'), EG?(lx<15?"1 in "+sci(1/P):"1 in 10"+sup(Math.round(lx))):"certain");
-      ctx.set($('[data-o="kg"]'), Q>0?sci(perkg)+" J, "+sci(perkg/GASOLINE)+" × gasoline":"costs "+sci(-perkg)+" J");
+      ctx.set($('[data-o="kg"]'), Q>0?TT("{perkg} J, {perkg2} × gasoline",{perkg:sci(perkg),perkg2:sci(perkg/GASOLINE)}):TT("costs {sci} J",{sci:sci(-perkg)}));
       ctx.set($('[data-o="note"]'), r.note);
       return {Q:Q,B:B,EG:EG,E0:E0,P:P};
     }
@@ -681,8 +655,8 @@ var AtomSims=(function(){
         st.fire=-1e9; readout(); ctx.dirty(); return; }
       if(e.target.closest('[data-i="fire"]')){ st.fire=performance.now(); st.shots++; var R=readout();
         var parts=splitEnergy(st.r,R.Q);
-        if(st.r.id==="pp") ctx.set($('[data-o="out"]'),"Fused, slowly: a deuteron, a positron, and a neutrino. The positron soon meets an electron and turns 1.02 MeV into light; the neutrino carries about 0.26 MeV straight out of the Sun.");
-        else ctx.set($('[data-o="out"]'), R.Q>0?"Fused. "+parts.map(function(p){ return NUC[p[0]].s+" carries "+fmt(p[1],2)+" MeV"; }).join(", ")+".":"Fused, but the product holds less binding than the two irons did: the reaction swallowed "+fmt(-R.Q,1)+" MeV.");
+        if(st.r.id==="pp") ctx.set($('[data-o="out"]'),TT("Fused, slowly: a deuteron, a positron, and a neutrino. The positron soon meets an electron and turns 1.02 MeV into light; the neutrino carries about 0.26 MeV straight out of the Sun."));
+        else ctx.set($('[data-o="out"]'), R.Q>0?TT("Fused. {parts}.",{parts:parts.map(function(p){ return TT("{NUC} carries {p} MeV",{NUC:NUC[p[0]].s,p:fmt(p[1],2)}); }).join(", ")}):TT("Fused, but the product holds less binding than the two irons did: the reaction swallowed {fmt} MeV.",{fmt:fmt(-R.Q,1)}));
         ctx.emit("fusion:"+st.r.id); if(st.kT>=10) ctx.emit("fusion:"+st.r.id+":hot"); }
     });
     $('[data-i="T"]').addEventListener("input",function(){ st.kT=T(); readout(); ctx.dirty(); });
@@ -707,11 +681,11 @@ var AtomSims=(function(){
         g.setLineDash([4,5]); g.strokeStyle=th.acc; g.beginPath(); g.moveTo(x0,ey); g.lineTo(x1,ey); g.stroke(); g.setLineDash([]);
         g.fillStyle=th.ink2; g.font="500 14px Archivo, sans-serif";
         /* the labels sit beside the wall, never across it: right of it if they fit, else left */
-        var Xb=x0+((rC-0.2)/12)*(x1-x0), L1="a typical collision, "+fmt(R.E0,0)+" keV,", L2="has to tunnel through it",
+        var Xb=x0+((rC-0.2)/12)*(x1-x0), L1=TT("a typical collision, {R} keV,",{R:fmt(R.E0,0)}), L2=TT("has to tunnel through it"),
             tw=Math.max(g.measureText(L1).width,g.measureText(L2).width), right=Xb+8+tw<=x1, lx=right?Xb+8:Xb-8;
         g.textAlign=right?"left":"right";
-        if(w<520){ g.textAlign="right"; halo(g,"the barrier, "+bstr(B),x1,top-8,th); g.textAlign=right?"left":"right"; }   /* clear of the nuclei on a phone */
-        else halo(g,"the barrier, "+bstr(B),lx,top-8,th);
+        if(w<520){ g.textAlign="right"; halo(g,TT("the barrier, {bstr}",{bstr:bstr(B)}),x1,top-8,th); g.textAlign=right?"left":"right"; }   /* clear of the nuclei on a phone */
+        else halo(g,TT("the barrier, {bstr}",{bstr:bstr(B)}),lx,top-8,th);
         halo(g,L1,lx,Math.min(by-20,ey-22),th);
         halo(g,L2,lx,Math.min(by-4,ey-6),th);
         g.textAlign="left";
@@ -740,7 +714,7 @@ var AtomSims=(function(){
       q.clearRect(0,0,W,Hh);
       /* the two curve names share a line when they fit, and stack on a narrow screen */
       q.font="500 14px Archivo, sans-serif";
-      var two=R.EG && q.measureText("how many have this energy").width+q.measureText("chance to tunnel").width+40>W-24;
+      var two=R.EG && q.measureText(TT("how many have this energy")).width+q.measureText(TT("chance to tunnel")).width+40>W-24;
       var pl=12, pr=12, pt=two?40:22, pb=26, Wp=W-pl-pr, Hp=Hh-pt-pb, Emax=Math.max(R.E0*3,kT*8, 5);
       function curve(f,col,fill){ var ys=[], mx=0, i; for(i=0;i<=160;i++){ var E=Emax*i/160+1e-6, v=f(E); ys.push(v); if(v>mx) mx=v; }
         q.beginPath(); for(i=0;i<=160;i++){ var X=pl+Wp*i/160, Y=pt+Hp*(1-ys[i]/(mx||1)); if(i===0) q.moveTo(X,Y); else q.lineTo(X,Y); }
@@ -751,11 +725,11 @@ var AtomSims=(function(){
       if(R.EG){ curve(function(E){ return Math.exp(-Math.sqrt(R.EG/E)); }, th.sub[2], false);
         curve(function(E){ return Math.exp(-E/kT-Math.sqrt(R.EG/E)); }, th.acc, true); }
       q.fillStyle=th.ink2; q.font="500 14px Archivo, sans-serif"; q.textAlign="left";
-      halo(q,"how many have this energy",pl,14,th);
-      q.fillStyle=th.sub[2]; q.textAlign="right"; if(R.EG) halo(q,"chance to tunnel",pl+Wp,two?32:14,th); q.textAlign="left";
+      halo(q,TT("how many have this energy"),pl,14,th);
+      q.fillStyle=th.sub[2]; q.textAlign="right"; if(R.EG) halo(q,TT("chance to tunnel"),pl+Wp,two?32:14,th); q.textAlign="left";
       q.fillStyle=th.ink2; q.textAlign="right"; halo(q,fmt(Emax,0)+" keV",pl+Wp,Hh-6,th); q.textAlign="left"; halo(q,"0",pl,Hh-6,th);
       if(R.EG){ var xe=pl+Wp*R.E0/Emax; q.strokeStyle=th.acc; q.setLineDash([3,4]); q.beginPath(); q.moveTo(xe,pt); q.lineTo(xe,pt+Hp); q.stroke(); q.setLineDash([]);
-        q.fillStyle=th.ink; q.textAlign="center"; halo(q,"Gamow peak",xe,pt+Hp-6,th); }
+        q.fillStyle=th.ink; q.textAlign="center"; halo(q,TT("Gamow peak"),xe,pt+Hp-6,th); }
       return (t>-0.1&&t<6.5);
     }};
   }
@@ -768,21 +742,14 @@ var AtomSims=(function(){
     function K(R){ return (1+R)*Math.exp(-R); }
     function E(R,anti){ return 27.2114*(1/R-(anti?(J(R)-K(R))/(1-S(R)):(J(R)+K(R))/(1+S(R)))); }   /* eV, relative to H + p */
     var Rmin=2.5, Emin=0; (function(){ for(var R=1;R<5;R+=0.001){ var e=E(R,false); if(e<Emin){ Emin=e; Rmin=R; } } })();
-    root.innerHTML='<div class="sb-controls"><div class="sb-pick" role="radiogroup" aria-label="How the two waves combine">'+
-      '<button type="button" role="radio" aria-checked="true" data-b="0">In step: bonding</button><button type="button" role="radio" aria-checked="false" data-b="1">Out of step: antibonding</button></div>'+
-      '<label class="sb-slider"><span>Distance between the protons <b data-o="R"></b></span><input type="range" min="50" max="800" value="250" data-i="R" aria-label="Distance between the protons"></label></div>'+
-      '<div class="sb-stage"><canvas class="sb-cv" data-c="map" aria-hidden="true"></canvas><canvas class="sb-cv" data-c="curve" aria-hidden="true"></canvas></div>'+
-      '<dl class="sb-read"><div><dt>Energy of the bond</dt><dd data-o="E"></dd></div><div><dt>Overlap of the two waves</dt><dd data-o="S"></dd></div>'+
-      '<div><dt>Best distance, this model</dt><dd>'+fmt(Rmin*52.918,0)+' pm, '+fmt(-Emin,2)+' eV</dd></div><div><dt>Best distance, exact</dt><dd>106 pm, 2.79 eV</dd></div></dl>'+
-      '<p class="sb-note">One electron, two protons. Add the two 1s waves in step (the same color) and they pile up between the protons, which pulls both protons in: a bond. Add them out of step and a node cuts the middle: the protons push apart. This simple model gets the bond about 25% too long and too weak; the exact solution is in the last box.</p>'+
-      '<p class="sb-out" data-o="out" aria-live="polite"></p>';
+    root.innerHTML="<div class=\"sb-controls\">"+"<div class=\"sb-pick\" role=\"radiogroup\" aria-label=\""+(((TT("How the two waves combine"))))+"\">"+"<button type=\"button\" role=\"radio\" aria-checked=\"true\" data-b=\"0\">"+(((TT("In step: bonding"))))+"</button>"+"<button type=\"button\" role=\"radio\" aria-checked=\"false\" data-b=\"1\">"+(((TT("Out of step: antibonding"))))+"</button>"+"</div>"+"<label class=\"sb-slider\">"+(((TT("<span>Distance between the protons <b data-o=\"R\"></b></span>"))))+"<input type=\"range\" min=\"50\" max=\"800\" value=\"250\" data-i=\"R\" aria-label=\""+(((TT("Distance between the protons"))))+"\">"+"</label>"+"</div>"+"<div class=\"sb-stage\">"+"<canvas class=\"sb-cv\" data-c=\"map\" aria-hidden=\"true\">"+"</canvas>"+"<canvas class=\"sb-cv\" data-c=\"curve\" aria-hidden=\"true\">"+"</canvas>"+"</div>"+"<dl class=\"sb-read\">"+"<div>"+"<dt>"+(((TT("Energy of the bond"))))+"</dt>"+"<dd data-o=\"E\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Overlap of the two waves"))))+"</dt>"+"<dd data-o=\"S\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Best distance, this model"))))+"</dt>"+"<dd>"+(((TT("{Rmin} pm, {fmt} eV",{Rmin:fmt(Rmin*52.918,0),fmt:fmt(-Emin,2)}))))+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Best distance, exact"))))+"</dt>"+"<dd>"+(((TT("106 pm, 2.79 eV"))))+"</dd>"+"</div>"+"</dl>"+"<p class=\"sb-note\">"+TT("One electron, two protons. Add the two 1s waves in step (the same color) and they pile up between the protons, which pulls both protons in: a bond. Add them out of step and a node cuts the middle: the protons push apart. This simple model gets the bond about 25% too long and too weak; the exact solution is in the last box.")+"</p>"+"<p class=\"sb-out\" data-o=\"out\" aria-live=\"polite\">"+"</p>";
     var $=function(s){ return root.querySelector(s); };
     function readout(){
       var e=E(st.R,st.anti);
       ctx.set($('[data-o="R"]'), fmt(st.R*52.918,0)+" pm");
-      ctx.set($('[data-o="E"]'), (e<0?"bound by ":"pushed apart by ")+fmt(Math.abs(e),2)+" eV");
+      ctx.set($('[data-o="E"]'), (e<0?TT("bound by "):TT("pushed apart by "))+fmt(Math.abs(e),2)+" eV");
       ctx.set($('[data-o="S"]'), fmt(S(st.R)*100,0)+"%");
-      if(!st.anti && Math.abs(st.R-Rmin)<0.12){ ctx.set($('[data-o="out"]'),"That's the bottom of the well: the distance this model likes best."); ctx.emit("bond:min"); }
+      if(!st.anti && Math.abs(st.R-Rmin)<0.12){ ctx.set($('[data-o="out"]'),TT("That's the bottom of the well: the distance this model likes best.")); ctx.emit("bond:min"); }
       else ctx.set($('[data-o="out"]'),"");
     }
     root.addEventListener("click",function(e){ var b=e.target.closest("[data-b]"); if(!b) return;
@@ -807,7 +774,7 @@ var AtomSims=(function(){
       }
       g.imageSmoothingEnabled=true; g.drawImage(img.c,0,0,w,h);
       var k=w/img.span; [-R/2,R/2].forEach(function(px){ var X=w/2+px*k; g.fillStyle=th.light?"#101312":"#ffffff"; g.beginPath(); g.arc(X,h/2,5,0,6.2832); g.fill();
-        g.fillStyle=th.ink; g.font="600 14px Archivo, sans-serif"; g.textAlign="center"; halo(g,"proton",X,h/2+22,th); });
+        g.fillStyle=th.ink; g.font="600 14px Archivo, sans-serif"; g.textAlign="center"; halo(g,TT("proton",{}),X,h/2+22,th); });
       var c2=fit($('[data-c="curve"]')), q=c2.g, W=c2.w, H=c2.h, pl=34, pr=10, pt=14, pb=24, Wp=W-pl-pr, Hp=H-pt-pb;
       var X=function(r){ return pl+Wp*(r-0.5)/7.5; }, Y=function(e){ return pt+Hp*(1-(e+3)/9); };
       q.clearRect(0,0,W,H); q.fillStyle=th.ink3; q.fillRect(pl,Y(0),Wp,1);
@@ -815,7 +782,7 @@ var AtomSims=(function(){
         for(var r=0.6;r<=8;r+=0.02){ var e=Math.min(6,E(r,cv[0])); if(r<0.61) q.moveTo(X(r),Y(e)); else q.lineTo(X(r),Y(e)); } q.stroke(); });
       var e=E(R,st.anti); q.fillStyle=th.acc; q.beginPath(); q.arc(X(R),Y(Math.min(6,e)),6,0,6.2832); q.fill();
       q.fillStyle=th.ink2; q.font="500 14px Archivo, sans-serif"; q.textAlign="right";
-      halo(q,"0 eV",pl-4,Y(0)+4,th); q.textAlign="left"; halo(q,"energy as the protons part",pl+Wp*0.35,12,th);
+      halo(q,"0 eV",pl-4,Y(0)+4,th); q.textAlign="left"; halo(q,TT("energy as the protons part"),pl+Wp*0.35,12,th);
       q.textAlign="right"; halo(q,"8 a₀",pl+Wp,H-6,th);
       return false;
     }};
@@ -823,31 +790,23 @@ var AtomSims=(function(){
 
   /* ------------------------------------------------------------ the battery bench */
   var CELLS={
-    li:{name:"Lithium-ion", ion:"Li⁺", el:3,
-      anode:[{id:"graphite",name:"Graphite",f:"LiC₆",V:0.10,C:372,el:[6]},{id:"si",name:"Silicon",f:"Li₁₅Si₄",V:0.40,C:3579,el:[14]},
-             {id:"limetal",name:"Lithium metal",f:"Li",V:0.0,C:3860,el:[3]},{id:"lto",name:"Lithium titanate",f:"Li₄Ti₅O₁₂",V:1.55,C:175,el:[22]}],
-      cathode:[{id:"lco",name:"Lithium cobalt oxide",f:"LiCoO₂",V:3.9,C:140,el:[27]},{id:"nmc",name:"NMC 811",f:"LiNi₀.₈Mn₀.₁Co₀.₁O₂",V:3.8,C:200,el:[28,25,27]},
-               {id:"lfp",name:"Lithium iron phosphate",f:"LiFePO₄",V:3.4,C:170,el:[26,15]},{id:"lmo",name:"Lithium manganese oxide",f:"LiMn₂O₄",V:4.0,C:120,el:[25]},
-               {id:"s",name:"Sulfur",f:"Li₂S",V:2.15,C:1675,el:[16]}]},
-    na:{name:"Sodium-ion", ion:"Na⁺", el:11,
-      anode:[{id:"hc",name:"Hard carbon",f:"C",V:0.10,C:300,el:[6]},{id:"nametal",name:"Sodium metal",f:"Na",V:0.0,C:1166,el:[11]}],
-      cathode:[{id:"pw",name:"Prussian white",f:"Na₂Fe[Fe(CN)₆]",V:3.2,C:150,el:[26,6,7]},{id:"nvp",name:"Sodium vanadium phosphate",f:"Na₃V₂(PO₄)₃",V:3.4,C:117,el:[23,15]},
-               {id:"nfm",name:"Layered oxide",f:"NaNi⅓Fe⅓Mn⅓O₂",V:3.0,C:130,el:[28,26,25]}]}
+    li:{name:TT("Lithium-ion"), ion:"Li⁺", el:3,
+      anode:[{id:"graphite",name:TT("Graphite"),f:"LiC₆",V:0.10,C:372,el:[6]},{id:"si",name:TT("Silicon"),f:"Li₁₅Si₄",V:0.40,C:3579,el:[14]},
+             {id:"limetal",name:TT("Lithium metal"),f:"Li",V:0.0,C:3860,el:[3]},{id:"lto",name:TT("Lithium titanate"),f:"Li₄Ti₅O₁₂",V:1.55,C:175,el:[22]}],
+      cathode:[{id:"lco",name:TT("Lithium cobalt oxide"),f:"LiCoO₂",V:3.9,C:140,el:[27]},{id:"nmc",name:"NMC 811",f:"LiNi₀.₈Mn₀.₁Co₀.₁O₂",V:3.8,C:200,el:[28,25,27]},
+               {id:"lfp",name:TT("Lithium iron phosphate"),f:"LiFePO₄",V:3.4,C:170,el:[26,15]},{id:"lmo",name:TT("Lithium manganese oxide"),f:"LiMn₂O₄",V:4.0,C:120,el:[25]},
+               {id:"s",name:TT("Sulfur"),f:"Li₂S",V:2.15,C:1675,el:[16]}]},
+    na:{name:TT("Sodium-ion"), ion:"Na⁺", el:11,
+      anode:[{id:"hc",name:TT("Hard carbon"),f:"C",V:0.10,C:300,el:[6]},{id:"nametal",name:TT("Sodium metal"),f:"Na",V:0.0,C:1166,el:[11]}],
+      cathode:[{id:"pw",name:TT("Prussian white"),f:"Na₂Fe[Fe(CN)₆]",V:3.2,C:150,el:[26,6,7]},{id:"nvp",name:TT("Sodium vanadium phosphate"),f:"Na₃V₂(PO₄)₃",V:3.4,C:117,el:[23,15]},
+               {id:"nfm",name:TT("Layered oxide"),f:"NaNi⅓Fe⅓Mn⅓O₂",V:3.0,C:130,el:[28,26,25]}]}
   };
   function Charge(root, ctx){
     var st={fam:"li", a:"graphite", c:"lco"};
-    function opts(list,sel){ return list.map(function(x){ return '<option value="'+x.id+'"'+(x.id===sel?' selected':'')+'>'+x.name+' ('+x.f+')</option>'; }).join(''); }
+    function opts(list,sel){ return list.map(function(x){ return "<option value=\""+(((x.id)))+"\""+((((x.id===sel?' selected':''))))+">"+(((x.name)))+" ("+(((x.f)))+")"+"</option>"; }).join(''); }
     function build(){
       var F=CELLS[st.fam];
-      root.innerHTML='<div class="sb-controls"><div class="sb-pick" role="radiogroup" aria-label="Which ion carries the charge">'+
-        '<button type="button" role="radio" aria-checked="'+(st.fam==="li")+'" data-f="li">Lithium-ion</button><button type="button" role="radio" aria-checked="'+(st.fam==="na")+'" data-f="na">Sodium-ion</button></div>'+
-        '<label class="sb-sel"><span>Negative electrode</span><select data-i="a">'+opts(F.anode,st.a)+'</select></label>'+
-        '<label class="sb-sel"><span>Positive electrode</span><select data-i="c">'+opts(F.cathode,st.c)+'</select></label></div>'+
-        '<div class="sb-stage one"><canvas class="sb-cv" data-c="cell" aria-hidden="true"></canvas></div>'+
-        '<dl class="sb-read"><div><dt>Cell voltage</dt><dd data-o="V"></dd></div><div><dt>Energy, electrode materials only</dt><dd data-o="Wh"></dd></div>'+
-        '<div><dt>Elements inside</dt><dd data-o="els"></dd></div></dl>'+
-        '<p class="sb-note">Voltage is how far '+(st.fam==="li"?"lithium":"sodium")+' falls in energy when it moves from the negative electrode into the positive one: the bigger the drop, the higher the voltage. Capacity is how many ions each gram can hold. These are rough textbook figures for the electrode materials alone; a finished cell, with its electrolyte, separator, foils, and case, holds about half to two thirds as much.</p>'+
-        '<p class="sb-out" data-o="out" aria-live="polite"></p>';
+      root.innerHTML="<div class=\"sb-controls\">"+"<div class=\"sb-pick\" role=\"radiogroup\" aria-label=\""+(((TT("Which ion carries the charge"))))+"\">"+((("<button type=\"button\" role=\"radio\" aria-checked=\""+(((st.fam==="li")))+"\" data-f=\"li\">"+(TT("Lithium-ion")))))+"</button>"+((("<button type=\"button\" role=\"radio\" aria-checked=\""+(((st.fam==="na")))+"\" data-f=\"na\">"+(TT("Sodium-ion")))))+"</button>"+"</div>"+"<label class=\"sb-sel\">"+(((TT("<span>Negative electrode</span>"))))+"<select data-i=\"a\">"+((((opts(F.anode,st.a)))))+"</select>"+"</label>"+"<label class=\"sb-sel\">"+(((TT("<span>Positive electrode</span>"))))+"<select data-i=\"c\">"+((((opts(F.cathode,st.c)))))+"</select>"+"</label>"+"</div>"+"<div class=\"sb-stage one\">"+"<canvas class=\"sb-cv\" data-c=\"cell\" aria-hidden=\"true\">"+"</canvas>"+"</div>"+"<dl class=\"sb-read\">"+"<div>"+"<dt>"+(((TT("Cell voltage"))))+"</dt>"+"<dd data-o=\"V\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Energy, electrode materials only"))))+"</dt>"+"<dd data-o=\"Wh\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Elements inside"))))+"</dt>"+"<dd data-o=\"els\">"+"</dd>"+"</div>"+"</dl>"+"<p class=\"sb-note\">"+TT("Voltage is how far {v} falls in energy when it moves from the negative electrode into the positive one: the bigger the drop, the higher the voltage. Capacity is how many ions each gram can hold. These are rough textbook figures for the electrode materials alone; a finished cell, with its electrolyte, separator, foils, and case, holds about half to two thirds as much.",{v:((((st.fam==="li"?"lithium":"sodium"))))})+"</p>"+"<p class=\"sb-out\" data-o=\"out\" aria-live=\"polite\">"+"</p>";
       readout(false);
     }
     function cur(){ var F=CELLS[st.fam]; return {F:F,a:F.anode.filter(function(x){ return x.id===st.a; })[0]||F.anode[0], c:F.cathode.filter(function(x){ return x.id===st.c; })[0]||F.cathode[0]}; }
@@ -856,9 +815,9 @@ var AtomSims=(function(){
       ctx.set($('[data-o="V"]'), fmt(V,2)+" V");
       ctx.set($('[data-o="Wh"]'), fmt(Wh,0)+" Wh/kg");
       var els=[k.F.el].concat(k.a.el,k.c.el).filter(function(z,i,arr){ return arr.indexOf(z)===i; });
-      $('[data-o="els"]').innerHTML=els.map(function(z){ return '<button type="button" class="sb-el" data-z="'+z+'">'+ELEMENTS[z-1][1]+'</button>'; }).join(' ');
-      ctx.set($('[data-o="out"]'), k.a.id==="limetal"||k.a.id==="nametal"?"Metal anodes hold the most, but the metal can grow needles (dendrites) that short the cell: the problem solid electrolytes are trying to solve.":
-        (k.c.id==="s"?"Sulfur stores a lot, but its intermediate compounds dissolve and shuttle between the electrodes, fading the cell.":(k.a.id==="si"?"Silicon holds ten times more than graphite but swells by about three times as it fills, so it cracks.":"")));
+      $('[data-o="els"]').innerHTML=els.map(function(z){ return "<button type=\"button\" class=\"sb-el\" data-z=\""+(((z)))+"\">"+(((ELEMENTS[z-1][1])))+"</button>"; }).join(' ');
+      ctx.set($('[data-o="out"]'), k.a.id==="limetal"||k.a.id==="nametal"?TT("Metal anodes hold the most, but the metal can grow needles (dendrites) that short the cell: the problem solid electrolytes are trying to solve."):
+        (k.c.id==="s"?TT("Sulfur stores a lot, but its intermediate compounds dissolve and shuttle between the electrodes, fading the cell."):(k.a.id==="si"?TT("Silicon holds ten times more than graphite but swells by about three times as it fills, so it cracks."):"")));
       if(user!==false){ ctx.emit("battery:"+k.a.id+"-"+k.c.id); if(st.fam==="na") ctx.emit("battery:na"); }
       ctx.dirty();
     }
@@ -875,13 +834,13 @@ var AtomSims=(function(){
       var lx=w*0.62, top=34, bot=h-30, Y=function(v){ return top+(bot-top)*(v/4.6); };
       g.fillStyle=th.ink3; g.fillRect(lx,top,1.5,bot-top);
       g.fillStyle=th.ink2; g.font="500 14px Archivo, sans-serif"; g.textAlign="left";
-      halo(g,"energy of the ion: higher is less stable",lx-4,14,th);
+      halo(g,TT("energy of the ion: higher is less stable"),lx-4,14,th);
       var ya=Y(k.a.V), yc=Y(k.c.V);
       g.fillStyle=th.sub[0]; g.fillRect(lx+10,ya-2,w-lx-22,4); g.fillStyle=th.acc; g.fillRect(lx+10,yc-2,w-lx-22,4);
-      g.fillStyle=th.ink; halo(g,k.a.name+", "+fmt(k.a.V,2)+" V vs "+(st.fam==="li"?"Li":"Na"),lx+12,ya-8,th); halo(g,k.c.name+", "+fmt(k.c.V,2)+" V",lx+12,yc+18,th);
+      g.fillStyle=th.ink; halo(g,TT("{k}, {k2} V vs {st}",{k:k.a.name,k2:fmt(k.a.V,2),st:(st.fam==="li"?"Li":"Na")}),lx+12,ya-8,th); halo(g,k.c.name+", "+fmt(k.c.V,2)+" V",lx+12,yc+18,th);
       var fallX=lx+(w-lx)*0.5; g.strokeStyle=th.ink2; g.setLineDash([3,4]); g.beginPath(); g.moveTo(fallX,ya); g.lineTo(fallX,yc); g.stroke(); g.setLineDash([]);
       var fy=ya+((t*0.6)%1)*(yc-ya); g.fillStyle=th.acc; g.beginPath(); g.arc(fallX,fy,6,0,6.2832); g.fill();
-      g.fillStyle=th.ink; g.font="700 15px Archivo, sans-serif"; halo(g,fmt(V,2)+" V drop",fallX+12,(ya+yc)/2,th);
+      g.fillStyle=th.ink; g.font="700 15px Archivo, sans-serif"; halo(g,TT("{V} V drop",{V:fmt(V,2)}),fallX+12,(ya+yc)/2,th);
       /* the cell: two electrodes, ions crossing the electrolyte, electrons round the circuit to a lamp */
       var cx0=18, cx1=lx-28, ex=(cx1-cx0), ey0=h*0.34, ey1=h-24, aw=ex*0.24;
       g.fillStyle=th.light?"#d8dcd8":"#1d2125"; g.fillRect(cx0,ey0,ex,ey1-ey0);
@@ -890,7 +849,7 @@ var AtomSims=(function(){
       halo(g,k.a.f,cx0+aw/2,ey1+16,th); halo(g,k.c.f,cx1-aw/2,ey1+16,th);
       for(var i=0;i<14;i++){ var u=((t*0.35+i/14)%1), x=cx0+aw+u*(ex-2*aw), y=ey0+12+((i*37)%100)/100*(ey1-ey0-24);
         g.fillStyle=th.light?"#09467a":"#e2f7ff"; g.beginPath(); g.arc(x,y,3.2,0,6.2832); g.fill(); }
-      g.fillStyle=th.ink2; g.font="500 14px Archivo, sans-serif"; halo(g,k.F.ion+" through the electrolyte",(cx0+cx1)/2,ey0-8,th);
+      g.fillStyle=th.ink2; g.font="500 14px Archivo, sans-serif"; halo(g,TT("{k} through the electrolyte",{k:k.F.ion}),(cx0+cx1)/2,ey0-8,th);
       var wy=ey0-34; g.strokeStyle=th.ink3; g.lineWidth=2; g.beginPath(); g.moveTo(cx0+aw/2,ey0); g.lineTo(cx0+aw/2,wy); g.lineTo(cx1-aw/2,wy); g.lineTo(cx1-aw/2,ey0); g.stroke();
       for(i=0;i<8;i++){ var u2=((t*0.5+i/8)%1), L=(wy<ey0)?(ey0-wy)*2+(cx1-cx0-aw):1, sPos=u2*L, px, py, seg1=ey0-wy, seg2=cx1-cx0-aw;
         if(sPos<seg1){ px=cx0+aw/2; py=ey0-sPos; } else if(sPos<seg1+seg2){ px=cx0+aw/2+(sPos-seg1); py=wy; } else { px=cx1-aw/2; py=wy+(sPos-seg1-seg2); }
@@ -913,13 +872,7 @@ var AtomSims=(function(){
   function mount(host, opt){
     var D=host.ownerDocument||document;
     host.classList.add("sb");
-    host.innerHTML='<div class="sb-tabs" role="tablist" aria-label="Workbench">'+
-      '<button type="button" role="tab" aria-selected="true" data-t="fuse" id="sbTabFuse" aria-controls="sbFuse">Fuse nuclei</button>'+
-      '<button type="button" role="tab" aria-selected="false" data-t="bond" id="sbTabBond" aria-controls="sbBond">Make a bond</button>'+
-      '<button type="button" role="tab" aria-selected="false" data-t="charge" id="sbTabCharge" aria-controls="sbCharge">Build a battery</button></div>'+
-      '<div class="sb-pane" role="tabpanel" id="sbFuse" aria-labelledby="sbTabFuse"></div>'+
-      '<div class="sb-pane" role="tabpanel" id="sbBond" aria-labelledby="sbTabBond" hidden></div>'+
-      '<div class="sb-pane" role="tabpanel" id="sbCharge" aria-labelledby="sbTabCharge" hidden></div>';
+    host.innerHTML="<div class=\"sb-tabs\" role=\"tablist\" aria-label=\""+((TT("Workbench")))+"\">"+"<button type=\"button\" role=\"tab\" aria-selected=\"true\" data-t=\"fuse\" id=\"sbTabFuse\" aria-controls=\"sbFuse\">"+((TT("Fuse nuclei")))+"</button>"+"<button type=\"button\" role=\"tab\" aria-selected=\"false\" data-t=\"bond\" id=\"sbTabBond\" aria-controls=\"sbBond\">"+((TT("Make a bond")))+"</button>"+"<button type=\"button\" role=\"tab\" aria-selected=\"false\" data-t=\"charge\" id=\"sbTabCharge\" aria-controls=\"sbCharge\">"+((TT("Build a battery")))+"</button>"+"</div>"+"<div class=\"sb-pane\" role=\"tabpanel\" id=\"sbFuse\" aria-labelledby=\"sbTabFuse\">"+"</div>"+"<div class=\"sb-pane\" role=\"tabpanel\" id=\"sbBond\" aria-labelledby=\"sbTabBond\" hidden>"+"</div>"+"<div class=\"sb-pane\" role=\"tabpanel\" id=\"sbCharge\" aria-labelledby=\"sbTabCharge\" hidden>"+"</div>";
     var dirty=true, cache=new WeakMap();
     var ctx={ set:function(el,v){ if(el && cache.get(el)!==v){ cache.set(el,v); el.textContent=v; } },
       emit:function(e){ if(opt.onEvent) opt.onEvent(e); }, dirty:function(){ dirty=true; },
@@ -954,113 +907,113 @@ var AtomSims=(function(){
    ---------------------------------------------------------------------------- */
 var Missions=(function(){
   var LIST=[
-    {id:"atom", short:"Atom", title:"Build an atom", blurb:"Protons, neutrons, and electrons, put together by hand.", steps:[
-      {say:"Open the labs and build carbon: six protons, six neutrons, and six electrons.", show:{lab:"build", z:6}, when:"build:6:12:0"},
-      {say:"Add two neutrons to make carbon-14. Cosmic rays make it in the air, and its steady decay is the clock that dates wood and bone.", show:{lab:"build", z:6, a:14}, when:"build:6:14:*"},
-      {say:"Now make an ion. Build fluorine and give it one extra electron: a fluoride ion, the kind toothpaste delivers.", show:{lab:"build", z:9, a:19, e:10}, when:"build:9:*:-1"},
-      {say:"Find the edge of the nuclear map. Build oxygen and keep adding neutrons until the last one won't stay.", show:{lab:"build", z:8, a:25}, when:"goal:drip"}],
-     done:"Everything you have ever touched is some count of these three particles. Protons decide the element, neutrons decide whether it lasts, and electrons decide how it bonds."},
-    {id:"light", short:"Light", title:"Read the light", blurb:"Why every element glows in its own colors.", steps:[
-      {say:"In the labs, open Calculate and find hydrogen's red line: an electron falling from level 3 to level 2.", show:{lab:"calc", calc:"light", line:"3,2"}, when:"calc:line:1:3-2"},
-      {say:"Now let the electron fall all the way to level 1. That light is ultraviolet, beyond what your eye can see.", show:{lab:"calc", calc:"light", line:"2,1"}, when:"calc:line:1:*-1"},
-      {say:"Open Hear and play neon's light. Each line in its spectrum becomes a tone.", show:{lab:"hear", z:10, play:true}, when:"hear:10"},
-      {say:"Play hydrogen's light and compare. No two elements share the same set of lines, which is how astronomers tell what a star is made of.", show:{lab:"hear", z:1, play:true}, when:"hear:1"}],
-     done:"Helium was found this way. In 1868 its yellow line turned up in sunlight, 27 years before anyone found the element on Earth."},
-    {id:"mole", short:"Mole", title:"Weigh a molecule", blurb:"From the mass of one atom to grams on a scale.", steps:[
-      {say:"In the labs, open Calculate, then Molar mass, and type water: H2O.", show:{lab:"calc", calc:"molar", formula:"H2O"}, when:"calc:molar:H2O"},
-      {say:"Type glucose, C6H12O6, the sugar your cells burn for energy.", show:{lab:"calc", calc:"molar", formula:"C6H12O6"}, when:"calc:molar:C6H12O6"},
-      {say:"Type caffeine, C8H10N4O2.", show:{lab:"calc", calc:"molar", formula:"C8H10N4O2"}, when:"calc:molar:C8H10N4O2"},
-      {say:"Pick the element that carries the largest share of caffeine's mass.", show:{pick:6}, when:"pick:6"}],
-     done:"A mole is 6.022 × 10²³ of anything. Molar mass turns that unimaginable count into grams you can weigh: 18 grams of water is one mole of water molecules."},
-    {id:"decay", short:"Decay", title:"Date a bone", blurb:"Radioactive decay, used as a clock.", steps:[
-      {say:"In the labs, open Calculate, then Radioactive decay, and choose carbon-14.", show:{lab:"calc", calc:"decay", preset:"6,14"}, when:"calc:decay:6,14"},
-      {say:"Slide time forward until a quarter of the carbon-14 is left. That takes two half-lives, about 11,400 years.", show:{lab:"calc", calc:"decay", half:2}, when:"calc:decay:half:2"},
-      {say:"Press Listen like a Geiger counter and hear the clicks thin out as the atoms run out.", show:{lab:"calc", calc:"decay", listen:true}, when:"calc:listen"},
-      {say:"Open Predict and answer a question.", show:{lab:"predict"}, when:"quiz:*"}],
-     done:"Radiocarbon dating reaches back about 50,000 years; after that too little carbon-14 is left to count. For older rocks, geologists use slower clocks, such as uranium-238, with a half-life of 4.5 billion years."},
-    {id:"star", short:"Star", title:"Light a star", blurb:"The reaction that powers the Sun, and why it is so slow.", steps:[
-      {say:"Pick hydrogen. The Sun is about three-quarters hydrogen.", show:{pick:1}, when:"pick:1"},
-      {say:"In the workbench, fuse two protons. This is the first step of the chain that powers the Sun.", show:{sim:"fuse", react:"pp"}, when:"fusion:pp"},
-      {say:"Read the chance to tunnel. On top of that, a proton must turn into a neutron by the weak force as they touch, so an average proton in the Sun's core waits billions of years. Fire once more.", show:{sim:"fuse", react:"pp"}, when:"fusion:pp*"},
-      {say:"Pick helium, the ash the Sun leaves behind.", show:{pick:2}, when:"pick:2"},
-      {say:"Most helium is older than any star. Switch to Origins and pick the Big Bang.", show:{lens:"origin", filter:"b"}, when:"lens:origin:b"}],
-     done:"The Sun turns about 600 million tonnes of hydrogen into helium every second, and about 4 million tonnes of that leaves as sunlight: E = mc²."},
-    {id:"gold", short:"Gold", title:"Forge gold", blurb:"From the Big Bang to the ring on your finger.", steps:[
-      {say:"Every story starts with hydrogen, made in the first few minutes after the Big Bang. Pick hydrogen.", show:{pick:1}, when:"pick:1"},
-      {say:"Switch the table to Origins to see where everything else was made.", show:{lens:"origin"}, when:"lens:origin*"},
-      {say:"Stars fuse light nuclei into heavier ones, all the way up to iron, among the most tightly bound nuclei of all. Pick iron.", show:{pick:26}, when:"pick:26"},
-      {say:"Fall into iron's nucleus and find it near the top of the binding-energy curve.", show:{depth:"nucleus"}, when:"depth:nucleus"},
-      {say:"Past iron, fusion stops paying. Gold needs a flood of neutrons, such as when two neutron stars collide. Pick gold and watch its birth.", show:{pick:79}, when:"pick:79"},
-      {say:"Open gold's card. Relativity, acting on its fast inner electrons, is part of why it is yellow.", show:{card:79}, when:"card:79"}],
-     done:"Most of the gold you have ever touched was likely made when two dead stars collided, long before the Sun existed."},
-    {id:"element", short:"New element", title:"Make a new element", blurb:"The heaviest atoms ever made, a few at a time.", steps:[
-      {say:"Switch to Origins and pick the elements made by people.", show:{lens:"origin", filter:"h"}, when:"lens:origin:h"},
-      {say:"Pick oganesson, element 118. Only a handful of its atoms have ever been detected, and each lasted only about a thousandth of a second.", show:{pick:118}, when:"pick:118"},
-      {say:"Fall into its nucleus: 118 protons pushing each other apart, held together by the strong force for barely a moment.", show:{depth:"nucleus"}, when:"depth:nucleus"},
-      {say:"Pick livermorium. In 2024 Berkeley Lab made two of its atoms with a titanium-50 beam, a rehearsal for making element 120.", show:{pick:116}, when:"pick:116"},
-      {say:"Open oganesson's card and read its open problem, under Future.", show:{card:118, tab:"future"}, when:"card:118"}],
-     done:"Elements 119 and 120 would begin a new row of the table. Nobody has made either yet, and whether the heaviest nuclei have an island of stability is still an open question."},
-    {id:"bond", short:"Molecule", title:"Make a molecule", blurb:"One electron, two protons, the simplest chemical bond.", steps:[
-      {say:"Open the workbench's bond bench.", show:{sim:"bond"}, when:"open:bond"},
-      {say:"Slide the protons until the energy is lowest. That distance is the bond.", show:{sim:"bond"}, when:"bond:min"},
-      {say:"Now put the two waves out of step and watch the bond disappear.", show:{sim:"bond"}, when:"bond:anti"},
-      {say:"Pick hydrogen. H₂, two of these bonded, is the most common molecule in the universe.", show:{pick:1}, when:"pick:1"}],
-     done:"Every covalent bond, from water to DNA, is electron waves adding in step between nuclei."},
-    {id:"quark", short:"Quark", title:"Pull a quark out", blurb:"Try to break the strongest force there is.", steps:[
-      {say:"Pick hydrogen: its nucleus is a single proton.", show:{pick:1}, when:"pick:1"},
-      {say:"Fall into the proton.", show:{depth:"proton"}, when:"depth:proton"},
-      {say:"Keep going, down to the quarks.", show:{depth:"pull"}, when:"depth:pull"},
-      {say:"Grab a quark and pull until the string snaps.", show:{depth:"pull"}, when:"snap"}],
-     done:"No quark ever comes out alone: the energy you put in turns into new matter instead. That is confinement, and proving the theory behind it has a mass gap is a million-dollar problem."},
-    {id:"fission", short:"Fission", title:"Split the atom", blurb:"Why the heaviest nuclei give up energy when they break.", steps:[
-      {say:"Pick uranium.", show:{pick:92}, when:"pick:92"},
-      {say:"Fall into uranium's nucleus: 92 protons and about 146 neutrons, packed at the same density as nearly every other nucleus.", show:{depth:"nucleus"}, when:"depth:nucleus"},
-      {say:"Open uranium's card and find it on the binding-energy curve. Past iron, each nucleon is held a little less tightly, so breaking a heavy nucleus in two releases energy.", show:{card:92}, when:"card:92"},
-      {say:"Pick iron, near the top of the curve, where almost nothing is left to gain either way.", show:{pick:26}, when:"pick:26"},
-      {say:"Prove it in the workbench: fuse iron with iron and watch the reaction swallow energy instead of releasing it.", show:{sim:"fuse", react:"fefe"}, when:"fusion:fefe*"}],
-     done:"Splitting one uranium-235 nucleus releases about 200 million electronvolts, millions of times more than burning one molecule of fuel. Reactors make nearly a tenth of the world's electricity this way."},
-    {id:"fusion", short:"Fusion", title:"Fuel a fusion reactor", blurb:"Deuterium, tritium, lithium, and a wall of tungsten.", steps:[
-      {say:"Fusion power runs on hydrogen's heavy forms, deuterium and tritium. Pick hydrogen.", show:{pick:1}, when:"pick:1"},
-      {say:"In the workbench, fire deuterium at tritium.", show:{sim:"fuse", react:"dt"}, when:"fusion:dt"},
-      {say:"Turn the temperature to at least 10 keV, about 116 million kelvin, and fire again. Watch where the Gamow peak sits: most reactions happen far below the barrier, by tunneling.", show:{sim:"fuse", react:"dt", hot:true}, when:"fusion:dt:hot"},
-      {say:"Tritium barely exists in nature, so a power plant must breed its own. Fire a neutron into lithium-6.", show:{sim:"fuse", react:"nli6"}, when:"fusion:nli6"},
-      {say:"The wall that faces the plasma is tungsten, which melts at 3,422 °C. Pick tungsten.", show:{pick:74}, when:"pick:74"}],
-     done:"Deuterium from seawater, tritium bred from lithium, a tungsten wall, and superconducting magnets: the recipe ITER and many fusion companies are racing to make work."},
-    {id:"battery", short:"Battery", title:"Build a better battery", blurb:"Voltage, capacity, and the elements in between.", steps:[
-      {say:"Open the battery bench. It starts with graphite and lithium cobalt oxide, the cell in most phones.", show:{sim:"charge"}, when:"open:charge"},
-      {say:"Swap the positive electrode for lithium iron phosphate: a lower voltage, but no cobalt and much safer.", show:{sim:"charge"}, when:"battery:*-lfp"},
-      {say:"Try a silicon negative electrode and watch the capacity jump.", show:{sim:"charge"}, when:"battery:si-*"},
-      {say:"Now switch to sodium-ion: cheaper and more abundant, a little heavier.", show:{sim:"charge"}, when:"battery:na"},
-      {say:"Pick sodium on the table and read what is happening with it right now.", show:{pick:11}, when:"pick:11"}],
-     done:"Every battery is a trade between how far an ion falls, how many a gram can hold, and what the materials cost the planet."},
-    {id:"chip", short:"Chip", title:"Build a chip", blurb:"Sand, purified, patterned, and insulated with hafnium.", steps:[
-      {say:"Switch to Frontier and pick computer chips.", show:{lens:"frontier", filter:"chips"}, when:"lens:frontier:chips"},
-      {say:"Pick silicon. Chip-grade silicon is purified to better than 99.9999999 percent.", show:{pick:14}, when:"pick:14"},
-      {say:"Fall into silicon's electron cloud. It has four outer electrons, so a trace of an element with three or five turns it into a conductor a voltage can switch on and off.", show:{depth:"cloud"}, when:"depth:cloud"},
-      {say:"Pick hafnium. Since 2007, a film of hafnium oxide a few nanometers thick has insulated the gates of the transistors in fast chips.", show:{pick:72}, when:"pick:72"},
-      {say:"Pick gallium. Gallium nitride makes blue LEDs and the small, cool-running chips in fast chargers.", show:{pick:31}, when:"pick:31"}],
-     done:"A modern processor holds tens of billions of transistors, made from purified sand, a few dopant atoms, and layers of rarer metals only atoms thick."},
-    {id:"qubit", short:"Qubit", title:"Build a qubit", blurb:"Three elements, three ways to hold a quantum bit.", steps:[
-      {say:"Switch the table to the Frontier lens and pick out quantum computing.", show:{lens:"frontier", filter:"quantum"}, when:"lens:frontier:quantum"},
-      {say:"Pick ytterbium. In 2024 Microsoft and Atom Computing entangled 24 logical qubits made of its atoms.", show:{pick:70}, when:"pick:70"},
-      {say:"Fall into ytterbium's electron cloud. Atom Computing's qubit is two spin states of the nucleus inside it, held in place by laser light.", show:{depth:"cloud"}, when:"depth:cloud"},
-      {say:"Superconducting qubits are tiny circuits instead, built from aluminum and tantalum. Pick tantalum.", show:{pick:73}, when:"pick:73"},
-      {say:"Ion traps hold single charged atoms. Pick barium, the qubit in Quantinuum's 98-qubit Helios.", show:{pick:56}, when:"pick:56"}],
-     done:"Atoms, circuits, and ions: nobody yet knows which will reach a million reliable qubits. That race is wide open."},
-    {id:"time", short:"Clock", title:"Keep perfect time", blurb:"From cesium to the first nuclear clock.", steps:[
-      {say:"The second is defined by cesium-133: 9,192,631,770 ticks. Pick cesium.", show:{pick:55}, when:"pick:55"},
-      {say:"Optical clocks tick with light, tens of thousands of times faster. Pick strontium.", show:{pick:38}, when:"pick:38"},
-      {say:"Pick lutetium. In September 2026 two lutetium-ion clocks in Singapore set the accuracy record: off by about one part in ten quintillion.", show:{pick:71}, when:"pick:71"},
-      {say:"Pick thorium. Its nucleus holds the first nuclear clocks, reported in October 2026.", show:{pick:90}, when:"pick:90"},
-      {say:"Fall all the way into thorium's nucleus, where that clock ticks.", show:{depth:"nucleus"}, when:"depth:nucleus"}],
-     done:"Clocks this good can feel gravity change over a centimeter of height, and may catch the constants of nature drifting."},
-    {id:"medicine", short:"Medicine", title:"Fight cancer with atoms", blurb:"Radioactive atoms that find a tumor, and the ones that photograph it.", steps:[
-      {say:"Switch to Frontier and pick medicine.", show:{lens:"frontier", filter:"medicine"}, when:"lens:frontier:medicine"},
-      {say:"Pick technetium. It has no stable form at all, yet technetium-99m is used in about four out of five nuclear medicine scans, tens of millions a year.", show:{pick:43}, when:"pick:43"},
-      {say:"Pick lutetium. Lutetium-177, carried by a molecule that seeks out prostate cancer cells, became an approved drug in 2022.", show:{pick:71}, when:"pick:71"},
-      {say:"Pick actinium. Actinium-225 fires alpha particles that stop within a few cell widths, and it is being tested against cancers other treatments cannot reach.", show:{pick:89}, when:"pick:89"},
-      {say:"Fall into actinium's nucleus, where that alpha particle comes from.", show:{depth:"nucleus"}, when:"depth:nucleus"}],
-     done:"The instability that makes radiation dangerous also makes it precise: an atom that decays inside a tumor spends its energy exactly where it is needed."}
+    {id:"atom", short:TT("Atom"), title:TT("Build an atom"), blurb:TT("Protons, neutrons, and electrons, put together by hand."), steps:[
+      {say:TT("Open the labs and build carbon: six protons, six neutrons, and six electrons."), show:{lab:"build", z:6}, when:"build:6:12:0"},
+      {say:TT("Add two neutrons to make carbon-14. Cosmic rays make it in the air, and its steady decay is the clock that dates wood and bone."), show:{lab:"build", z:6, a:14}, when:"build:6:14:*"},
+      {say:TT("Now make an ion. Build fluorine and give it one extra electron: a fluoride ion, the kind toothpaste delivers."), show:{lab:"build", z:9, a:19, e:10}, when:"build:9:*:-1"},
+      {say:TT("Find the edge of the nuclear map. Build oxygen and keep adding neutrons until the last one won't stay."), show:{lab:"build", z:8, a:25}, when:"goal:drip"}],
+     done:TT("Everything you have ever touched is some count of these three particles. Protons decide the element, neutrons decide whether it lasts, and electrons decide how it bonds.")},
+    {id:"light", short:TT("Light"), title:TT("Read the light"), blurb:TT("Why every element glows in its own colors."), steps:[
+      {say:TT("In the labs, open Calculate and find hydrogen's red line: an electron falling from level 3 to level 2."), show:{lab:"calc", calc:"light", line:"3,2"}, when:"calc:line:1:3-2"},
+      {say:TT("Now let the electron fall all the way to level 1. That light is ultraviolet, beyond what your eye can see."), show:{lab:"calc", calc:"light", line:"2,1"}, when:"calc:line:1:*-1"},
+      {say:TT("Open Hear and play neon's light. Each line in its spectrum becomes a tone."), show:{lab:"hear", z:10, play:true}, when:"hear:10"},
+      {say:TT("Play hydrogen's light and compare. No two elements share the same set of lines, which is how astronomers tell what a star is made of."), show:{lab:"hear", z:1, play:true}, when:"hear:1"}],
+     done:TT("Helium was found this way. In 1868 its yellow line turned up in sunlight, 27 years before anyone found the element on Earth.")},
+    {id:"mole", short:TT("Mole"), title:TT("Weigh a molecule"), blurb:TT("From the mass of one atom to grams on a scale."), steps:[
+      {say:TT("In the labs, open Calculate, then Molar mass, and type water: H2O."), show:{lab:"calc", calc:"molar", formula:"H2O"}, when:"calc:molar:H2O"},
+      {say:TT("Type glucose, C6H12O6, the sugar your cells burn for energy."), show:{lab:"calc", calc:"molar", formula:"C6H12O6"}, when:"calc:molar:C6H12O6"},
+      {say:TT("Type caffeine, C8H10N4O2."), show:{lab:"calc", calc:"molar", formula:"C8H10N4O2"}, when:"calc:molar:C8H10N4O2"},
+      {say:TT("Pick the element that carries the largest share of caffeine's mass."), show:{pick:6}, when:"pick:6"}],
+     done:TT("A mole is 6.022 × 10²³ of anything. Molar mass turns that unimaginable count into grams you can weigh: 18 grams of water is one mole of water molecules.")},
+    {id:"decay", short:TT("Decay"), title:TT("Date a bone"), blurb:TT("Radioactive decay, used as a clock."), steps:[
+      {say:TT("In the labs, open Calculate, then Radioactive decay, and choose carbon-14."), show:{lab:"calc", calc:"decay", preset:"6,14"}, when:TT("calc:decay:6,14")},
+      {say:TT("Slide time forward until a quarter of the carbon-14 is left. That takes two half-lives, about 11,400 years."), show:{lab:"calc", calc:"decay", half:2}, when:"calc:decay:half:2"},
+      {say:TT("Press Listen like a Geiger counter and hear the clicks thin out as the atoms run out."), show:{lab:"calc", calc:"decay", listen:true}, when:"calc:listen"},
+      {say:TT("Open Predict and answer a question."), show:{lab:"predict"}, when:"quiz:*"}],
+     done:TT("Radiocarbon dating reaches back about 50,000 years; after that too little carbon-14 is left to count. For older rocks, geologists use slower clocks, such as uranium-238, with a half-life of 4.5 billion years.")},
+    {id:"star", short:TT("Star"), title:TT("Light a star"), blurb:TT("The reaction that powers the Sun, and why it is so slow."), steps:[
+      {say:TT("Pick hydrogen. The Sun is about three-quarters hydrogen."), show:{pick:1}, when:"pick:1"},
+      {say:TT("In the workbench, fuse two protons. This is the first step of the chain that powers the Sun."), show:{sim:"fuse", react:"pp"}, when:"fusion:pp"},
+      {say:TT("Read the chance to tunnel. On top of that, a proton must turn into a neutron by the weak force as they touch, so an average proton in the Sun's core waits billions of years. Fire once more."), show:{sim:"fuse", react:"pp"}, when:"fusion:pp*"},
+      {say:TT("Pick helium, the ash the Sun leaves behind."), show:{pick:2}, when:"pick:2"},
+      {say:TT("Most helium is older than any star. Switch to Origins and pick the Big Bang."), show:{lens:"origin", filter:"b"}, when:"lens:origin:b"}],
+     done:TT("The Sun turns about 600 million tonnes of hydrogen into helium every second, and about 4 million tonnes of that leaves as sunlight: E = mc².")},
+    {id:"gold", short:TT("Gold"), title:TT("Forge gold"), blurb:TT("From the Big Bang to the ring on your finger."), steps:[
+      {say:TT("Every story starts with hydrogen, made in the first few minutes after the Big Bang. Pick hydrogen."), show:{pick:1}, when:"pick:1"},
+      {say:TT("Switch the table to Origins to see where everything else was made."), show:{lens:"origin"}, when:"lens:origin*"},
+      {say:TT("Stars fuse light nuclei into heavier ones, all the way up to iron, among the most tightly bound nuclei of all. Pick iron."), show:{pick:26}, when:"pick:26"},
+      {say:TT("Fall into iron's nucleus and find it near the top of the binding-energy curve."), show:{depth:"nucleus"}, when:"depth:nucleus"},
+      {say:TT("Past iron, fusion stops paying. Gold needs a flood of neutrons, such as when two neutron stars collide. Pick gold and watch its birth."), show:{pick:79}, when:"pick:79"},
+      {say:TT("Open gold's card. Relativity, acting on its fast inner electrons, is part of why it is yellow."), show:{card:79}, when:"card:79"}],
+     done:TT("Most of the gold you have ever touched was likely made when two dead stars collided, long before the Sun existed.")},
+    {id:"element", short:TT("New element"), title:TT("Make a new element"), blurb:TT("The heaviest atoms ever made, a few at a time."), steps:[
+      {say:TT("Switch to Origins and pick the elements made by people."), show:{lens:"origin", filter:"h"}, when:"lens:origin:h"},
+      {say:TT("Pick oganesson, element 118. Only a handful of its atoms have ever been detected, and each lasted only about a thousandth of a second."), show:{pick:118}, when:"pick:118"},
+      {say:TT("Fall into its nucleus: 118 protons pushing each other apart, held together by the strong force for barely a moment."), show:{depth:"nucleus"}, when:"depth:nucleus"},
+      {say:TT("Pick livermorium. In 2024 Berkeley Lab made two of its atoms with a titanium-50 beam, a rehearsal for making element 120."), show:{pick:116}, when:"pick:116"},
+      {say:TT("Open oganesson's card and read its open problem, under Future."), show:{card:118, tab:"future"}, when:"card:118"}],
+     done:TT("Elements 119 and 120 would begin a new row of the table. Nobody has made either yet, and whether the heaviest nuclei have an island of stability is still an open question.")},
+    {id:"bond", short:TT("Molecule"), title:TT("Make a molecule"), blurb:TT("One electron, two protons, the simplest chemical bond."), steps:[
+      {say:TT("Open the workbench's bond bench."), show:{sim:"bond"}, when:"open:bond"},
+      {say:TT("Slide the protons until the energy is lowest. That distance is the bond."), show:{sim:"bond"}, when:"bond:min"},
+      {say:TT("Now put the two waves out of step and watch the bond disappear."), show:{sim:"bond"}, when:"bond:anti"},
+      {say:TT("Pick hydrogen. H₂, two of these bonded, is the most common molecule in the universe."), show:{pick:1}, when:"pick:1"}],
+     done:TT("Every covalent bond, from water to DNA, is electron waves adding in step between nuclei.")},
+    {id:"quark", short:TT("Quark"), title:TT("Pull a quark out"), blurb:TT("Try to break the strongest force there is."), steps:[
+      {say:TT("Pick hydrogen: its nucleus is a single proton."), show:{pick:1}, when:"pick:1"},
+      {say:TT("Fall into the proton."), show:{depth:"proton"}, when:"depth:proton"},
+      {say:TT("Keep going, down to the quarks."), show:{depth:"pull"}, when:"depth:pull"},
+      {say:TT("Grab a quark and pull until the string snaps."), show:{depth:"pull"}, when:"snap"}],
+     done:TT("No quark ever comes out alone: the energy you put in turns into new matter instead. That is confinement, and proving the theory behind it has a mass gap is a million-dollar problem.")},
+    {id:"fission", short:TT("Fission"), title:TT("Split the atom"), blurb:TT("Why the heaviest nuclei give up energy when they break."), steps:[
+      {say:TT("Pick uranium."), show:{pick:92}, when:"pick:92"},
+      {say:TT("Fall into uranium's nucleus: 92 protons and about 146 neutrons, packed at the same density as nearly every other nucleus."), show:{depth:"nucleus"}, when:"depth:nucleus"},
+      {say:TT("Open uranium's card and find it on the binding-energy curve. Past iron, each nucleon is held a little less tightly, so breaking a heavy nucleus in two releases energy."), show:{card:92}, when:"card:92"},
+      {say:TT("Pick iron, near the top of the curve, where almost nothing is left to gain either way."), show:{pick:26}, when:"pick:26"},
+      {say:TT("Prove it in the workbench: fuse iron with iron and watch the reaction swallow energy instead of releasing it."), show:{sim:"fuse", react:"fefe"}, when:"fusion:fefe*"}],
+     done:TT("Splitting one uranium-235 nucleus releases about 200 million electronvolts, millions of times more than burning one molecule of fuel. Reactors make nearly a tenth of the world's electricity this way.")},
+    {id:"fusion", short:TT("Fusion"), title:TT("Fuel a fusion reactor"), blurb:TT("Deuterium, tritium, lithium, and a wall of tungsten."), steps:[
+      {say:TT("Fusion power runs on hydrogen's heavy forms, deuterium and tritium. Pick hydrogen."), show:{pick:1}, when:"pick:1"},
+      {say:TT("In the workbench, fire deuterium at tritium."), show:{sim:"fuse", react:"dt"}, when:"fusion:dt"},
+      {say:TT("Turn the temperature to at least 10 keV, about 116 million kelvin, and fire again. Watch where the Gamow peak sits: most reactions happen far below the barrier, by tunneling."), show:{sim:"fuse", react:"dt", hot:true}, when:"fusion:dt:hot"},
+      {say:TT("Tritium barely exists in nature, so a power plant must breed its own. Fire a neutron into lithium-6."), show:{sim:"fuse", react:"nli6"}, when:"fusion:nli6"},
+      {say:TT("The wall that faces the plasma is tungsten, which melts at 3,422 °C. Pick tungsten."), show:{pick:74}, when:"pick:74"}],
+     done:TT("Deuterium from seawater, tritium bred from lithium, a tungsten wall, and superconducting magnets: the recipe ITER and many fusion companies are racing to make work.")},
+    {id:"battery", short:TT("Battery"), title:TT("Build a better battery"), blurb:TT("Voltage, capacity, and the elements in between."), steps:[
+      {say:TT("Open the battery bench. It starts with graphite and lithium cobalt oxide, the cell in most phones."), show:{sim:"charge"}, when:"open:charge"},
+      {say:TT("Swap the positive electrode for lithium iron phosphate: a lower voltage, but no cobalt and much safer."), show:{sim:"charge"}, when:"battery:*-lfp"},
+      {say:TT("Try a silicon negative electrode and watch the capacity jump."), show:{sim:"charge"}, when:"battery:si-*"},
+      {say:TT("Now switch to sodium-ion: cheaper and more abundant, a little heavier."), show:{sim:"charge"}, when:"battery:na"},
+      {say:TT("Pick sodium on the table and read what is happening with it right now."), show:{pick:11}, when:"pick:11"}],
+     done:TT("Every battery is a trade between how far an ion falls, how many a gram can hold, and what the materials cost the planet.")},
+    {id:"chip", short:TT("Chip"), title:TT("Build a chip"), blurb:TT("Sand, purified, patterned, and insulated with hafnium."), steps:[
+      {say:TT("Switch to Frontier and pick computer chips."), show:{lens:"frontier", filter:"chips"}, when:"lens:frontier:chips"},
+      {say:TT("Pick silicon. Chip-grade silicon is purified to better than 99.9999999 percent."), show:{pick:14}, when:"pick:14"},
+      {say:TT("Fall into silicon's electron cloud. It has four outer electrons, so a trace of an element with three or five turns it into a conductor a voltage can switch on and off."), show:{depth:"cloud"}, when:"depth:cloud"},
+      {say:TT("Pick hafnium. Since 2007, a film of hafnium oxide a few nanometers thick has insulated the gates of the transistors in fast chips."), show:{pick:72}, when:"pick:72"},
+      {say:TT("Pick gallium. Gallium nitride makes blue LEDs and the small, cool-running chips in fast chargers."), show:{pick:31}, when:"pick:31"}],
+     done:TT("A modern processor holds tens of billions of transistors, made from purified sand, a few dopant atoms, and layers of rarer metals only atoms thick.")},
+    {id:"qubit", short:TT("Qubit"), title:TT("Build a qubit"), blurb:TT("Three elements, three ways to hold a quantum bit."), steps:[
+      {say:TT("Switch the table to the Frontier lens and pick out quantum computing."), show:{lens:"frontier", filter:"quantum"}, when:"lens:frontier:quantum"},
+      {say:TT("Pick ytterbium. In 2024 Microsoft and Atom Computing entangled 24 logical qubits made of its atoms."), show:{pick:70}, when:"pick:70"},
+      {say:TT("Fall into ytterbium's electron cloud. Atom Computing's qubit is two spin states of the nucleus inside it, held in place by laser light."), show:{depth:"cloud"}, when:"depth:cloud"},
+      {say:TT("Superconducting qubits are tiny circuits instead, built from aluminum and tantalum. Pick tantalum."), show:{pick:73}, when:"pick:73"},
+      {say:TT("Ion traps hold single charged atoms. Pick barium, the qubit in Quantinuum's 98-qubit Helios."), show:{pick:56}, when:"pick:56"}],
+     done:TT("Atoms, circuits, and ions: nobody yet knows which will reach a million reliable qubits. That race is wide open.")},
+    {id:"time", short:TT("Clock"), title:TT("Keep perfect time"), blurb:TT("From cesium to the first nuclear clock."), steps:[
+      {say:TT("The second is defined by cesium-133: 9,192,631,770 ticks. Pick cesium."), show:{pick:55}, when:"pick:55"},
+      {say:TT("Optical clocks tick with light, tens of thousands of times faster. Pick strontium."), show:{pick:38}, when:"pick:38"},
+      {say:TT("Pick lutetium. In September 2026 two lutetium-ion clocks in Singapore set the accuracy record: off by about one part in ten quintillion."), show:{pick:71}, when:"pick:71"},
+      {say:TT("Pick thorium. Its nucleus holds the first nuclear clocks, reported in October 2026."), show:{pick:90}, when:"pick:90"},
+      {say:TT("Fall all the way into thorium's nucleus, where that clock ticks."), show:{depth:"nucleus"}, when:"depth:nucleus"}],
+     done:TT("Clocks this good can feel gravity change over a centimeter of height, and may catch the constants of nature drifting.")},
+    {id:"medicine", short:TT("Medicine"), title:TT("Fight cancer with atoms"), blurb:TT("Radioactive atoms that find a tumor, and the ones that photograph it."), steps:[
+      {say:TT("Switch to Frontier and pick medicine."), show:{lens:"frontier", filter:"medicine"}, when:"lens:frontier:medicine"},
+      {say:TT("Pick technetium. It has no stable form at all, yet technetium-99m is used in about four out of five nuclear medicine scans, tens of millions a year."), show:{pick:43}, when:"pick:43"},
+      {say:TT("Pick lutetium. Lutetium-177, carried by a molecule that seeks out prostate cancer cells, became an approved drug in 2022."), show:{pick:71}, when:"pick:71"},
+      {say:TT("Pick actinium. Actinium-225 fires alpha particles that stop within a few cell widths, and it is being tested against cancers other treatments cannot reach."), show:{pick:89}, when:"pick:89"},
+      {say:TT("Fall into actinium's nucleus, where that alpha particle comes from."), show:{depth:"nucleus"}, when:"depth:nucleus"}],
+     done:TT("The instability that makes radiation dangerous also makes it precise: an atom that decays inside a tumor spends its energy exactly where it is needed.")}
   ];
   function match(pat, ev){
     if(Array.isArray(pat)) return pat.some(function(p){ return match(p,ev); });
@@ -1080,15 +1033,14 @@ var Missions=(function(){
       if(a[1]===b[1]) seg=' L'+b[0]+' '+b[1];
       else { var x=a[0]>W/2?W-2:2; seg=' C'+x+' '+a[1]+' '+x+' '+b[1]+' '+b[0]+' '+b[1]; }
       path+=seg;
-      if(st.done[LIST[i-1].id]&&st.done[LIST[i].id]) lit+='<path class="ms-lit" d="M'+a[0]+' '+a[1]+seg+'"/>';
+      if(st.done[LIST[i-1].id]&&st.done[LIST[i].id]) lit+="<path class=\"ms-lit\" d=\"M"+(((a[0])))+" "+(((a[1])))+(((seg)))+"\"/>";
     }
-    var h='<svg class="ms-map" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><path class="ms-line" d="'+path+'"/>'+lit;
+    var h="<svg class=\"ms-map\" viewBox=\"0 0 "+(((((W)))))+" "+(((((H)))))+"\" aria-hidden=\"true\"><path class=\"ms-line\" d=\""+(((((path)))))+"\"/>"+(((((lit)))));
     LIST.forEach(function(m,k){
       var p=P[k], done=!!st.done[m.id], part=Math.min(1,(st.prog[m.id]||0)/m.steps.length), cur=st.cur===m.id;
-      h+='<g class="ms-stop'+(done?' d':'')+(cur?' c':'')+(m.id===hot?' hot':'')+'" data-start="'+m.id+'" transform="translate('+p[0].toFixed(1)+' '+p[1]+')">'+
-        '<circle class="ms-hit" r="22"/><circle class="ms-dot" r="9"/>';
+      h+="<g class=\"ms-stop"+((((((done?' d':''))))))+((((((cur?' c':''))))))+((((((m.id===hot?' hot':''))))))+"\" data-start=\""+(((((m.id)))))+"\" transform=\"translate("+(((((p[0].toFixed(1))))))+" "+(((((p[1])))))+")\">"+"<circle class=\"ms-hit\" r=\"22\"/>"+"<circle class=\"ms-dot\" r=\"9\"/>";
       if(!done&&part>0){ var ang=part*2*Math.PI-1e-4, x=Math.sin(ang)*13, y=-Math.cos(ang)*13;
-        h+='<path class="ms-arc" d="M0 -13 A13 13 0 '+(part>0.5?1:0)+' 1 '+x.toFixed(2)+' '+y.toFixed(2)+'"/>'; }
+        h+="<path class=\"ms-arc\" d=\"M0 -13 A13 13 0 "+((((part>0.5?1:0))))+" 1 "+(((x.toFixed(2))))+" "+(((y.toFixed(2))))+"\"/>"; }
       h+='<text class="ms-lab" y="29" text-anchor="middle">'+esc(m.short)+'</text></g>';
     });
     return h+'</svg>';
@@ -1104,10 +1056,10 @@ var Missions=(function(){
     /* where the page has its own Missions buttons (the website's bar and the
        table's foot), nothing floats over the page until a mission is under way */
     var TOG=opt.toggles||[], lastTog=null;
-    function syncToggles(nd){ TOG.forEach(function(b){ b.innerHTML='Missions <span>'+nd+' of '+LIST.length+'</span>';
+    function syncToggles(nd){ TOG.forEach(function(b){ b.innerHTML=TT("Missions <span>{nd} of {length}</span>",{nd:nd,length:LIST.length});
       b.setAttribute("aria-expanded",(st.open||((st.cur||st.celebrate)&&!st.min))?"true":"false"); });
       host.classList.toggle("ms-listing",!!TOG.length&&st.open&&!st.cur&&!st.celebrate); }
-    function pillHTML(nd){ return (st.cur&&st.min?'Mission: '+esc(byId(st.cur).title)+' <span>'+(st.step+1)+'/'+byId(st.cur).steps.length+'</span>':'Missions <span>'+nd+' of '+LIST.length+(opt.short?'':' done')+'</span>'); }
+    function pillHTML(nd){ return (st.cur&&st.min?TT("Mission: {esc} <span>{st}/{byId}</span>",{esc:esc(byId(st.cur).title),st:(st.step+1),byId:byId(st.cur).steps.length}):TT("Missions <span>{nd} of {length}{opt}</span>",{nd:nd,length:LIST.length,opt:(opt.short?'':' done')})); }
     /* a step that moves on inside the same mission is updated in place, so
        the words are announced and the button you pressed keeps the focus;
        anything else is drawn fresh, with the focus put back where it was */
@@ -1115,7 +1067,7 @@ var Missions=(function(){
       var nd=Object.keys(st.done).filter(byId).length, h='', panel=host.querySelector(".ms-panel[data-m]");
       if(st.cur&&!st.min&&!st.celebrate&&panel&&panel.getAttribute("data-m")===st.cur){
         var M0=byId(st.cur), S0=M0.steps[st.step];
-        panel.querySelector(".ms-top span").textContent="Step "+(st.step+1)+" of "+M0.steps.length;
+        panel.querySelector(".ms-top span").textContent=TT("Step {st} of {M0}",{st:(st.step+1),M0:M0.steps.length});
         [].forEach.call(panel.querySelectorAll(".ms-bar i"),function(i,k){ i.className=k<st.step?"d":(k===st.step?"c":""); });
         panel.querySelector(".ms-say").textContent=S0.say;
         var sh=panel.querySelector('[data-a="show"]'); if(sh) sh.hidden=!S0.show;
@@ -1123,30 +1075,20 @@ var Missions=(function(){
         syncToggles(nd); if(opt.onChange) opt.onChange(st); return;
       }
       var fa=document.activeElement, back=null;
-      if(fa&&host.contains(fa)) back=fa.getAttribute("data-a")?'[data-a="'+fa.getAttribute("data-a")+'"]':(fa.getAttribute("data-start")?'button[data-start="'+fa.getAttribute("data-start")+'"]':null);
+      if(fa&&host.contains(fa)) back=fa.getAttribute("data-a")?TT("[data-a=\"{fa}\"]",{fa:fa.getAttribute("data-a")}):(fa.getAttribute("data-start")?"button[data-start=\""+((fa.getAttribute("data-start")))+"\"]":null);
       if(st.min){ /* folded away: only the pill shows */ }
       else if(st.celebrate){
         var m=byId(st.celebrate), nx=next();
-        h='<div class="ms-panel ms-done" role="region" aria-label="Mission complete"><h3 tabindex="-1">Mission complete: '+esc(m.title)+'</h3><p>'+esc(m.done)+'</p>'+
-          mapSVG(st, m.id)+
-          '<div class="ms-row">'+(nx?'<button type="button" class="ms-go" data-start="'+nx.id+'">Next: '+esc(nx.title)+'</button>':'')+
-          '<button type="button" data-a="list">All missions</button><button type="button" data-a="close">Close</button></div></div>';
+        h="<div class=\"ms-panel ms-done\" role=\"region\" aria-label=\""+((TT("Mission complete")))+"\">"+"<h3 tabindex=\"-1\">"+((TT("Mission complete: {m}",{m:esc(m.title)})))+"</h3>"+"<p>"+(((esc(m.done))))+"</p>"+(((mapSVG(st, m.id))))+"<div class=\"ms-row\">"+((((nx?TT("<button type=\"button\" class=\"ms-go\" data-start=\"{id}\">Next: {nx}",{id:nx.id,nx:esc(nx.title)})+"</button>":''))))+"<button type=\"button\" data-a=\"list\">"+((TT("All missions")))+"</button>"+"<button type=\"button\" data-a=\"close\">"+((TT("Close")))+"</button>"+"</div>"+"</div>";
       } else if(st.cur){
         var M=byId(st.cur), S=M.steps[st.step];
-        h='<div class="ms-panel" data-m="'+M.id+'" role="region" aria-label="Mission: '+esc(M.title)+'"><div class="ms-top"><h3>'+esc(M.title)+'</h3><span>Step '+(st.step+1)+' of '+M.steps.length+'</span></div>'+
-          '<div class="ms-bar" aria-hidden="true">'+M.steps.map(function(x,i){ return '<i class="'+(i<st.step?"d":(i===st.step?"c":""))+'"></i>'; }).join('')+'</div>'+
-          '<p class="ms-say" aria-live="polite">'+esc(S.say)+'</p><div class="ms-row"><button type="button" class="ms-go" data-a="show"'+(S.show?'':' hidden')+'>Show me</button>'+
-          '<button type="button" data-a="list">All missions</button><button type="button" data-a="quit">Leave mission</button></div></div>';
+        h="<div class=\"ms-panel\" data-m=\""+(((((M.id)))))+"\" role=\"region\" aria-label=\"Mission: "+(((((esc(M.title))))))+"\">"+"<div class=\"ms-top\">"+"<h3>"+(((((esc(M.title))))))+"</h3>"+((((TT("<span>Step {st} of {M}</span>",{st:(st.step+1),M:M.steps.length})))))+"</div>"+"<div class=\"ms-bar\" aria-hidden=\"true\">"+(((((M.steps.map(function(x,i){ return "<i class=\""+((((i<st.step?"d":(i===st.step?"c":"")))))+"\"></i>"; }).join(''))))))+"</div>"+"<p class=\"ms-say\" aria-live=\"polite\">"+(((((esc(S.say))))))+"</p>"+"<div class=\"ms-row\">"+(((("<button type=\"button\" class=\"ms-go\" data-a=\"show\""+((S.show?'':' hidden'))+">"+TT("Show me")))))+"</button>"+"<button type=\"button\" data-a=\"list\">"+((((TT("All missions")))))+"</button>"+"<button type=\"button\" data-a=\"quit\">"+((((TT("Leave mission")))))+"</button>"+"</div>"+"</div>";
       } else if(st.open){
         var nx2=next();
-        h='<div class="ms-panel ms-list" role="region" aria-label="Missions"><div class="ms-top"><h3>Missions</h3><span>'+nd+' of '+LIST.length+' done</span></div>'+
-          mapSVG(st, nx2&&nx2.id)+'<ul>'+
-          LIST.map(function(m){ var p=st.prog[m.id]||0;
-            return '<li><button type="button" data-start="'+m.id+'"><b>'+esc(m.title)+'</b><span>'+esc(m.blurb)+'</span>'+
-              (st.done[m.id]?'<i>Done</i>':(p?'<i>'+p+' of '+m.steps.length+' steps</i>':''))+'</button></li>'; }).join('')+
-          '</ul><div class="ms-row"><button type="button" data-a="close">Close</button></div></div>';
+        h="<div class=\"ms-panel ms-list\" role=\"region\" aria-label=\""+((TT("Missions")))+"\">"+"<div class=\"ms-top\">"+"<h3>"+((TT("Missions")))+"</h3>"+((TT("<span>{nd} of {length} done</span>",{nd:nd,length:LIST.length})))+"</div>"+(((mapSVG(st, nx2&&nx2.id))))+"<ul>"+(((LIST.map(function(m){ var p=st.prog[m.id]||0;
+            return "<li>"+"<button type=\"button\" data-start=\""+(((m.id)))+"\"><b>"+(((esc(m.title))))+"</b><span>"+(((esc(m.blurb))))+"</span>"+((((st.done[m.id]?TT("<i>Done</i>"):(p?TT("<i>{p} of {m} steps</i>",{p:p,m:m.steps.length}):'')))))+"</button>"+"</li>"; }).join(''))))+"</ul>"+"<div class=\"ms-row\">"+"<button type=\"button\" data-a=\"close\">"+((TT("Close")))+"</button>"+"</div>"+"</div>";
       }
-      if(!TOG.length||st.cur||st.celebrate) h+='<button type="button" class="ms-pill" data-a="toggle" aria-expanded="'+((st.open||st.cur||st.celebrate)&&!st.min?"true":"false")+'">'+pillHTML(nd)+'</button>';
+      if(!TOG.length||st.cur||st.celebrate) h+="<button type=\"button\" class=\"ms-pill\" data-a=\"toggle\" aria-expanded=\""+(((((st.open||st.cur||st.celebrate)&&!st.min?"true":"false"))))+"\">"+(((pillHTML(nd))))+"</button>";
       host.innerHTML=h; syncToggles(nd);
       var tgt=st.celebrate?host.querySelector(".ms-done h3"):(back?host.querySelector(back):null);
       if(!tgt&&back) tgt=host.querySelector('[data-a="show"]:not([hidden])')||host.querySelector(".ms-pill");

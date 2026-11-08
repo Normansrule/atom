@@ -12,6 +12,41 @@
    ============================================================================ */
 @font-face{font-family:"Archivo";src:url(fonts/archivo-var.woff2) format("woff2");
   font-weight:100 900;font-stretch:62% 125%;font-display:swap}
+/* The other scripts. Archivo covers Latin; for every other writing system the
+   same family name falls through to a font the computer already has, chosen
+   by the character's range, so no stylesheet or canvas call needs to change
+   and nothing is downloaded. The ranges name the script, not the language:
+   Hindi and Marathi share Devanagari, Arabic and Urdu share the Arabic script. */
+@font-face{font-family:"Archivo";src:local("Helvetica Neue"),local("Segoe UI"),local("Roboto"),local("Noto Sans"),local("Arial");
+  unicode-range:U+0100-024F,U+1E00-1EFF,U+0400-04FF,U+0500-052F,U+2DE0-2DFF,U+A640-A69F}          /* Latin extended (Turkish, Vietnamese, French œ), Cyrillic */
+@font-face{font-family:"Archivo";src:local("PingFang SC"),local("Hiragino Sans GB"),local("Microsoft YaHei"),local("Noto Sans CJK SC"),local("Noto Sans SC"),local("Source Han Sans SC");
+  unicode-range:U+4E00-9FFF,U+3400-4DBF,U+3000-303F,U+FF00-FFEF,U+2E80-2EFF,U+31C0-31EF,U+F900-FAFF}  /* Han, CJK punctuation and full-width forms */
+@font-face{font-family:"Archivo";src:local("Hiragino Sans"),local("Hiragino Kaku Gothic ProN"),local("Yu Gothic"),local("Meiryo"),local("Noto Sans CJK JP"),local("Noto Sans JP");
+  unicode-range:U+3040-309F,U+30A0-30FF,U+31F0-31FF}                                              /* hiragana, katakana */
+@font-face{font-family:"Archivo";src:local("Apple SD Gothic Neo"),local("Malgun Gothic"),local("Noto Sans CJK KR"),local("Noto Sans KR");
+  unicode-range:U+AC00-D7AF,U+1100-11FF,U+3130-318F,U+A960-A97F,U+D7B0-D7FF}                        /* hangul */
+@font-face{font-family:"Archivo";src:local("Kohinoor Devanagari"),local("Devanagari Sangam MN"),local("Nirmala UI"),local("Mangal"),local("Noto Sans Devanagari");
+  unicode-range:U+0900-097F,U+A8E0-A8FF,U+1CD0-1CFF}                                              /* Devanagari: Hindi, Marathi */
+@font-face{font-family:"Archivo";src:local("Kohinoor Bangla"),local("Bangla Sangam MN"),local("Nirmala UI"),local("Vrinda"),local("Noto Sans Bengali");
+  unicode-range:U+0980-09FF}                                                                      /* Bengali */
+@font-face{font-family:"Archivo";src:local("Tamil Sangam MN"),local("InaiMathi"),local("Nirmala UI"),local("Latha"),local("Noto Sans Tamil");
+  unicode-range:U+0B80-0BFF}                                                                      /* Tamil */
+@font-face{font-family:"Archivo";src:local("Kohinoor Telugu"),local("Telugu Sangam MN"),local("Nirmala UI"),local("Gautami"),local("Noto Sans Telugu");
+  unicode-range:U+0C00-0C7F}                                                                      /* Telugu */
+@font-face{font-family:"Archivo";src:local("Geeza Pro"),local("Noto Naskh Arabic"),local("Noto Sans Arabic"),local("Segoe UI"),local("Tahoma"),local("Arial");
+  unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF}                        /* Arabic script: Arabic, Urdu */
+/* right-to-left: the browser mirrors flex rows and text; these are the parts laid out by hand */
+[dir="rtl"]{--dir:-1}
+[dir="rtl"] .lb-tabs,[dir="rtl"] .lb-rail,[dir="rtl"] .lb-subtabs{direction:rtl}
+[dir="rtl"] input[type="search"],[dir="rtl"] input[type="text"],[dir="rtl"] textarea{direction:rtl;text-align:right}
+[dir="rtl"] code,[dir="rtl"] kbd,[dir="rtl"] .num,[dir="rtl"] .lb-code,[dir="rtl"] .lb-chcode{direction:ltr;unicode-bidi:isolate;display:inline-block}
+/* the language badge: EN / ES over the real select */
+.lang-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;padding:0 10px;box-shadow:inset 0 0 0 1px var(--line);color:var(--ink2);font:600 13px/1 "Archivo",sans-serif;letter-spacing:.06em;cursor:pointer}
+.lang-wrap::before{content:attr(data-code)}
+.lang-wrap:focus-within{box-shadow:inset 0 0 0 2px var(--acc);color:var(--ink)}
+.lang-pick{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;border:0;font:inherit}
+.lang-pick option{color:#111;background:#fff}
+
 
 :root{
   --bg:#0b0c0d; --bg2:#121416; --bg3:#1b1e22; --ink:#f2f3f1; --ink2:#cdd1d4; --ink3:#aab0b5;
@@ -77,7 +112,8 @@ sub,sup{font-size:.7em;line-height:0}
 /* between a tablet and a laptop the bar has five links and four controls to
    seat on one line: tighter gaps and a shorter search box, never a second row */
 @media (min-width:901px) and (max-width:1180px){ .bar nav{gap:14px;margin-left:8px} .bar .find input{width:150px} }
-@media (min-width:901px) and (max-width:1100px){ .bar .btn-small{display:none} .bar .find input{width:140px} }   /* Get Atom stays in the hero and the Get section */
+@media (min-width:901px) and (max-width:1100px){ .bar .btn-small{display:none} .bar .find input{width:140px} }
+@media (min-width:901px) and (max-width:1000px){ .bar nav{gap:12px} .bar .find input{width:112px} }   /* Get Atom stays in the hero and the Get section */
 /* the two switches are quiet: the one filled button in the bar is Get Atom */
 .toggle{background:transparent;color:var(--ink2);border:0;box-shadow:inset 0 0 0 1px var(--line);padding:8px 12px;min-height:40px;font:600 14px/1 "Archivo",sans-serif;
   cursor:pointer;transition:transform 160ms var(--ease-out),color 160ms ease,box-shadow 160ms ease}
@@ -408,7 +444,7 @@ html.atom-drag,html.atom-drag body{-webkit-user-select:none;user-select:none}
   .spectrograph canvas{height:140px}
   .live dd{font-size:26px}
 }
-@media (max-width:420px){ .bar-actions .btn-small{display:none} }
+@media (max-width:560px){ .bar-actions .btn-small{display:none} .bar-actions{gap:6px} .bar{padding:10px 12px;gap:10px} .toggle{padding:8px 8px;font-size:12px} .lang-wrap{min-width:40px;padding:0 6px} .wordmark{font-size:20px} }
 
 /* ------------------------------------------------------------------ calm
    Reduced motion: nothing is pinned or scrubbed. Each section is a still,

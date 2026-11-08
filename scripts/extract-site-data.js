@@ -5,11 +5,12 @@
 // data are copied verbatim; the binding curve is computed by that same code.
 const fs=require('fs'), vm=require('vm');
 const html=fs.readFileSync(process.argv[2],'utf8');
-const main=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)][1][1];
+const main=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).find(b=>b.indexOf('/* ATOM-ENGINES BEGIN */')>=0);
+if(!main) throw new Error('main script missing');
 const cut=main.indexOf('/* ATOM-ENGINES BEGIN */');
 if(cut<0) throw new Error('engine marker missing');
 const physics=main.slice(0,cut);
-const ctx={Math,console,Float64Array,Float32Array,Int8Array,Int16Array,Uint8Array,Object,Array,String,Number,JSON,isNaN};
+const ctx={Math,console,Float64Array,Float32Array,Int8Array,Int16Array,Uint8Array,Object,Array,String,Number,JSON,isNaN,TT:(s)=>s,AtomI18N:{T:(s)=>s}};
 vm.createContext(ctx);
 vm.runInContext(physics+';this.ELEMENTS=ELEMENTS;this.bindingSEMF=bindingSEMF;this.BA_MEAS=BA_MEAS;this.valleyZ=valleyZ;this.USES=USES;',ctx);
 if(ctx.ELEMENTS.length!==118||ctx.USES.length!==118) throw new Error('expected 118 elements');
