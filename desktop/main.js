@@ -9,14 +9,13 @@
 const { app, BrowserWindow, Menu, shell, session, dialog, screen } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
-const { pathToFileURL } = require("node:url");
+const { fileURLToPath } = require("node:url");
 
 const SITE = "https://normansrule.github.io/atom/";
 const REPO = "https://github.com/normansrule/atom";
 const ISSUES = REPO + "/issues/new/choose";
 const RELEASES = REPO + "/releases";
 const PAGE = path.join(__dirname, "app", "index.html");
-const PAGE_URL = pathToFileURL(PAGE).href;
 const EXTERNAL = /^(https?|mailto):/i;
 
 // Keep Atom's settings in a folder of its own: "Atom" was also the name of a
@@ -36,7 +35,9 @@ if (!app.requestSingleInstanceLock()) {
     try { fs.writeFileSync(stateFile(), JSON.stringify({ ...win.getNormalBounds(), maximized: win.isMaximized() })); } catch { /* not worth failing over */ }
   };
   const openExternal = (url) => { if (EXTERNAL.test(url)) shell.openExternal(url); };
-  const isOwnPage = (url) => url.split("#")[0].split("?")[0] === PAGE_URL;   // the page may carry ?lang=; a reload keeps it
+  // The page may carry ?lang= and a #link; a reload keeps them. Paths are compared, not strings:
+  // Chromium and Node do not always percent-encode an unusual install folder the same way.
+  const isOwnPage = (url) => { try { const u = new URL(url); return u.protocol === "file:" && path.resolve(fileURLToPath(u)) === path.resolve(PAGE); } catch { return false; } };
 
   function createWindow() {
     const s = readState();
@@ -143,6 +144,8 @@ if (!app.requestSingleInstanceLock()) {
     const allowed = (permission) => permission === "fullscreen" || permission === "clipboard-sanitized-write";
     session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => cb(allowed(permission)));
     session.defaultSession.setPermissionCheckHandler((_wc, permission) => allowed(permission));
+    // Atom is one file and the language files beside it. Nothing the page could ask the network for leaves this computer.
+    session.defaultSession.webRequest.onBeforeRequest({ urls: ["http://*/*", "https://*/*", "ws://*/*", "wss://*/*"] }, (_details, cb) => cb({ cancel: true }));
     buildMenu();
     createWindow();
   });

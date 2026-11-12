@@ -6,11 +6,13 @@
 :root{
   --lb-build:#ffa25c; --lb-predict:#b99cff; --lb-calc:#3fd8c6; --lb-bench:#ffb020; --lb-hear:#ff8fc4; --lb-you:#6fdc9a; --lb-explore:#8fb3ff; --lb-math:#c9e86b; --lb-lessons:#ffd166;
   --lb-p:#ff9a55; --lb-n:#c3ccd8; --lb-e:#6fd3ff;
+  --lb-sub-s:#6fd3ff; --lb-sub-p:#ff9a55; --lb-sub-d:#6fdc9a; --lb-sub-f:#b99cff;   /* the four kinds of subshell, wherever they are drawn */
   --lb-ok:#5ed69a; --lb-warn:#f5c451; --lb-bad:#ff9eab; --lb-onk:#141005;
 }
 :root[data-theme="light"]{
   --lb-build:#7a3300; --lb-predict:#4b2a91; --lb-calc:#0b5a52; --lb-bench:#643c00; --lb-hear:#8a1840; --lb-you:#1d5e2c; --lb-explore:#1f3f8f; --lb-math:#3e5a00; --lb-lessons:#6b4a00;
   --lb-p:#733000; --lb-n:#33435c; --lb-e:#09467a;
+  --lb-sub-s:#09467a; --lb-sub-p:#733000; --lb-sub-d:#1d5e2c; --lb-sub-f:#4b2a91;
   --lb-ok:#0b4f2c; --lb-warn:#5c4000; --lb-bad:#861826; --lb-onk:#ffffff;
 }
 /* the grounds are the host's: --panel, --panel2, --sunk, --line and --line2
@@ -525,8 +527,13 @@
 .lb-table th,.lb-table td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--lb-line);vertical-align:top}
 .lb-table th{color:var(--ink2);font-weight:600}
 .lb-mion{margin:0 0 4px;font-size:var(--fs-ui,14px);color:var(--ink2);padding:4px 10px;border:1px solid var(--lb-line);border-radius:999px;display:inline-block}
-.lb-msteps{display:grid;grid-template-columns:repeat(5,minmax(0,auto));gap:6px;list-style:none;margin:0;padding:0;flex:1 1 420px;min-width:0;justify-content:start}
-.lb-msteps button{width:100%;justify-content:flex-start}
+/* ten steps in two rows of five, each column as wide as its longer name. Beside the element
+   picker when the row has room for that; otherwise on a row of its own (it used to be given
+   420px whatever the names needed, which crushed the number badges into ovals at 1280) */
+.lb-msteps{display:grid;grid-template-columns:repeat(5,minmax(0,max-content));gap:6px;list-style:none;margin:0;padding:0;flex:0 1 auto;max-width:100%;min-width:0;justify-content:start}
+.lb-msteps button{width:100%;height:100%;justify-content:flex-start}
+.lb-msteps button b{flex:none}
+.lb-msteps button span{min-width:0}
 .lb-msteps button{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 12px 4px 4px;border-radius:var(--lb-rp,999px);border:1px solid var(--lb-line2);
   background:transparent;color:var(--ink);font:inherit;font-size:var(--fs-ui,14px);cursor:pointer}
 .lb-msteps button b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--lb-raise);font-size:var(--fs-micro,13px);font-variant-numeric:tabular-nums}
@@ -581,6 +588,9 @@
 .lb-speak[data-on="1"]{color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink2)}
 dfn.lb-term{font-style:normal;text-decoration:underline dotted;text-decoration-color:var(--k);text-underline-offset:3px;text-decoration-thickness:1.5px;cursor:help}
 dfn.lb-term:focus-visible{outline:2px solid var(--k);outline-offset:2px}
+dfn.lb-term[aria-expanded="true"]{text-decoration-style:solid}
+/* a Listen button that sits beside a passage that announces itself, not inside it */
+.lb-speak.after{display:flex;width:fit-content;margin:-4px 0 10px}
 .lb-termcard{display:block;margin:6px 0;padding:8px 12px;border-left:3px solid var(--k);background:var(--lb-fill,rgba(127,127,127,.08));font-size:var(--fs-small,14px);color:var(--ink)}
 .lb-lslist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:16px}
 .lb-lscard{padding:16px;border:1px solid var(--lb-line);border-radius:var(--lb-r,8px);display:flex;flex-direction:column;gap:6px}

@@ -90,9 +90,10 @@ var ORB_L="spdf";
 /* the element's name in a sentence: each slot is a template the language pack owns, so
    "Iron’s", "an iron atom" and "iron’s 26 protons" come out as "del hierro", "un átomo de
    hierro" and "los 26 protones del hierro" in Spanish */
-function atomPhrase(name){ var n=name.toLowerCase(); return /^[aeiou]/.test(n)?TT("an {el} atom",{el:n}):TT("a {el} atom",{el:n}); }
-function poss(name){ return TT("{El}’s",{El:name}); }
-function fmt(x,d){ return (+x).toLocaleString("en-US",{maximumFractionDigits:d===undefined?2:d,minimumFractionDigits:d===undefined?0:Math.min(d,2)}); }
+/* "an iron atom", "a gold atom": the article is English's own business, so it is chosen from the English name */
+function atomPhrase(z){ return /^[aeiou]/i.test(AtomI18N.elEnglish(z))?TT("an {el} atom",{z:z}):TT("a {el} atom",{z:z}); }
+function poss(z){ return TT("{El}’s",{z:z}); }
+function fmt(x,d){ return AtomI18N.Nmm(x, d===undefined?0:Math.min(d,2), d===undefined?2:d); }   /* in the reader's notation */
 function supNum(s){ var m={"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
   return String(s).split("").map(function(c){ return m[c]||c; }).join(""); }
 /* an orbital to draw: n, l, m, its screened charge, and whether its subshell
@@ -110,16 +111,17 @@ function setElement(z, quiet){
   SEL=z; EL=ELEMENTS[z-1]; ELV=PT?PT.V[z]:PTable.valence(z);
   var name=EL[2], nuc=nucleusOf(z);
   [].slice.call(D.querySelectorAll('[data-el="name"]')).forEach(function(s){ s.textContent=name; });
-  [].slice.call(D.querySelectorAll('[data-el="lname"]')).forEach(function(s){ s.textContent=name.toLowerCase(); });
+  [].slice.call(D.querySelectorAll('[data-el="lname"]')).forEach(function(s){ s.textContent=AtomI18N.elWord(z); });
+  [].slice.call(D.querySelectorAll('[data-el="the"]')).forEach(function(s){ s.textContent=AtomI18N.theEl(z); });
   if(LABS) LABS.setElement(z);
-  [].slice.call(D.querySelectorAll('[data-el="poss"]')).forEach(function(s){ s.textContent=poss(name); });
-  [].slice.call(D.querySelectorAll('[data-el="atom"]')).forEach(function(s){ s.textContent=atomPhrase(name); });
-  [].slice.call(D.querySelectorAll('[data-el="protons"]')).forEach(function(s){ s.textContent=z===1?TT("hydrogen’s one proton"):TT("{el}’s {z} protons",{el:name.toLowerCase(),z:z}); });
-  D.getElementById("fallIn").textContent=TT("Fall into {name}",{name:name.toLowerCase()});
+  [].slice.call(D.querySelectorAll('[data-el="poss"]')).forEach(function(s){ s.textContent=poss(z); });
+  [].slice.call(D.querySelectorAll('[data-el="atom"]')).forEach(function(s){ s.textContent=atomPhrase(z); });
+  [].slice.call(D.querySelectorAll('[data-el="protons"]')).forEach(function(s){ s.textContent=z===1?TT("hydrogen’s one proton"):TT("{el}’s {n, plural, one {# proton} other {# protons}}",{z:z,n:z}); });
+  D.getElementById("fallIn").textContent=TT("Fall into {name}",{name:AtomI18N.elWord(z),z:z});
   cloudTexts(); buildPicker(); lightSetup(); emptyTexts(); nucleusTexts();
   userOrb=null; NUCC=null; bindReveal=CALM?1:Math.min(bindReveal,1);
   drawRadial(true); drawBinding(true);
-  if(!quiet){ try{ history.replaceState(null,"","?el="+EL[1]+location.hash); }catch(e){} }
+  if(!quiet){ try{ var u=new URL(location.href); u.searchParams.set("el",EL[1]); history.replaceState(null,"",u.pathname+u.search+u.hash); }catch(e){} }
   WLIGHT=AtomWorld.elementLight(z);
   ELTINT={dark:mixHex("#05060c",WLIGHT.rgb,0.07), light:mixHex("#eef0ee",WLIGHT.rgb,0.10)}; lastTint="";
   if(WORLD){ WORLD.setLight(WLIGHT.lines, WLIGHT.rgb); if(!quiet) WORLD.birth(ORIGIN[z-1], performance.now()); }
@@ -135,8 +137,14 @@ function cloudTexts(){
     s3=TT("Now put the electron in two levels at once. The phases beat and the cloud starts to <b>slosh</b>, 2.47 × 10¹⁵ times a second, slowed here about 10¹⁵ times. A sloshing charge is an antenna: this motion is what sends out hydrogen&rsquo;s ultraviolet Lyman-α light.");
   } else {
     var nr=v.n-v.l-1;
-    s0=TT("This is {v} <b>{v2}</b> orbital, computed rather than drawn: <b>ψ = R(r) · Y(θ, φ)</b>. It holds the electron that puts {v3} in the {v4} block{v5}. The other {v6} electron{v7} screen the nucleus, so it feels a charge of about <b>{v8}</b>, not {v9} (Slater&rsquo;s rules).",{v:((poss(name.toLowerCase()))),v2:((PTable.orbName(v,true))),v3:((name.toLowerCase())),v4:((ORB_L[v.l])),v5:(((v.full?TT(", and that subshell is full, so it is perfectly round"):""))),v6:(((z-1))),v7:(((z>2?"s":""))),v8:((fmt(v.Ze,2))),v9:((z))});
-    s1=TT("The dark gaps are <b>nodes</b>, where the wave passes through zero and the electron is never found. A {n}{ORB_L} orbital has {nr} spherical {nr, plural, one {node} other {nodes}} and {l} through the middle, n − 1 = {v} in all{v2}",{n:v.n,ORB_L:ORB_L[v.l],nr:nr,l:v.l,v:(v.n-1),v2:(v.full&&v.l>0?TT(". In a full subshell the flat ones cancel out, which is why it is round."):".")});
+    var cv={z:z, orb:PTable.orbName(v,true), blk:ORB_L[v.l], n:z-1, ze:fmt(v.Ze,2)};
+    s0=v.full?
+      TT("This is {el}&rsquo;s <b>{orb}</b> orbital, computed rather than drawn: <b>ψ = R(r) · Y(θ, φ)</b>. It holds the electron that puts {el} in the {blk} block, and that subshell is full, so it is perfectly round. The other {n, plural, one {# electron screens} other {# electrons screen}} the nucleus, so it feels a charge of about <b>{ze}</b>, not {Z} (Slater&rsquo;s rules).",cv):
+      TT("This is {el}&rsquo;s <b>{orb}</b> orbital, computed rather than drawn: <b>ψ = R(r) · Y(θ, φ)</b>. It holds the electron that puts {el} in the {blk} block. The other {n, plural, one {# electron screens} other {# electrons screen}} the nucleus, so it feels a charge of about <b>{ze}</b>, not {Z} (Slater&rsquo;s rules).",cv);
+    var nv={orb:v.n+ORB_L[v.l], nr:nr, l:v.l, all:v.n-1};
+    s1=v.full&&v.l>0?
+      TT("The dark gaps are <b>nodes</b>, where the wave passes through zero and the electron is never found. A {orb} orbital has {nr, plural, =0 {no spherical nodes} one {# spherical node} other {# spherical nodes}} and {l} through the middle, n − 1 = {all} in all. In a full subshell the flat ones cancel out, which is why it is round.",nv):
+      TT("The dark gaps are <b>nodes</b>, where the wave passes through zero and the electron is never found. A {orb} orbital has {nr, plural, =0 {no spherical nodes} one {# spherical node} other {# spherical nodes}} and {l} through the middle, n − 1 = {all} in all.",nv);
     s3=TT("Now every electron at once: <b>{v}</b> of them, in shells of {v2}. Each subshell is a hydrogen-like cloud with its own screened charge, and together they make the atom&rsquo;s layered glow. The brightness here is logarithmic: the innermost shell is thousands of times denser than the outermost.",{v:((z)),v2:((shellsOf(z).join(", ")))});
   }
   D.getElementById("cs0").innerHTML=s0; D.getElementById("cs1").innerHTML=s1; D.getElementById("cs3").innerHTML=s3;
@@ -344,8 +352,8 @@ var flash=-1e9;
 function pullReadout(){
   var S=PULL.S||quarks(performance.now()/1000).S;
   var leg=S.legs[PULL.idx], E=PULL.on?Math.max(0,Q.sigma*(S.L-(PULL.restL||S.L))):0, left=Math.max(0,Q.rBreak-leg);
-  set("pLeg",leg.toFixed(2)+" fm"); set("pE",E.toFixed(2)+" GeV"); set("pF",Q.tonnes.toFixed(1)+" tonnes");
-  set("pLeft",PULL.broken?"broken":left.toFixed(2)+" fm");
+  set("pLeg",leg.toFixed(2)+" fm"); set("pE",E.toFixed(2)+" GeV"); set("pF",TT("{n} metric tons",{n:AtomI18N.Nmm(Q.tonnes,1,1)}));
+  set("pLeft",PULL.broken?TT("broken",{}):left.toFixed(2)+" fm");
   D.getElementById("pLeft").classList.toggle("hot",!PULL.broken&&left<0.2);
   if(PULL.on&&!PULL.broken) Sound.humSet(E);
 }
@@ -375,8 +383,8 @@ var LNOTE={
   36:TT("From 1960 to 1983 the meter itself was defined by an orange line of krypton-86."),
   37:TT("Rubidium is named for its deep red light, from the Latin rubidus."),
   49:TT("Indium is named for its indigo line."),
-  55:TT("Caesium is named for the sky blue of these two lines, from the Latin caesius."),
-  80:TT("These violet, blue and green lines light every fluorescent tube; the coating turns mercury&rsquo;s ultraviolet into white."),
+  55:TT("Cesium is named for the sky blue of these two lines, from the Latin caesius."),
+  80:TT("These violet, blue, and green lines light every fluorescent tube; the coating turns mercury&rsquo;s ultraviolet into white."),
   81:TT("Thallium is named for its green line, from the Greek thallos, a green shoot.")
 };
 function lightSetup(){
@@ -388,20 +396,21 @@ function lightSetup(){
   D.getElementById("spectrograph").classList.toggle("noladder", LMODE==="lines");
   var intro, eq, fine;
   if(LMODE==="lines"){
-    intro=TT("Heat {name} or run a current through it and it glows in exactly these colors, the same everywhere in the universe. That is how we know what the stars are made of. Each line is one electron dropping between two levels, and the photon carries away the difference. {LNOTE}",{name:name.toLowerCase(),LNOTE:(LNOTE[SEL]||"")});
+    intro=TT("Heat {name} or run a current through it and it glows in exactly these colors, the same everywhere in the universe. That is how we know what the stars are made of. Each line is one electron dropping between two levels, and the photon carries away the difference. {LNOTE}",{name:AtomI18N.elWord(SEL),z:SEL,LNOTE:(LNOTE[SEL]||"")});
     eq=TT("E = hc / λ");
-    fine=TT("Measured lines from the NIST Atomic Spectra Database, converted from air to vacuum wavelengths. With more than one electron, the electrons repel each other and the Schrödinger equation has no exact solution, so these are measured, not computed.{v}",{v:((SEL===20||SEL===38||SEL===56)?TT(" Some belong to the singly charged ion, which flames and lamps excite too."):"")});
+    fine=TT("Measured lines from the NIST Atomic Spectra Database, converted from air to vacuum wavelengths. With more than one electron, the electrons repel each other and the Schrödinger equation has no exact solution, so these are measured, not computed.")+((SEL===20||SEL===38||SEL===56)?" "+TT("Some belong to the singly charged ion, which flames and lamps excite too."):"");
   } else {
-    intro=TT("{LMODE}Drop hydrogen&rsquo;s electron from level 3 to level 2 and the energy leaves as one photon of red light. For a one-electron atom that is the Rydberg formula, and every line below is computed from it:",{LMODE:(LMODE==="ref"?TT("Every element glows in its own set of colors. Atom doesn&rsquo;t carry {poss} measured lines yet, so here is hydrogen, the one atom whose spectrum is exact arithmetic. ",{poss:poss(name.toLowerCase())}):"")});
+    intro=(LMODE==="ref"?TT("Every element glows in its own set of colors. Atom doesn&rsquo;t carry {el}&rsquo;s measured lines yet, so here is hydrogen, the one atom whose spectrum is exact arithmetic.",{z:SEL})+" ":"")+
+      TT("Drop hydrogen&rsquo;s electron from level 3 to level 2 and the energy leaves as one photon of red light. For a one-electron atom that is the Rydberg formula, and every line below is computed from it:");
     eq="1/λ = R<sub>H</sub> (1/n₁² − 1/n₂²)";
     fine=TT("Computed for Hα: 656.470 nm. Measured by the US National Institute of Standards and Technology (NIST): 656.463 nm. The seven picometers in between are physics the formula leaves out: relativity, the electron&rsquo;s spin, and quantum electrodynamics (QED). In 2026 hydrogen tested the Standard Model to better than a part per trillion.");
   }
   D.getElementById("lightIntro").innerHTML=intro; D.getElementById("lightEq").innerHTML=eq; D.getElementById("lightFine").innerHTML=fine;
   var wl=AtomWorld.elementLight(SEL);
   D.getElementById("ringNote").textContent= wl.lines.length ?
-    TT("The page is lit by {poss} own light, and the rings around the atom are its lines, spread out by wavelength the way a diffraction grating spreads them: violet nearest, red farthest.",{poss:poss(name.toLowerCase())}) :
-    TT("Atom has no measured lines for {name}, so the page is lit instead by the colors of the places that made it.",{name:name.toLowerCase()});
-  set("lineReadout", LMODE==="lines"?TT("Scroll, or press the button. Each line appears where {poss} electrons put it.",{poss:poss(name.toLowerCase())}):TT("Scroll, or press the button. Each fall from a higher level adds a line where the formula says it must be."));
+    TT("The page is lit by {el}’s own light, and the rings around the atom are its lines, spread out by wavelength the way a diffraction grating spreads them: violet nearest, red farthest.",{z:SEL}) :
+    TT("Atom has no measured lines for {name}, so the page is lit instead by the colors of the places that made it.",{name:AtomI18N.elWord(SEL),z:SEL});
+  set("lineReadout", LMODE==="lines"?TT("Scroll, or press the button. Each line appears where {el}’s electrons put it.",{z:SEL}):TT("Scroll, or press the button. Each fall from a higher level adds a line where the formula says it must be."));
   D.getElementById("lightEq").setAttribute("aria-label", LMODE==="lines"?TT("E equals h c over lambda"):TT("one over lambda equals R H times the quantity one over n one squared minus one over n two squared"));
   drawSpectrum(); drawLadder();
 }
@@ -460,7 +469,7 @@ function nextMeasured(){
 function landLine(e){
   if(e.measured){
     LIT[e.idx]=(LIT[e.idx]||0)+1; drawSpectrum();
-    set("lineReadout",TT("{e} nm: E = hc/λ = {v} eV. {Object} of {poss} {length} visible lines here.",{e:e.lam.toFixed(2),v:(1239.84198/e.lam).toFixed(3),Object:(Object.keys(LIT).length),poss:poss(EL[2].toLowerCase()),length:ELINES.length}));
+    set("lineReadout",TT("{lam} nm: E = hc/λ = {ev} eV. {lit} of {el}’s {n, plural, one {# visible line} other {# visible lines}} here.",{lam:fmt(e.lam,2),ev:fmt(1239.84198/e.lam,3),lit:Object.keys(LIT).length,z:SEL,n:ELINES.length}));
   } else {
     var key=e.lam.toFixed(2); LINES[key]=(LINES[key]||0)+1; drawSpectrum();
     var names={3:"Hα",4:"Hβ",5:"Hγ",6:"Hδ"};
@@ -483,11 +492,11 @@ function emptyTexts(){
   var name=EL[2], nuc=nucleusOf(SEL), r=ARAD[SEL-1], txt;
   if(r){
     var ratio=r*1e-12/(nuc.R*1e-15), across=0.015*ratio, fields=Math.max(1,Math.round(across/100));
-    txt=TT("Keep falling, into {name}. Its atom is about {fmt} picometers across. Its nucleus is {fmt2} femtometers, {fmt3} times smaller. Make the nucleus a marble and the atom would be {fmt4} meters wide, about {fields} football {fields, plural, one {field} other {fields}} end to end.",{name:name.toLowerCase(),fmt:fmt(2*r,0),fmt2:fmt(2*nuc.R,1),fmt3:fmt(Math.round(ratio/100)*100,0),fmt4:fmt(Math.round(across/10)*10,0),fields:fields});
+    txt=TT("Keep falling, into {name}. Its atom is about {fmt} picometers across. Its nucleus is {fmt2} femtometers, {fmt3} times smaller. Make the nucleus a marble and the atom would be {fmt4} meters wide, about {fields} football {fields, plural, one {field} other {fields}} end to end.",{name:AtomI18N.elWord(SEL),z:SEL,fmt:fmt(2*r,0),fmt2:fmt(2*nuc.R,1),fmt3:fmt(Math.round(ratio/100)*100,0),fmt4:fmt(Math.round(across/10)*10,0),fields:fields});
     var frac=Math.pow(nuc.R*1e-15/(r*1e-12),3);
     set("emptyStat",((1-frac)*100).toFixed(12)+" %");
   } else {
-    txt=TT("Keep falling, into {name}. Nobody has made enough of it to measure how big its atom is, but its nucleus is about {fmt} femtometers across, and the cloud around it is tens of thousands of times wider.",{name:name.toLowerCase(),fmt:fmt(2*nuc.R,1)});
+    txt=TT("Keep falling, into {name}. Nobody has made enough of it to measure how big its atom is, but its nucleus is about {fmt} femtometers across, and the cloud around it is tens of thousands of times wider.",{name:AtomI18N.elWord(SEL),z:SEL,fmt:fmt(2*nuc.R,1)});
     set("emptyStat",TT("Almost all"));
   }
   D.getElementById("emptyText").textContent=txt;
@@ -502,9 +511,12 @@ function nucleusTexts(){
   } else {
     var S=PTable.semfTerms(SEL,nuc.A), B=meas?meas*nuc.A:S.B;
     h2=TT("A force you never feel");
-    txt=TT("<b>{v}</b> nucleons: <b>{v2}</b> proton{v3} that push each other apart and <b>{v4}</b> neutron{v5}, held together by the strong nuclear force, which reaches only about one nucleon&rsquo;s width. Building {v6}-{v7} releases <b>{v8} MeV</b>{v9}, so it weighs less than its loose parts by exactly that much: E = mc².",{v:((nuc.A)),v2:((SEL)),v3:(((SEL>1?"s":""))),v4:((nuc.N)),v5:(((nuc.N===1?"":"s"))),v6:((name.toLowerCase())),v7:((nuc.A)),v8:((fmt(B,1))),v9:(((meas?TT(" (measured)"):TT(" (liquid-drop formula)"))))});
-    if(isMagic(SEL)&&isMagic(nuc.N)) txt+=TT(" Both {SEL} and {N} are <b>magic numbers</b>, closed nuclear shells, so this nucleus is doubly magic.",{SEL:SEL,N:nuc.N});
-    else if(isMagic(SEL)||isMagic(nuc.N)) txt+=TT(" {isMagic} is a <b>magic number</b>, a closed nuclear shell.",{isMagic:(isMagic(SEL)?SEL:nuc.N)});
+    var bv={z:SEL, A:nuc.A, p:SEL, n:nuc.N, B:fmt(B,1)};
+    txt=meas?
+      TT("<b>{A}</b> nucleons: <b>{p}</b> {p, plural, one {proton} other {protons that push each other apart}} and <b>{n}</b> {n, plural, one {neutron} other {neutrons}}, held together by the strong nuclear force, which reaches only about one nucleon&rsquo;s width. Building {el}-{A} releases <b>{B} MeV</b> (measured), so it weighs less than its loose parts by exactly that much: E = mc².",bv):
+      TT("<b>{A}</b> nucleons: <b>{p}</b> {p, plural, one {proton} other {protons that push each other apart}} and <b>{n}</b> {n, plural, one {neutron} other {neutrons}}, held together by the strong nuclear force, which reaches only about one nucleon&rsquo;s width. Building {el}-{A} releases <b>{B} MeV</b> (liquid-drop formula), so it weighs less than its loose parts by exactly that much: E = mc².",bv);
+    if(isMagic(SEL)&&isMagic(nuc.N)) txt+=" "+TT("Both {SEL} and {N} are <b>magic numbers</b>, closed nuclear shells, so this nucleus is doubly magic.",{SEL:SEL,N:nuc.N});
+    else if(isMagic(SEL)||isMagic(nuc.N)) txt+=" "+TT("{isMagic} is a <b>magic number</b>, a closed nuclear shell.",{isMagic:(isMagic(SEL)?SEL:nuc.N)});
     eq="B = a<sub>V</sub>A − a<sub>S</sub>A<sup>2/3</sup> − a<sub>C</sub>Z(Z−1)/A<sup>1/3</sup> − a<sub>A</sub>(A−2Z)²/A "+(S.d>=0?"+":"−")+" δ<br>= "+
       fmt(S.v,1)+" − "+fmt(S.s,1)+" − "+fmt(S.c,1)+" − "+fmt(S.a,1)+" "+(S.d>=0?"+":"−")+" "+fmt(Math.abs(S.d),1)+" = <b>"+fmt(S.B,1)+" MeV</b>";
   }
@@ -557,7 +569,7 @@ function drawBinding(force){
   g.strokeStyle=theme==="light"?"#09467a":"#6fd3ff"; g.stroke();
   BINDING.measured.forEach(function(p){ if(p[0]>lim) return; g.fillStyle=T.acc; g.beginPath(); g.arc(X(p[0]),Y(p[1]),3.2,0,6.2832); g.fill(); });
   var nuc=nucleusOf(SEL), A=nuc.A, meas=BA_MEAS[SEL+"-"+A], ba=A===1?0:(meas||PTable.semfTerms(SEL,A).B/A);
-  var marks=[[A,EL[2].toLowerCase()+"-"+A,ba,true]];
+  var marks=[[A,AtomI18N.elWord(SEL)+"-"+A,ba,true]];
   if(SEL!==26) marks.push([56,"iron-56",8.79,false]);
   var clash=marks.length>1 && Math.abs(X(marks[0][0])-X(56))<110;   /* two labels that would overprint: one goes below */
   marks.forEach(function(m,mi){
@@ -623,8 +635,8 @@ function measure(){
 }
 if(window.ResizeObserver){ var sectRO=new ResizeObserver(function(){ SECT=null; }); sectRO.observe(D.querySelector("main")||D.body);
   var pinRO=new ResizeObserver(function(){ fitPins(); }); pinPlates.forEach(function(x){ pinRO.observe(x[1]); }); }
-var gaugeLinks=[].slice.call(D.querySelectorAll(".gauge a")), gaugeMap={table:"top",cloud:"cloud",light:"light",empty:"empty",nucleus:"nucleus",proton:"proton",pull:"pull",edge:"edge"};
-function markGauge(){ var k=gaugeMap[active]||"edge"; gaugeLinks.forEach(function(a){ a.classList.toggle("on",a.getAttribute("data-depth")===k); }); }
+var gaugeLinks=null, gaugeMap={table:"top",cloud:"cloud",light:"light",empty:"empty",nucleus:"nucleus",proton:"proton",pull:"pull",edge:"edge"};
+function markGauge(){ var k=gaugeMap[active]||"edge"; if(!gaugeLinks||(gaugeLinks[0]&&!gaugeLinks[0].isConnected)) gaugeLinks=[].slice.call(D.querySelectorAll(".gauge a")); gaugeLinks.forEach(function(a){ a.classList.toggle("on",a.getAttribute("data-depth")===k); }); }
 
 /* ------------------------------------------------------------------ pointer: turn the atom, pull the quark */
 var cam={yaw:-0.6,pitch:0.42,ty:-0.6,tp:0.42,vy:0,vp:0,drag:null,dy0:0,dp0:0};
@@ -730,7 +742,7 @@ function readout(z){
 }
 function originLine(z){
   var m=ORIGIN[z-1], ks=Object.keys(m).sort(function(a,b){ return m[b]-m[a]; });
-  if(ks[0]==="h") return TT("Nothing from the stars survives: every atom here was made {z}.",{z:(z<=92?TT("recently, by decay or in reactors"):TT("by people, a few at a time"))});
+  if(ks[0]==="h") return z<=92?TT("Nothing from the stars survives: every atom here was made recently, by decay or in reactors."):TT("Nothing from the stars survives: every atom here was made by people, a few at a time.");
   return TT("Made in {ks}.",{ks:ks.map(function(k){ return ORIGIN_KINDS[k].short+" ("+Math.round(m[k]*100)+"%)"; }).join(", ")});
 }
 /* ------------------------------------------------------------------ lenses: the same table, read three ways */
@@ -764,10 +776,11 @@ function withLabs(fn){
   if(fn) LABS_Q.push(fn);
   if(LABS_STATE!==0) return;
   LABS_STATE=1;
+  var broke=function(){ LABS_STATE=3; var st=D.getElementById("labsStatus"); if(st) st.textContent=TT("The labs could not be loaded. Check your connection and reload the page."); };
   var s=D.createElement("script"); s.src="assets/atom-labs.js"; s.async=true;
-  s.onload=function(){ try{ labsBoot(); LABS_STATE=2; }catch(e){ LABS_STATE=3; if(window.console) console.error(e); return; } var q=LABS_Q; LABS_Q=[]; q.forEach(function(g){ g(); }); };
-  s.onerror=function(){ LABS_STATE=3; var st=D.getElementById("labsStatus"); if(st) st.textContent=TT("The labs could not be loaded. Check your connection and reload the page."); };
-  D.head.appendChild(s);
+  s.onload=function(){ try{ labsBoot(); LABS_STATE=2; }catch(e){ if(window.console) console.error(e); broke(); return; } var q=LABS_Q; LABS_Q=[]; q.forEach(function(g){ g(); }); };
+  s.onerror=broke;
+  AtomI18N.need("labs").then(function(){ (D.head||D.documentElement).appendChild(s); });
 }
 var labsBoot=function(){};
 function openSheet(z){
@@ -1059,7 +1072,7 @@ function frame(now){
   if(active==="table"&&PT){ var tl=PT.tiles[SEL]; if(tl){ RD.tile=tl.getBoundingClientRect(); RD.ox=tl.offsetLeft+tl.offsetWidth/2; RD.oy=tl.offsetTop+tl.offsetHeight/2; RD.tw=tl.offsetWidth; RD.th=tl.offsetHeight; }
     if(!mqSmall.matches&&slot.parentNode===PT.grid) RD.slot=slot.getBoundingClientRect(); }
   if(frames%6===0) markGauge(); tint(active);
-  if(was!==active||frames===1){ root.classList.toggle("at-table",active==="table"); root.classList.toggle("at-bench",active==="bench"); root.classList.toggle("at-end",active==="end"); if(MS&&was!==active) MS.signal(TT("depth:{active}",{active:active})); }
+  if(was!==active||frames===1){ root.classList.toggle("at-table",active==="table"); root.classList.toggle("at-bench",active==="bench"); root.classList.toggle("at-end",active==="end"); if(MS&&was!==active) MS.signal("depth:"+active); }
   drawWorld(now, dt);
   if(LABS && labsVisible) LABS.frame(now);
   stepPull(now); stepEmit(now);
@@ -1088,7 +1101,7 @@ function frame(now){
            where it was read and only its size changes */
         var s=1+z*z*14;
         if(sheet.classList.contains("open")) closeSheet(false);
-        put(PT.el,"transformOrigin",TT("{ox}px {oy}px",{ox:RD.ox,oy:RD.oy})); put(PT.el,"transform","scale("+s.toFixed(4)+")");
+        put(PT.el,"transformOrigin",RD.ox+"px "+RD.oy+"px"); put(PT.el,"transform","scale("+s.toFixed(4)+")");
         put(PT.el,"opacity",(1-smooth(0.26,0.6,prog)).toFixed(3));
         if(!PT.el.classList.contains("zooming")) PT.el.classList.add("zooming"); PT.focus={z:SEL,k:smooth(0.08,0.42,prog)};
         var tr=RD.tile, tc=[tr.left+tr.width/2, tr.top+tr.height/2], k2=smooth(0.55,1,prog);
@@ -1111,7 +1124,9 @@ function frame(now){
       var txt;
       if(orb==="shine") txt=TT("2p<sub>z</sub> and 1s at once: the cloud sloshes at 2.47 × 10¹⁵ Hz, slowed for you");
       else if(typeof orb==="string") txt=TT("All {SEL} electrons, {cfg} · drag the stage to turn it",{SEL:SEL,cfg:configStr(SEL).replace(/([spdf])(\d+)/g,"$1<sup>$2</sup>")});
-      else txt=TT("Showing {EL} {orbLabel} · n = {n}, l = {l}{orb} · drag the stage to turn it",{EL:EL[2].toLowerCase(),orbLabel:orbLabel(orb,true),n:orb.n,l:orb.l,orb:(orb.full?TT(", a full subshell"):", m = "+orb.m)});
+      else txt=orb.full?
+        TT("Showing {el} {orb} · n = {n}, l = {l}, a full subshell · drag the stage to turn it",{z:SEL,orb:orbLabel(orb,true),n:orb.n,l:orb.l}):
+        TT("Showing {el} {orb} · n = {n}, l = {l}, m = {m} · drag the stage to turn it",{z:SEL,orb:orbLabel(orb,true),n:orb.n,l:orb.l,m:orb.m});
       var ro=D.getElementById("orbReadout"); if(ro.getAttribute("data-k")!==txt){ ro.innerHTML=txt; ro.setAttribute("data-k",txt); }
       drawRadial(false, orb);
       break;
@@ -1331,10 +1346,10 @@ function boot(){
     if(PT&&PT.lens==="yours") PT.setLens("yours","");
   };
   if(lh){
-    if(TT("IntersectionObserver") in window){
+    if("IntersectionObserver" in window){
       new IntersectionObserver(function(es){ es.forEach(function(e){ labsVisible=e.isIntersecting; }); },{rootMargin:"100px"}).observe(lh);
       /* fetch the labs a screen and a half before they come into view */
-      var near=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ withLabs(); near.disconnect(); } }); },{rootMargin:"1500px 0px"}); near.observe(lh);
+      var near=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ withLabs(); near.disconnect(); } }); },{rootMargin:"800px 0px"}); near.observe(lh);   /* about a screen away: at 1500px a desktop window had them at boot */
     } else { labsVisible=true; withLabs(); }
   }
   if(tb){ tb.hidden=true; tb.addEventListener("click",function(){ goLabs("you"); }); }
@@ -1346,6 +1361,16 @@ function boot(){
   else if(window.requestIdleCallback) requestIdleCallback(function(){ withLabs(); },{timeout:12000}); else setTimeout(function(){ withLabs(); },6000);
   /* the language menu */
   AtomI18N.mountMenu(D.getElementById("langHost"), "langPick");
+  /* the top bar holds what fits. Its breakpoints were measured in English; a language with longer
+     words gets, at the same width, the compact forms a narrower window would: first without the
+     Get button, then with the search field folded to its icon, then without the section links
+     (they are all one scroll away), and last with the two switches on two lines each. The language
+     menu must never be the thing that falls off the edge. */
+  var barEl=D.querySelector(".bar");
+  function fitBar(){ if(!barEl) return; barEl.removeAttribute("data-fit");
+    for(var k=1;k<=4&&barEl.scrollWidth>barEl.clientWidth+1;k++) barEl.setAttribute("data-fit",k); }
+  fitBar(); window.addEventListener("resize",fitBar);
+  if(D.fonts&&D.fonts.ready) D.fonts.ready.then(fitBar);
   /* missions */
   var md=D.getElementById("missions");
   if(md) MS=Missions.create({host:md, go:missionGo, onStart:function(){ if(LABS) LABS.resync(); },
@@ -1357,8 +1382,25 @@ function boot(){
 AtomI18N.ready.then(boot);   /* the language pack, if one is chosen, arrives first */
 /* the site keeps itself for offline use (a classroom cart, a plane); the
    worker is registered after the first screen is up so it never competes
-   with it, and only where it can run (https, or a local test server) */
-if("serviceWorker" in navigator && /^(https:|http:)$/.test(location.protocol) && !/\.(app)$/.test(location.hostname)){
-  window.addEventListener("load",function(){ setTimeout(function(){ try{ navigator.serviceWorker.register("sw.js").catch(function(){}); }catch(e){} }, 2500); });
+   with it, and only where it can run (https, or a local test server). It
+   is told which language files this reader uses, so those are kept too. A
+   new release waits until the reader says so: swapping the files under an
+   open page (an exit check half done) is how a page breaks. */
+if("serviceWorker" in navigator && /^(https:|http:)$/.test(location.protocol)){
+  window.addEventListener("load",function(){ setTimeout(function(){ try{
+    var SW=navigator.serviceWorker, had=!!SW.controller, turned=false;
+    var tell=function(w){ try{ var f=AtomI18N.packFiles(); if(w&&f.length) w.postMessage({atom:"packs",urls:f}); }catch(e){} };
+    SW.register("sw.js").then(function(reg){
+      tell(reg.active||SW.controller); SW.ready.then(function(r){ tell(r.active); });
+      var offer=function(w){ if(!w||!had) return; var n=D.getElementById("updateNote"); if(n) return;
+        n=D.createElement("div"); n.id="updateNote"; n.className="update-note"; n.setAttribute("role","status");
+        var t=D.createElement("span"); t.textContent=TT("A new version of Atom is ready."); var bt=D.createElement("button"); bt.type="button"; bt.className="btn btn-small"; bt.textContent=TT("Reload");
+        bt.addEventListener("click",function(){ bt.disabled=true; try{ w.postMessage("atom:update"); }catch(e){ location.reload(); } });
+        n.appendChild(t); n.appendChild(bt); D.body.appendChild(n); };
+      if(reg.waiting) offer(reg.waiting);
+      reg.addEventListener("updatefound",function(){ var w=reg.installing; if(!w) return; w.addEventListener("statechange",function(){ if(w.state==="installed") offer(w); }); });
+    }).catch(function(){});
+    SW.addEventListener("controllerchange",function(){ if(had&&!turned){ turned=true; location.reload(); } });
+  }catch(e){} }, 2500); });
 }
 })();

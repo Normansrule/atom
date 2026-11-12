@@ -97,7 +97,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
             let inside = res.map { url.standardizedFileURL.path.hasPrefix($0 + "/") } ?? false
             decisionHandler(inside ? .allow : .cancel)
         case "about", "data", "blob":
-            decisionHandler(.allow)
+            // an inner frame only (the print sheet is one): the window itself never leaves the app's page
+            let inner = !(action.targetFrame?.isMainFrame ?? true)
+            decisionHandler(inner || url.absoluteString == "about:blank" ? .allow : .cancel)
         default:
             decisionHandler(.cancel)
         }

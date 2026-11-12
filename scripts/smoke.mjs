@@ -46,13 +46,25 @@ await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const ORIGIN = `http://127.0.0.1:${server.address().port}`;
 
 const failures = [];
-// the service worker's cache is named for the release: the two versions must agree
+// the service worker's cache is named for the release and for the files in it: the version
+// must be VERSION's, and the build stamp must be the hash of the files (scripts/stamp_sw.py writes it)
 {
+  const { createHash } = await import("node:crypto");
   const vf = [path.join(ROOT, "..", "VERSION"), path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "VERSION")].find((f) => fs.existsSync(f));
   const v = vf ? fs.readFileSync(vf, "utf8").trim() : null;
-  const m = /var VERSION = "([^"]+)"/.exec(fs.readFileSync(path.join(ROOT, "sw.js"), "utf8"));
+  const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
+  const m = /var VERSION = "([^"]+)"/.exec(sw), bm = /var BUILD = "([0-9a-f]*)"/.exec(sw), cm = /var CORE = (\[[\s\S]*?\]);/.exec(sw);
   if (v && (!m || m[1] !== v)) { console.log(`  FAIL sw.js says ${m ? m[1] : "nothing"} but VERSION says ${v}`); process.exit(1); }
   console.log(`  ok   sw.js cache version ${m ? m[1] : "?"}${v ? "" : " (VERSION file not found here, not compared)"}`);
+  if (!bm || !cm) { console.log("  FAIL sw.js has no BUILD stamp or no CORE list"); process.exit(1); }
+  const files = [...new Set(JSON.parse(cm[1]).map((f) => (f === "./" ? "index.html" : f)))].sort();
+  const packDir = path.join(ROOT, "assets", "i18n");
+  if (fs.existsSync(packDir)) files.push(...fs.readdirSync(packDir).filter((f) => f.endsWith(".js")).sort().map((f) => "assets/i18n/" + f));
+  const h = createHash("sha256");
+  for (const f of files) { h.update(f); h.update("\0"); h.update(fs.readFileSync(path.join(ROOT, f))); h.update("\0"); }
+  const want = h.digest("hex").slice(0, 8);
+  if (bm[1] !== want) { console.log(`  FAIL sw.js says BUILD ${bm[1]} but the files give ${want}: run python3 scripts/stamp_sw.py`); process.exit(1); }
+  console.log(`  ok   sw.js build stamp ${want} matches the ${files.length} files it names`);
 }
 const fail = (where, what) => { failures.push(`${where}: ${what}`); console.log(`  FAIL ${where}: ${what}`); };
 const ok = (where, what) => console.log(`  ok   ${where}: ${what}`);
@@ -60,12 +72,13 @@ const ok = (where, what) => console.log(`  ok   ${where}: ${what}`);
 console.log(`browser: ${ENGINE}`);
 const browser = await launcher.launch(ENGINE === "chromium" ? {
   executablePath: process.env.CHROME_PATH || undefined,
-  args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
+  args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", ...(process.env.ATOM_CHROME_ARGS || "").split(" ").filter(Boolean)],
 } : {});
 
 async function visit(name, url, check, opts = {}) {
   console.log(`\n${name}  ${url}`);
   const page = await browser.newPage({ viewport: opts.viewport || { width: 1440, height: 900 }, ...(opts.context || {}) });
+  if (opts.init) await page.addInitScript(opts.init);
   const errors = [], outside = [], broken = [];
   page.on("pageerror", (e) => errors.push(String(e).slice(0, 200)));
   page.on("console", (m) => { if (m.type() === "error" && !(opts.allow404 && /404/.test(m.text()))) errors.push(m.text().slice(0, 200)); });
@@ -109,6 +122,11 @@ await visit("site", `${BASE}`, async (page, n) => {
   tabs === 7 ? ok(n, "the labs load on approach, seven tabs") : fail(n, `the labs did not load (${tabs} tabs)`);
   const labBad = await page.evaluate(() => window.AtomLabs ? AtomLabs.selfTest().filter((x) => !x[1]).map((x) => x[0]) : ["no AtomLabs"]);
   labBad.length ? fail(n, "labs self-test on the site: " + labBad.join("; ")) : ok(n, "labs self-test passes on the site");
+  // the ground behind the text panels. From 1.3.0 to 1.7.0 a stray "}" in site.css closed :root early, --veil was
+  // never set, and the labs' text sat straight on the moving scene; nothing looked at the panel's own background.
+  const veil = await page.evaluate(() => { const c = getComputedStyle(document.querySelector(".labs-panel")).backgroundColor, m = c.match(/[\d.]+/g) || [];
+    return { c, a: c === "transparent" ? 0 : c.includes("/") ? +m[m.length - 1] : /^rgba\(/.test(c) ? +m[3] : 1 }; });
+  veil.a >= 0.9 ? ok(n, `the labs' text has its ground (${veil.c})`) : fail(n, `the labs panel is see-through (${veil.c}): --veil is not set`);
   await page.evaluate(() => document.getElementById("lbTab-math").click()); await page.waitForTimeout(400);
   const mt = await page.evaluate(() => (document.querySelector("#labsHost .lb-mtitle") || {}).textContent || "");
   /gold/i.test(mt) ? ok(n, "The math opens on gold") : fail(n, `The math did not open (${mt})`);
@@ -170,7 +188,7 @@ for (const code of ["es"]) {
   await visit(`site in ${code}`, `${BASE}?lang=${code}`, async (page, n) => {
     const lang = await page.evaluate(() => document.documentElement.lang);
     lang === code ? ok(n, `html lang="${code}"`) : fail(n, `html lang="${lang}"`);
-    const badge = await page.evaluate(() => (document.querySelector(".lang-wrap") || {}).getAttribute?.("data-code"));
+    const badge = await page.evaluate(() => ((document.querySelector(".lang-menu .lang-sum") || {}).textContent || "").trim());
     badge === code.toUpperCase() ? ok(n, "the language badge shows it") : fail(n, `badge ${badge}`);
     const left = await page.evaluate(() => AtomI18N.missing.length);
     left === 0 ? ok(n, "every string the page asked for is in the pack") : fail(n, `${left} strings missing from the pack: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
@@ -182,8 +200,43 @@ for (const code of ["es"]) {
     tabs === 7 ? ok(n, "the labs load, seven tabs") : fail(n, `the labs did not load (${tabs} tabs)`);
     const left2 = await page.evaluate(() => AtomI18N.missing.length);
     left2 === 0 ? ok(n, "the labs' strings are all in the pack") : fail(n, `${left2} lab strings missing: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
+    // sentences are whole: an article meets its preposition by the language's rule, and no other word is touched
+    if (code === "es") {
+      const said = await page.evaluate(() => [AtomI18N.T("About {el}", { z: 26 }), AtomI18N.T("About {el}", { z: 47 }),
+        AtomI18N.T("{n, plural, one {# question} other {# questions}} about {m, plural, one {# element} other {# elements}}. Send the link, or read out the code.", { n: 2, m: 1 })]);
+      said[0] === "Acerca del hierro" && said[1] === "Acerca de la plata" && /Envía el enlace/.test(said[2]) && /1 elemento\./.test(said[2])
+        ? ok(n, `articles, contractions and plurals: ${said[0]}; ${said[1]}; ${said[2]}`) : fail(n, "a sentence is put together wrong: " + said.join(" | "));
+    }
+    // the depth gauge is translated and still marks where the reader is
+    await page.evaluate(() => document.getElementById("cloud").scrollIntoView()); await page.waitForTimeout(900);
+    const here = await page.evaluate(() => { const a = document.querySelector(".gauge a.on, .gauge a[aria-current]"); return a ? a.getAttribute("data-depth") + ":" + a.textContent.trim() : null; });
+    here && /^cloud:/.test(here) && !/Atom$/.test(here) ? ok(n, `the depth gauge marks the scene (${here.replace(/\s+/g, " ")})`) : fail(n, `the depth gauge did not mark the cloud scene (${here})`);
+    await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(400);
+    // offline in this language: the pack files are kept with the site
+    const swOk = await page.evaluate(() => navigator.serviceWorker ? navigator.serviceWorker.ready.then(() => true).catch(() => false) : false).catch(() => false);
+    if (swOk) {
+      await page.waitForTimeout(1500);
+      const ctx = page.context(); await ctx.setOffline(true);
+      let state = null;
+      try { await page.reload({ waitUntil: "load", timeout: 15000 }); await page.waitForTimeout(2500); state = await page.evaluate(() => ({ lang: document.documentElement.lang, tiles: document.querySelectorAll(".pt-el").length, failed: AtomI18N.failed, name: ELEMENTS[25][2] })); } catch (e) { state = null; }
+      await ctx.setOffline(false);
+      state && state.lang === code && state.tiles === 118 && !state.failed && state.name !== "Iron" ? ok(n, `loads offline in ${code} (${state.name})`) : fail(n, "offline in " + code + ": " + JSON.stringify(state));
+    } else fail(n, "the service worker did not register");
     await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(400);
   });
+  // Term help: a unit's symbol is matched in its own case only, and a term's card opens from the keyboard
+  await visit(`term help in ${code}`, `${BASE}?lang=${code}&terms=1#lab=predict`, async (page, n) => {
+    await page.waitForFunction(() => document.querySelector("#labsHost .lb-qtext"), null, { timeout: 15000 }).catch(() => {});
+    const marked = await page.evaluate(async () => { const q = document.querySelector("#labsHost .lb-qtext"); if (!q) return null;
+      q.textContent = "Pm 140 pm. Fm 5 MeV."; await new Promise((r) => setTimeout(r, 500)); return [].map.call(q.querySelectorAll("dfn.lb-term"), (d) => d.textContent).join(","); });
+    marked === "pm,MeV" ? ok(n, "pm and MeV are marked; the symbols Pm and Fm are not") : fail(n, `marked: ${marked}`);
+    const card = await page.evaluate(async () => { const d = document.querySelector("#labsHost .lb-qtext dfn.lb-term"); if (!d) return null; d.focus();
+      d.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); await new Promise((r) => setTimeout(r, 100));
+      const c = document.querySelector("#labsHost .lb-termcard"), open = d.getAttribute("aria-expanded");
+      d.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); await new Promise((r) => setTimeout(r, 100));
+      return { text: c ? c.textContent : null, role: c ? c.getAttribute("role") : null, open, closed: !document.querySelector("#labsHost .lb-termcard") }; });
+    card && card.text && card.role === "status" && card.open === "true" && card.closed ? ok(n, `a term's card opens with Enter and closes with Escape (${card.text.slice(0, 40)}…)`) : fail(n, "term card: " + JSON.stringify(card));
+  }, { wait: 7000, skipAxe: true });
   await visit(`app in ${code}`, `${BASE}app/?lang=${code}`, async (page, n) => {
     const lang = await page.evaluate(() => document.documentElement.lang);
     lang === code ? ok(n, `html lang="${code}"`) : fail(n, `html lang="${lang}"`);
@@ -191,6 +244,20 @@ for (const code of ["es"]) {
     left === 0 ? ok(n, "build, The math and the lessons ask for nothing the pack lacks") : fail(n, `${left} strings missing: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
   }, { wait: 7000, viewport: { width: 1440, height: 960 } });
 }
+
+// a language Atom does not have, and a name every object has: the page stays English and says nothing
+for (const bad of ["xx", "constructor", "ar"]) {
+  await visit(`?lang=${bad}`, `${BASE}handout.html?lang=${bad}`, async (page, n) => {
+    const st = await page.evaluate(() => ({ lang: document.documentElement.lang, dir: document.documentElement.dir || "ltr", cur: AtomI18N.lang, wait: document.documentElement.classList.contains("i18n-wait") }));
+    st.lang === "en" && st.cur === "en" && st.dir !== "rtl" && !st.wait ? ok(n, "refused: the page is English, left to right") : fail(n, JSON.stringify(st));
+  }, { wait: 800, skipAxe: true });
+}
+// a browser that refuses storage (private windows, locked-down school machines): the language
+// rides in the address instead, and the menu's links carry it
+await visit("storage refused, in es", `${BASE}handout.html?lang=es`, async (page, n) => {
+  const st = await page.evaluate(() => ({ lang: document.documentElement.lang, h1: document.querySelector("h1").textContent, en: (document.querySelector('.lang-list a[hreflang="en"]') || {}).getAttribute?.("href") }));
+  st.lang === "es" && /periódica/.test(st.h1) && /lang=en/.test(st.en || "") ? ok(n, "Spanish from the address alone; the menu links to ?lang=en") : fail(n, JSON.stringify(st));
+}, { wait: 1200, skipAxe: true, init: () => { const no = () => { throw new DOMException("refused", "SecurityError"); }; try { Storage.prototype.getItem = no; Storage.prototype.setItem = no; Storage.prototype.removeItem = no; } catch (e) {} } });
 
 await visit("teachers", `${BASE}teachers.html`, async (page, n) => {
   const links = await page.$$eval("main a[href^='./#lab=']", (as) => as.map((a) => a.getAttribute("href")));
@@ -203,7 +270,7 @@ await visit("teachers", `${BASE}teachers.html`, async (page, n) => {
 await visit("handout", `${BASE}handout.html`, async (page, n) => {
   (await page.locator("svg.qr path").count()) === 1 ? ok(n, "the QR code is drawn") : fail(n, "no QR code");
   (await page.locator("main section").count()) === 3 ? ok(n, "three columns: students, teachers, families") : fail(n, "the three sections are not all there");
-  const badge = await page.evaluate(() => (document.querySelector(".lang-wrap") || {}).getAttribute?.("data-code"));
+  const badge = await page.evaluate(() => ((document.querySelector(".lang-menu .lang-sum") || {}).textContent || "").trim());
   badge === "EN" ? ok(n, "the language menu mounted on its own") : fail(n, `language badge: ${badge}`);
 }, { wait: 1500 });
 
@@ -217,7 +284,7 @@ await visit("handout in es", `${BASE}handout.html?lang=es`, async (page, n) => {
 await visit("teachers in es", `${BASE}teachers.html?lang=es`, async (page, n) => {
   const left = await page.evaluate(() => AtomI18N.missing.length);
   left === 0 ? ok(n, "every string on the page is in the pack") : fail(n, `${left} missing: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
-  const badge = await page.evaluate(() => (document.querySelector(".lang-wrap") || {}).getAttribute?.("data-code"));
+  const badge = await page.evaluate(() => ((document.querySelector(".lang-menu .lang-sum") || {}).textContent || "").trim());
   badge === "ES" ? ok(n, "the language menu shows ES") : fail(n, `language badge: ${badge}`);
 }, { wait: 1500 });
 

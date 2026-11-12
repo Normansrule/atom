@@ -40,12 +40,24 @@
 [dir="rtl"] .lb-tabs,[dir="rtl"] .lb-rail,[dir="rtl"] .lb-subtabs{direction:rtl}
 [dir="rtl"] input[type="search"],[dir="rtl"] input[type="text"],[dir="rtl"] textarea{direction:rtl;text-align:right}
 [dir="rtl"] code,[dir="rtl"] kbd,[dir="rtl"] .num,[dir="rtl"] .lb-code,[dir="rtl"] .lb-chcode{direction:ltr;unicode-bidi:isolate;display:inline-block}
-/* the language badge: EN / ES over the real select */
-.lang-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;padding:0 10px;box-shadow:inset 0 0 0 1px var(--line);color:var(--ink2);font:600 13px/1 "Archivo",sans-serif;letter-spacing:.06em;cursor:pointer}
-.lang-wrap::before{content:attr(data-code)}
-.lang-wrap:focus-within{box-shadow:inset 0 0 0 2px var(--acc);color:var(--ink)}
-.lang-pick{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;border:0;font:inherit}
-.lang-pick option{color:#111;background:#fff}
+/* the language menu: a two-letter badge that opens a short list of links, each language in its own name */
+.lang-menu{position:relative;display:inline-block}
+.lang-sum{list-style:none;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;padding:0 10px;border:1px solid var(--line);color:var(--ink2);font:600 13px/1 "Archivo",sans-serif;letter-spacing:.06em;cursor:pointer;-webkit-user-select:none;user-select:none}
+.lang-sum::-webkit-details-marker{display:none}
+.lang-sum::marker{content:""}
+.lang-sum:hover,.lang-menu[open] .lang-sum{color:var(--ink);border-color:var(--ink3)}
+.lang-sum:focus-visible{outline:2px solid var(--acc);outline-offset:2px;color:var(--ink)}
+.lang-list{position:absolute;inset-inline-end:0;top:calc(100% + 6px);z-index:80;margin:0;padding:4px;list-style:none;min-width:12em;max-height:min(70vh,28em);overflow:auto;background:var(--bg2,var(--panel,#141618));border:1px solid var(--line);box-shadow:0 14px 36px rgba(0,0,0,.4);text-align:start}
+.lang-list li{margin:0;padding:0}
+.lang-list a{display:flex;align-items:center;min-height:40px;padding:0 12px;color:var(--ink);text-decoration:none;font:500 15px/1.2 "Archivo",sans-serif;letter-spacing:0;white-space:nowrap}
+.lang-list a:hover{background:rgba(127,127,127,.2)}
+.lang-list a:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+.lang-list a[aria-current]{font-weight:700;border-inline-start:3px solid var(--acc);padding-inline-start:9px}
+.lang-note{margin:0;padding:8px 12px;max-width:16em;color:var(--ink2);font:500 13px/1.35 "Archivo",sans-serif;white-space:normal}
+/* a new release is ready: said once, at the foot of the screen, and applied only when the reader asks */
+.update-note{position:fixed;inset-inline-start:16px;bottom:16px;z-index:90;display:flex;align-items:center;gap:12px;max-width:min(92vw,30rem);padding:10px 12px 10px 16px;background:var(--bg2);color:var(--ink);border:1px solid var(--line);box-shadow:0 14px 36px rgba(0,0,0,.4);font-size:15px}
+/* the page's own words wait, unseen, until they are in the reader's language */
+html.i18n-wait [data-i]{visibility:hidden}
 
 
 :root{
@@ -58,8 +70,11 @@
      grows: it arrives with a little overshoot and settles, as a thing with
      mass does; browsers without linear() fall back to --ease-out */
   --ease-spring:var(--ease-out);
-}
   --wdth:100; --wght:400;
+  /* the ground behind every panel of text: 98 percent, so the moving scene never comes
+     through strongly enough to cost a line its contrast. From 1.3.0 to 1.7.0 a stray "}"
+     above this line closed :root early and this was never set; atom-e2e/veil20.py now
+     measures the pixels behind the text. */
   --veil:color-mix(in srgb,var(--bg) 98%,transparent);
   color-scheme:dark;
 }
@@ -109,6 +124,15 @@ sub,sup{font-size:.7em;line-height:0}
 .bar nav a{display:inline-flex;align-items:center;min-height:40px;text-decoration:none;color:var(--ink2);font-size:15px;transition:color 160ms ease}
 .bar-actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-shrink:0}
 .bar nav a,.nav-ms{white-space:nowrap}
+/* what site.js asks for when the bar's contents are wider than the bar (a longer language at this width) */
+.bar[data-fit] .btn-small{display:none}
+.bar[data-fit]:not([data-fit="1"]) .find input{width:44px;padding:0;color:transparent;cursor:pointer;
+  background:var(--bg3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none' stroke='%23aab0b5' stroke-width='2'%3E%3Ccircle cx='8.5' cy='8.5' r='5.5'/%3E%3Cpath d='M13 13l4.5 4.5'/%3E%3C/svg%3E") center/20px no-repeat}
+.bar[data-fit]:not([data-fit="1"]) .find input::placeholder{color:transparent}
+.bar[data-fit]:not([data-fit="1"]) .find input:focus{position:absolute;left:12px;right:12px;top:8px;z-index:3;width:auto;padding:8px 14px;color:var(--ink);background-image:none;cursor:text}
+.bar[data-fit]:not([data-fit="1"]) .find input:focus::placeholder{color:var(--ink2)}
+.bar[data-fit="3"] nav,.bar[data-fit="4"] nav{display:none}
+.bar[data-fit="4"] .toggle{white-space:normal;max-width:5.6em;padding:4px 6px;line-height:1.1;text-align:center}
 /* between a tablet and a laptop the bar has five links and four controls to
    seat on one line: tighter gaps and a shorter search box, never a second row */
 @media (min-width:901px) and (max-width:1180px){ .bar nav{gap:14px;margin-left:8px} .bar .find input{width:150px} }
@@ -261,6 +285,9 @@ b{font-weight:650}
   background:var(--bg2);background:color-mix(in srgb,var(--bg2) 98%,transparent);transform:translateX(102%);transition:transform 320ms var(--ease-out)}
 .sheet.open{transition:transform 520ms var(--ease-spring)}
 .sheet.open{transform:none}
+/* on the spring the card passes its resting place by a few percent before it settles: its ground
+   reaches 40px past the edge it came in from, so that overshoot never opens a gap */
+.sheet::after{content:"";position:absolute;top:0;bottom:0;left:100%;width:40px;background:inherit;pointer-events:none}
 .sheet-bar{display:flex;gap:8px;align-items:center;padding:12px 20px;background:var(--bg3)}
 .sheet-x{margin-left:auto;background:var(--bg3);color:var(--ink);border:0;min-height:44px;padding:8px 14px;font:600 15px/1 "Archivo",sans-serif;cursor:pointer}
 .sheet-body{overflow:auto;padding:20px 24px 48px;flex:1;overscroll-behavior:contain;--wdth:100;--wght:400}
@@ -370,7 +397,8 @@ b{font-weight:650}
 .math{margin-top:24px}
 .math summary{cursor:pointer;font-weight:650;padding:8px 0}
 .math[open] summary{margin-bottom:8px}
-.pull-hint{position:absolute;left:var(--sx,66%);bottom:12%;transform:translateX(-50%);margin:0;color:var(--ink2);font-size:15px;transition:opacity 400ms ease}
+/* the hint rides the page while the proton stays put, so it can pass over the bright string: it carries its own ground */
+.pull-hint{position:absolute;left:var(--sx,66%);bottom:12%;transform:translateX(-50%);margin:0;padding:4px 10px;background:var(--veil);color:var(--ink2);font-size:15px;transition:opacity 400ms ease}
 [hidden]{display:none!important}
 .labs-status{min-height:380px;display:flex;align-items:center;justify-content:center;color:var(--ink2);margin:0}
 .hit{position:absolute;top:0;bottom:0;right:0;left:calc(var(--m) + min(560px,42vw) + 24px);touch-action:pan-y;cursor:grab;z-index:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -429,6 +457,7 @@ html.atom-drag,html.atom-drag body{-webkit-user-select:none;user-select:none}
   .pull-hint{display:none}
   .sheet{top:auto;left:0;width:auto;height:84svh;transform:translateY(102%)}
   .sheet.open{transform:none}
+  .sheet::after{top:100%;bottom:auto;left:0;right:0;width:auto;height:40px}
   .pd-elec{grid-template-columns:110px minmax(0,1fr)}
   .pd-bohr{width:110px;height:110px}
   .sticky{align-items:flex-end;padding:0 0 16px}
@@ -444,7 +473,7 @@ html.atom-drag,html.atom-drag body{-webkit-user-select:none;user-select:none}
   .spectrograph canvas{height:140px}
   .live dd{font-size:26px}
 }
-@media (max-width:560px){ .bar-actions .btn-small{display:none} .bar-actions{gap:6px} .bar{padding:10px 12px;gap:10px} .toggle{padding:8px 8px;font-size:12px} .lang-wrap{min-width:40px;padding:0 6px} .wordmark{font-size:20px} }
+@media (max-width:560px){ .bar-actions .btn-small{display:none} .bar-actions{gap:6px} .bar{padding:10px 12px;gap:10px} .toggle{padding:8px 8px;font-size:12px} .lang-sum{min-width:40px;padding:0 6px} .wordmark{font-size:20px} }
 
 /* ------------------------------------------------------------------ calm
    Reduced motion: nothing is pinned or scrubbed. Each section is a still,

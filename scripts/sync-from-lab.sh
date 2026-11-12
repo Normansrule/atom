@@ -16,6 +16,9 @@ cp "$SRC" "$HERE/docs/app/index.html"
 # lab keeps a 512-pixel copy, so it is not copied over here
 
 sh "$HERE/scripts/extract-site.sh" "$HERE/app/atom.html" "$HERE/docs/assets"
-# the language packs: app/i18n is the one source; the site serves a copy
-mkdir -p "$HERE/docs/assets/i18n"; rm -f "$HERE/docs/assets/i18n/"*.js; for f in "$HERE/app/i18n/"*.js; do [ -f "$f" ] && cp "$f" "$HERE/docs/assets/i18n/"; done; true
+# what follows from the app: the catalog of English sentences, the served language
+# packs (built from i18n/*.json), and the service worker's stamp of the site's files
+python3 "$HERE/scripts/i18n/i18n_tool.py" extract "$HERE"
+python3 "$HERE/scripts/i18n/i18n_tool.py" build "$HERE"
+python3 "$HERE/scripts/stamp_sw.py"
 echo "synced from $SRC"

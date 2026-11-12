@@ -68,6 +68,10 @@ done
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/Atom.icns"
 rm -rf "$ICONSET"
 
+# the languages Atom speaks, from the packs that were copied in: macOS hands the page the reader's
+# preferred language only if the app says it supports it, so without this list a Spanish Mac starts in English
+LOCALIZATIONS="<string>en</string>"
+for f in "$HERE/app/i18n/"*.js; do [ -f "$f" ] || continue; c="$(basename "$f" .js)"; [ "$c" = en ] || LOCALIZATIONS="$LOCALIZATIONS<string>$c</string>"; done
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -83,6 +87,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleIconFile</key><string>Atom</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleLocalizations</key><array>$LOCALIZATIONS</array>
   <key>LSMinimumSystemVersion</key><string>12.0</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.education</string>
   <key>NSHighResolutionCapable</key><true/>

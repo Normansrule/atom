@@ -37,16 +37,24 @@ jobs:
       - name: Validate the HTML
         if: matrix.browser == 'chromium'
         run: npx html-validate docs/index.html docs/404.html docs/teachers.html docs/handout.html app/atom.html
+      - name: Every style sheet's braces balance, and nothing is declared outside a rule
+        if: matrix.browser == 'chromium'
+        run: python3 scripts/check_css.py
       - name: The English catalog matches the pages, and every language pack passes its checks
         if: matrix.browser == 'chromium'
         run: |
           cp i18n/en.catalog.json /tmp/catalog-committed.json
           python3 scripts/i18n/i18n_tool.py extract .
           cmp /tmp/catalog-committed.json i18n/en.catalog.json || { echo "i18n/en.catalog.json is stale: run python3 scripts/i18n/i18n_tool.py extract ."; exit 1; }
-          for f in app/i18n/*.js; do
-            python3 scripts/i18n/i18n_tool.py check . "$f" | tee /tmp/check.txt
-            grep -q "missing 0, stale 0, problems 0" /tmp/check.txt || { echo "$f does not pass"; exit 1; }
-          done
+          # every pack is data (JSON), complete, and well formed; the checker exits 1 on anything else
+          python3 scripts/i18n/i18n_tool.py check .
+      - name: The served language files and the service worker's stamp come from the sources
+        if: matrix.browser == 'chromium'
+        run: |
+          mkdir -p /tmp/served && cp -r app/i18n /tmp/served/app && cp -r docs/assets/i18n /tmp/served/site
+          python3 scripts/i18n/i18n_tool.py build .
+          diff -r /tmp/served/app app/i18n && diff -r /tmp/served/site docs/assets/i18n || { echo "the served packs are stale: run python3 scripts/i18n/i18n_tool.py build ."; exit 1; }
+          python3 scripts/stamp_sw.py --check
       - name: Load every page, run the self-tests, check accessibility
         run: node scripts/smoke.mjs
         env:

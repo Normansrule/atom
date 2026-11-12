@@ -2,6 +2,59 @@
 
 Atom follows [semantic versioning](https://semver.org). The newest release is at the top.
 
+## [2.0.0] - 2026-11-11
+
+An overhaul that began with a full audit of 1.7.0 and fixed everything it found. Every sentence Atom shows is now a whole sentence, so Spanish reads as Spanish and the next eighteen languages can; the languages are data, served in pieces; the science and the standards are corrected where the audit caught them out; the learning helps are rebuilt; and the site keeps its shape in a long language on a small screen, online or off. The look and the structure are the ones you know, with one repair you will notice: the labs stand on a solid panel again, as they did in 1.2.
+
+### Corrections
+- **Slater's estimates, said exactly.** Electron energies and step 7 of The math used to say the estimates were rough. They now say how rough, from Atom's own data: within about 20 percent for about half the elements, most of them heavy; up to about twice too high for many light atoms and the first row of transition metals; and three to five times too high for p electrons. The self-test computes those figures on every run, so the sentence cannot drift from the numbers.
+- **Electron energies draws what Slater's rules give.** His rules put the s and p electrons of one shell at the same energy, so the two bars now stand side by side, each in its subshell's color, where 1.6 and 1.7 drew one on top of the other. The lab and the teacher guide say that a measured spectrum has two separate peaks there. Labels no longer collide, and the axis title wraps on a phone.
+- **The Sun compares like with like.** The Sun's dark lines were listed at their wavelengths in air and the elements' lines in vacuum; both are now in vacuum, in the drawing and in the text. The lab also says what a dark line does not show (how much of the element there is), and names calcium's lines as the ion's.
+- **Hydrogen's collapse.** Step 3 starts hydrogen at 25 picometers, where the classical atom lasts about 1.6 picoseconds; the 16 picoseconds quoted in the guide and the README is the figure from the Bohr radius. Both are now given, each with its distance.
+- **The size of the nucleus.** "Ten thousand times smaller" in one place and "a hundred thousand" in another are now "tens of thousands of times smaller," which is true of every element, and each element's own ratio is computed beside it. In the teacher guide, a one-centimeter marble makes the atom about 300 meters across (the guide had put the electrons 300 meters away).
+- **Standards.** The Sun is mapped to HS-ESS1-2 and HS-ESS1-3, the orbit and its collapse to HS-PS2-4, and line spectra to AP Chemistry 3.11 and 3.12, with the NGSS core ideas named; the note on what AP Chemistry leaves out of nuclear science is exact.
+- **Smaller things.** The carbon-14 step asks for 11,400 years, which is two of the 5,700-year half-lives the calculator uses. The glow question is asked only of elements with at least two visible lines. The chamber names the three decay chains that end at lead and the isotope each ends at.
+
+### Sentences
+- **Whole sentences, everywhere.** 1.7.0 still built many sentences from pieces ("About " + name, a number + " protons", a list joined with "and"), which works in English and nowhere else. All of them are now single templates with real plurals, element names that carry their article (del hierro, de la plata, al oro), lists joined by the language's own rule, and lower-casing that knows the language. 3,409 sentences and 43,381 words.
+- **A 1.7.0 bug in Spanish, fixed.** The rule that contracts "de el" to "del" also ate a letter in ordinary words, so "Envía el enlace" was shown as "Envíal enlace." The rule now knows that an accented letter is a letter, and leaves a capitalized "El" alone.
+- **Spanish, reviewed line by line.** 271 corrections, and Mexican usage throughout: jalar, presionar, electronvolt, autos, thousands with a comma. 135 simpler passages and 109 terms, in both languages.
+- **English.** US spelling, serial commas, and commas in thousands, in the app, the labs, the site, and the guide.
+- **Light,** a seventeenth kind of question in Predict: which color a jump in hydrogen gives off, which of two lines carries more energy, and what the Sun's dark lines show.
+
+### Languages
+- **Packs are data.** A language is one JSON file, `i18n/<code>.json`, with the English beside the translation; the files a browser loads are built from it. A reader in Spanish now gets 88 KB for the first screen and 46 KB more when the labs open, where 1.7.0 sent 261 KB before anything could be drawn. English loads no language file at all unless Simpler or Term help is on.
+- **One word, two meanings.** A word that needs two translations (Atom the name, and Atom the depth on the gauge) can carry a context, so a language can tell them apart.
+- **A stricter check.** The checker now knows which plural forms each language has, refuses tags inside a plural branch, refuses a sentence that begins or ends with a space, and requires short glossary forms (pm, MeV) to be matched in their exact case. `?lang=` accepts only a language that exists; anything else is English.
+- **Still to come:** the other eighteen languages, in 2.1.0 and 2.2.0, along with right-to-left layout and number entry with a decimal comma.
+
+### Learning helps
+- **Listen keeps its promise.** Some browsers offer voices that send the text to a company's servers. Listen now appears only when the device has a voice of its own, so nothing a student reads leaves the device. The button follows the explanation it reads, and reading stops when you change tabs.
+- **Term help reads case.** pm and MeV are marked; Pm and Fm, the elements, are not. A term's card opens with Enter or Space, closes with Escape, and is announced by a screen reader. In Vocabulary, the English column is marked as English, so a Spanish voice does not read it.
+- **A challenge survives a reload.** Switching language, or a tab the browser put to sleep, used to end a timed challenge. It is now where you left it.
+- **Lessons** return focus to the step you were on and keep their place when a saved state is damaged.
+
+### Site
+- **The labs' text has its ground back.** From 1.3.0 through 1.7.0 one stray brace in the site's style sheet left unset the near-solid ground that every panel of text stands on. The labs, the tour, the downloads, and the footer were drawn straight onto the moving scene, and wherever a cloud passed behind them the text washed out: on twelve screens of the published 1.7.0, measured in the two themes, 268 of 415 lines of text fell under 7:1 against the pixels behind them, and 174 of those under 3:1, nearly all of them in the dark theme. The panels are solid again, as they were in 1.0 to 1.2 and as this README's own recording of the labs has shown all along. On the same screens no line is now under 7:1, in English or Spanish, and none on the rest of the page from top to bottom. The title and the element readout above the table still stand on the sky itself, by design, over a patch the sky keeps quiet for them.
+- **Three things the same brace had switched off.** The dark theme now tells the browser it is dark, so menus and scrollbars match it. The springs announced in 1.3.0 never ran on the website; the element card now arrives on its spring, and its ground reaches past the edge so the overshoot opens no gap. The hint beside the proton carries its own ground.
+- **The math's ten steps** stand in two rows of five, each column as wide as its longer name. At laptop widths they had been squeezed into a space too small for them, which crushed the number badges into ovals.
+- **Trends:** the chart's heading wraps instead of running off the edge, in a narrow window or a longer language.
+- **The top bar fits.** In a longer language or a narrower window it folds in steps (the Get button, then search to an icon, then the links) and never pushes the page sideways. Checked on 32 combinations of page and width in each language.
+- **Offline, in your language.** The service worker's cache is named for a hash of the files it holds, so a corrected file reaches a returning reader without a new version number, and it keeps the language files of the language you chose. The offline test now runs in Spanish too.
+- **The teacher guide and the handout** hold on a phone (headers wrap, tables stay on the page), and the handout prints with half-inch margins.
+- The labs begin loading a little before they scroll into view.
+
+### Desktop apps
+- **Windows and Linux:** every network request is refused inside the app, not only navigation, and the test for "is this Atom's own page" compares file paths.
+- **Mac:** the app declares its languages, so macOS offers Atom its own language setting; `about:`, `data:`, and `blob:` addresses are allowed only in a frame inside the page.
+- The app's content security policy adds `base-uri 'none'` and `form-action 'none'`.
+
+### Under the hood
+- `scripts/i18n/i18n_tool.py build` writes the served language files; `scripts/stamp_sw.py` writes the service worker's stamp. CI checks every pack, rebuilds the served files and fails if they differ from what is committed, and checks the stamp.
+- `scripts/check_css.py` fails the build on a stray brace or a declaration outside a rule (a browser drops them without a word), and the smoke test checks that the labs' panel has its ground.
+- The smoke test runs 101 checks: Spanish sentences with their articles, the depth gauge in Spanish, offline in Spanish, Term help's case rule and keyboard, refused language codes, and a browser that refuses storage.
+- The pre-2.0 language files under `app/i18n/` and `docs/assets/i18n/` are now generated; edit `i18n/<code>.json`.
+
 ## [1.7.0] - 2026-11-07
 
 Atom in Spanish, from the first square to the last citation, with a language engine built for nineteen more; four learning helps for a classroom (lessons with exit checks, read-aloud, term help in two languages, a simpler reading level); and a kit for piloting Atom in a class: a one-page handout, a first lesson written out minute by minute, and a report form.

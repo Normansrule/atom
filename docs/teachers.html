@@ -11,23 +11,35 @@
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
-<script src="assets/atom-i18n.js"></script>
+<script src="assets/atom-i18n.js" data-pack="site"></script>
 <style>
   @font-face{font-family:"Archivo";src:url(assets/fonts/archivo-var.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
   :root{color-scheme:dark light;--bg:#0b0c0d;--bg2:#141618;--line:#2b3034;--ink:#f2f3f1;--ink2:#c9ced2;--ink3:#8d959b;--acc:#ffb020;--onacc:#141005;--link:#8fd3ff}
   @media (prefers-color-scheme:light){:root{--bg:#f3f1ec;--bg2:#ffffff;--line:#d9d4c9;--ink:#101312;--ink2:#2f3633;--ink3:#5c655f;--acc:#643c00;--onacc:#ffffff;--link:#0b4f8a}}
   html{background:var(--bg)}
   body{margin:0;color:var(--ink);font:17px/1.55 "Archivo",system-ui,-apple-system,sans-serif}
-  header{display:flex;align-items:center;gap:20px;padding:14px 24px;border-bottom:1px solid var(--line)}
+  header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:14px 24px;border-bottom:1px solid var(--line)}
+  header nav{display:flex;flex-wrap:wrap;gap:4px 16px;min-width:0}
   .wordmark{font-weight:300;font-stretch:125%;font-size:22px;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
-  header nav a{color:var(--ink2);text-decoration:none;margin-right:16px}
+  header nav a{color:var(--ink2);text-decoration:none}
   header nav a:hover,header nav a:focus-visible{color:var(--ink)}
-  header .lang-wrap{margin-left:auto}
-  .lang-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;padding:0 10px;box-shadow:inset 0 0 0 1px var(--line);color:var(--ink2);font:600 13px/1 "Archivo",sans-serif;letter-spacing:.06em;cursor:pointer}
-  .lang-wrap::before{content:attr(data-code)}
-  .lang-wrap:focus-within{box-shadow:inset 0 0 0 2px var(--acc);color:var(--ink)}
-  .lang-pick{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;border:0;font:inherit}
-  .lang-pick option{color:#111;background:#fff}
+  header #langHost{margin-inline-start:auto}
+  /* the language menu: a two-letter badge that opens a short list of links, each language in its own name */
+  .lang-menu{position:relative;display:inline-block}
+  .lang-sum{list-style:none;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;padding:0 10px;border:1px solid var(--line);color:var(--ink2);font:600 13px/1 "Archivo",sans-serif;letter-spacing:.06em;cursor:pointer;-webkit-user-select:none;user-select:none}
+  .lang-sum::-webkit-details-marker{display:none}
+  .lang-sum::marker{content:""}
+  .lang-sum:hover,.lang-menu[open] .lang-sum{color:var(--ink);border-color:var(--ink3)}
+  .lang-sum:focus-visible{outline:2px solid var(--acc);outline-offset:2px;color:var(--ink)}
+  .lang-list{position:absolute;inset-inline-end:0;top:calc(100% + 6px);z-index:80;margin:0;padding:4px;list-style:none;min-width:12em;max-height:min(70vh,28em);overflow:auto;background:var(--bg2,var(--panel,#141618));border:1px solid var(--line);box-shadow:0 14px 36px rgba(0,0,0,.4);text-align:start}
+  .lang-list li{margin:0;padding:0}
+  .lang-list a{display:flex;align-items:center;min-height:40px;padding:0 12px;color:var(--ink);text-decoration:none;font:500 15px/1.2 "Archivo",sans-serif;letter-spacing:0;white-space:nowrap}
+  .lang-list a:hover{background:rgba(127,127,127,.2)}
+  .lang-list a:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+  .lang-list a[aria-current]{font-weight:700;border-inline-start:3px solid var(--acc);padding-inline-start:9px}
+  .lang-note{margin:0;padding:8px 12px;max-width:16em;color:var(--ink2);font:500 13px/1.35 "Archivo",sans-serif;white-space:normal}
+  /* the page's own words wait, unseen, until they are in the reader's language */
+  html.i18n-wait [data-i]{visibility:hidden}
   .minutes{list-style:none;padding:0;margin:10px 0}
   .minutes li{display:grid;grid-template-columns:4.6rem 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
   .minutes b{color:var(--acc);font-variant-numeric:tabular-nums}
@@ -43,6 +55,9 @@
   th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
   th{color:var(--ink3);font-weight:600}
   td a{white-space:nowrap}
+  /* on a phone a table keeps to the page: tighter cells, and a long link breaks where it must */
+  @media (max-width:560px){ main{padding:28px 16px 64px} table{font-size:14px} th,td{padding:6px 6px} td a{white-space:normal;overflow-wrap:anywhere} th,td{overflow-wrap:break-word} }
+  @media (max-width:400px){ th,td{overflow-wrap:anywhere} }
   .act{border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0;background:var(--bg2)}
   .act h3{margin-top:0}
   .act p{margin:6px 0}
@@ -87,25 +102,25 @@
     <h3 data-i>1. Read the shells from a spectrum</h3>
     <p data-i class="meta">Electron energies (PES) · AP Chemistry 1.5 and 1.6 · NGSS HS-PS1-1</p>
     <p data-i>Open <a href="./#lab=pes&amp;z=11">sodium</a>. Students count the electrons in each peak from the left, write the configuration, then press <b>Mystery element</b> and identify five elements from their spectra alone. Collect: the five configurations, written out.</p>
-    <p data-i>Say plainly that the peak positions are estimates (Slater's rules); the pattern is the point. Then open <a href="./#lab=trends&amp;prop=ie">Trends</a> and ask where the dashed estimate leaves the measured line, and why (p electrons).</p>
+    <p data-i>Say plainly that the peak positions are estimates (Slater's rules), and that his rules give the s and p electrons of one shell the same energy, so those two bars stand side by side where a measured spectrum has two separate peaks. The pattern is the point. Then open <a href="./#lab=trends&amp;prop=ie">Trends</a> and ask where the dashed estimate leaves the measured line, and why (p electrons).</p>
   </div>
 
   <div class="act">
     <h3 data-i>2. What is the Sun made of?</h3>
-    <p data-i class="meta">The Sun · NGSS HS-PS4-3, HS-ESS1-3</p>
-    <p data-i>Open <a href="./#lab=sun">The Sun</a>. Students try each element and record which ones leave dark lines. Ask why helium gives no dark line even though it is the Sun's second ingredient (the surface is too cool for helium to absorb; it was found in 1868 as a bright line in an eclipse, 27 years before it was found on Earth). Collect: the list of five, and one sentence on how we know what a star is made of without going there.</p>
+    <p data-i class="meta">The Sun · NGSS HS-ESS1-2, HS-ESS1-3 (core ideas ESS1.A and PS4.B)</p>
+    <p data-i>Open <a href="./#lab=sun">The Sun</a>. Students try each element and record which ones leave dark lines. Ask why helium gives no dark line even though it is the Sun's second ingredient (the surface is too cool for helium to absorb; it was found in 1868 as a bright line in an eclipse, 27 years before it was found on Earth). Then ask whether a darker line means more of the element (it does not: the Sun is about 74 percent hydrogen and 25 percent helium by mass, and calcium, which makes the two darkest lines, is about two atoms in a million). Collect: the list of five, and one sentence on how we know what a star is made of without going there.</p>
   </div>
 
   <div class="act">
     <h3 data-i>3. The empty atom</h3>
-    <p data-i class="meta">The math, step 1 and step 9 · Predict, "Common mistakes" · NGSS HS-PS1-1</p>
+    <p data-i class="meta">The math, step 1 and step 9 · Predict, "Common mistakes" · NGSS HS-PS1-1 (core idea PS1.A)</p>
     <p data-i>Open <a href="./#lab=math&amp;z=26&amp;step=9">iron at step 9</a> and have students read the nucleus radius, then step 1 for the atom's. Ask for the ratio before showing it. Then the <a href="./#challenge=A1.empty.6.w.Fe">iron challenge</a>: six "common mistakes" questions, one of which asks the same thing with a 1-meter nucleus. Collect: a turn-in code (below).</p>
   </div>
 
   <div class="act">
     <h3 data-i>4. Why the orbit cannot last</h3>
-    <p data-i class="meta">The math, steps 2 and 3 · NGSS HS-PS4-3 · AP Chemistry 1.5</p>
-    <p data-i>Open <a href="./#lab=math&amp;z=1&amp;step=2">hydrogen at step 2</a>. Students read the orbit's speed and period, then step 3: an accelerating charge radiates, and the atom would collapse in about 16 picoseconds. Ask what a theory has to add to stop that (step 4: Bohr's rule), and what Bohr could not explain (step 5). Collect: the worksheet for hydrogen, questions 2 to 4.</p>
+    <p data-i class="meta">The math, steps 2 and 3 · NGSS HS-PS2-4 · AP Chemistry 1.5</p>
+    <p data-i>Open <a href="./#lab=math&amp;z=1&amp;step=2">hydrogen at step 2</a>. Students read the orbit's speed and period, then step 3: an accelerating charge radiates, and the atom would collapse in about 1.6 picoseconds from the 25 picometers Atom starts at (about 16 picoseconds from the Bohr radius, 53 picometers; slide the distance to see it). Ask what a theory has to add to stop that (step 4: Bohr's rule), and what Bohr could not explain (step 5). Collect: the worksheet for hydrogen, questions 2 to 4.</p>
   </div>
 
   <div class="act">
@@ -125,7 +140,7 @@
   <ul class="minutes">
     <li data-i><b>0 to 5</b><span>Open <a href="./">the table</a> on the projector. Click iron. Scroll once: the cloud, then the light, then the empty space. Ask: if the nucleus were a marble on your desk, how far away would the electrons be? Take guesses and write three on the board.</span></li>
     <li data-i><b>5 to 15</b><span>Students open <a href="./#lab=build&amp;z=26">Build on iron</a>. Add and remove protons, neutrons, and electrons and read what changes: the element, the isotope, the charge. Ask each pair to make a stable isotope, a radioactive one, and an ion, and to write the three names down.</span></li>
-    <li data-i><b>15 to 25</b><span>Open <a href="./#lab=math&amp;z=26&amp;step=9">The math at step 9</a>. Read the nucleus radius out loud, then step 1 for the atom's. Have students compute the ratio before Atom shows it, then scale the nucleus to a marble and check the board's guesses. A one-centimeter marble puts the electrons about 300 meters away, three football fields; the exit check asks the same with a one-meter nucleus, and the answer is 30 kilometers.</span></li>
+    <li data-i><b>15 to 25</b><span>Open <a href="./#lab=math&amp;z=26&amp;step=9">The math at step 9</a>. Read the nucleus radius out loud, then step 1 for the atom's. Have students compute the ratio before Atom shows it, then scale the nucleus to a marble and check the board's guesses. A one-centimeter marble makes the atom about 300 meters across, three football fields end to end; the exit check asks the same with a one-meter nucleus, and the answer is 30 kilometers across.</span></li>
     <li data-i><b>25 to 35</b><span>Open <a href="./#lab=predict&amp;z=26">Predict on iron</a> and let students work through a few questions. Wrong answers come back on their own ten minutes later, so a student who misses one gets a second try without being told to.</span></li>
     <li data-i><b>35 to 42</b><span>The exit check: the <a href="./#challenge=A1.empty.6.w.Fe">iron challenge</a>, six "common mistakes" questions in a fixed order, the same for everyone. Students press <b>Copy my turn-in code</b> under <a href="./#lab=you">You</a> and paste it into your form or LMS.</span></li>
     <li data-i><b>42 to 45</b><span>Ask the class for the one thing that surprised them. The usual answers are the emptiness, that the electron has no path, and that the nucleus weighs less than its parts. All three are where the next lessons go.</span></li>
@@ -137,9 +152,9 @@
   <table>
     <thead><tr><th data-i>Lesson</th><th data-i>Minutes</th><th data-i>Standards</th><th data-i>What students do</th></tr></thead>
     <tbody>
-      <tr><td data-i>Atoms are mostly empty</td><td>45</td><td>HS-PS1-1 · AP 1.5</td><td data-i>Build an atom, measure how empty it is, and meet the questions people get wrong.</td></tr>
+      <tr><td data-i>Atoms are mostly empty</td><td>45</td><td>HS-PS1-1 (PS1.A) · HS-PS1-8 · AP 1.5</td><td data-i>Build an atom, measure how empty it is, and meet the questions people get wrong.</td></tr>
       <tr><td data-i>Where the electrons live</td><td>45</td><td>HS-PS1-1 · AP 1.5, 1.6</td><td data-i>Orbital boxes, the photoelectron spectrum, and reading a configuration off the peaks.</td></tr>
-      <tr><td data-i>Light from atoms</td><td>40</td><td>HS-PS4-3 · HS-ESS1-3 · AP 1.5</td><td data-i>Hear hydrogen's lines, compute one, and find five elements in the Sun's light.</td></tr>
+      <tr><td data-i>Light from atoms</td><td>40</td><td>HS-PS4-3 · HS-ESS1-3 (ESS1.A) · AP 3.11, 3.12</td><td data-i>Hear hydrogen's lines, compute one, and find five elements in the Sun's light.</td></tr>
       <tr><td data-i>The nucleus and the mass that disappears</td><td>45</td><td>HS-PS1-8</td><td data-i>Carbon-14 on the chart of the nuclides, binding energy in iron, radioactive decay, and fusion.</td></tr>
       <tr><td data-i>The table predicts</td><td>40</td><td>HS-PS1-1 · AP 1.7, 1.8</td><td data-i>Size, ions, and reactivity, read off the table before you look them up.</td></tr>
     </tbody>
@@ -174,8 +189,8 @@
     <tbody>
       <tr><td data-i>Build; Predict; Trends; the table's lenses</td><td data-i><b>HS-PS1-1</b> Use the periodic table as a model to predict the relative properties of elements based on the patterns of electrons in the outermost energy level of atoms.</td><td data-i>1.5 Atomic structure and electron configuration; 1.7 Periodic trends; 1.8 Valence electrons and ionic compounds</td></tr>
       <tr><td data-i>Electron energies (PES); The math, step 7</td><td>HS-PS1-1</td><td data-i><b>1.6 Photoelectron spectroscopy</b>; 1.5</td></tr>
-      <tr><td data-i>Nuclides; Calculate (decay); Workbench (fusion); The math, step 9; the nucleus scene</td><td data-i><b>HS-PS1-8</b> Develop models to illustrate the changes in the composition of the nucleus of the atom and the energy released during the processes of fission, fusion, and radioactive decay.</td><td data-i>(outside the AP Chemistry framework; AP Physics 2 covers nuclear physics)</td></tr>
-      <tr><td data-i>Hear; The Sun; Calculate (light); The math, steps 4 and 5; the light scene</td><td data-i><b>HS-PS4-3</b> Evaluate the claims, evidence, and reasoning behind the idea that electromagnetic radiation can be described either by a wave model or a particle model, and that for some situations one model is more useful than the other.</td><td data-i>1.5 (line spectra as evidence for energy levels)</td></tr>
+      <tr><td data-i>Nuclides; Calculate (decay); Workbench (fusion); The math, step 9; the nucleus scene</td><td data-i><b>HS-PS1-8</b> Develop models to illustrate the changes in the composition of the nucleus of the atom and the energy released during the processes of fission, fusion, and radioactive decay.</td><td data-i>(binding energy, fission, and fusion are outside the AP Chemistry framework; half-life appears in 5.3 as first-order kinetics; AP Physics 2 covers nuclear physics)</td></tr>
+      <tr><td data-i>Hear; The Sun; Calculate (light); The math, steps 4 and 5; the light scene</td><td data-i><b>HS-PS4-3</b> Evaluate the claims, evidence, and reasoning behind the idea that electromagnetic radiation can be described either by a wave model or a particle model, and that for some situations one model is more useful than the other.</td><td data-i>3.11 Spectroscopy and the electromagnetic spectrum; 3.12 Photoelectric effect (photon energy and electronic transitions)</td></tr>
       <tr><td data-i>The Sun; the Origins lens; the Missions "Light a star" and "Forge gold"</td><td data-i><b>HS-ESS1-3</b> Communicate scientific ideas about the way stars, over their life cycle, produce elements.</td><td></td></tr>
       <tr><td data-i>Build: a molecule</td><td data-i>HS-PS1-1; HS-PS1-3 (bulk properties from the forces between particles)</td><td data-i>2.1 Types of chemical bonds; 2.5 Lewis diagrams; 2.7 VSEPR and bond hybridization</td></tr>
       <tr><td data-i>The math, steps 1 to 3 and 8 (Coulomb's law, orbits, relativity)</td><td data-i>HS-PS2-4 (Coulomb's law) and HS-PS4-3</td><td data-i>1.5 and 1.7, with the reasoning behind them</td></tr>

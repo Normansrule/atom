@@ -37,7 +37,7 @@
     if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("calm");
   })();
 </script>
-<script src="assets/atom-i18n.js"></script>
+<script src="assets/atom-i18n.js" data-pack="site"></script>
 </head>
 <body>
 <noscript><p class="noscript">Atom draws every element live with JavaScript and WebGL. Turn JavaScript on to see the table, or download the Mac app.</p></noscript>
@@ -73,14 +73,14 @@
 <!-- the depth gauge: the zoom framework, as navigation -->
 <nav data-i-attr="aria-label" class="gauge" aria-label="Depth">
   <ol>
-    <li data-i><a href="#top" data-depth="top"><b>118</b><span>Elements</span></a></li>
-    <li data-i><a href="#cloud" data-depth="cloud"><b>10⁻¹⁰ m</b><span>Atom</span></a></li>
-    <li data-i><a href="#light" data-depth="light"><b>10⁻¹⁰ m</b><span>Light</span></a></li>
-    <li data-i><a href="#empty" data-depth="empty"><b>10⁻¹² m</b><span>Empty</span></a></li>
-    <li data-i><a href="#nucleus" data-depth="nucleus"><b>10⁻¹⁴ m</b><span>Nucleus</span></a></li>
-    <li data-i><a href="#proton" data-depth="proton"><b>10⁻¹⁵ m</b><span>Proton</span></a></li>
-    <li data-i><a href="#pull" data-depth="pull"><b>10⁻¹⁵ m</b><span>Quarks</span></a></li>
-    <li data-i><a href="#edge" data-depth="edge"><b>&lt;10⁻¹⁸ m</b><span>Edge</span></a></li>
+    <li><a href="#top" data-depth="top"><b>118</b><span data-i>Elements</span></a></li>
+    <li><a href="#cloud" data-depth="cloud"><b>10⁻¹⁰ m</b><span data-i data-i-ctx="depth gauge">Atom</span></a></li>
+    <li><a href="#light" data-depth="light"><b>10⁻¹⁰ m</b><span data-i>Light</span></a></li>
+    <li><a href="#empty" data-depth="empty"><b>10⁻¹² m</b><span data-i>Empty</span></a></li>
+    <li><a href="#nucleus" data-depth="nucleus"><b>10⁻¹⁴ m</b><span data-i>Nucleus</span></a></li>
+    <li><a href="#proton" data-depth="proton"><b>10⁻¹⁵ m</b><span data-i>Proton</span></a></li>
+    <li><a href="#pull" data-depth="pull"><b>10⁻¹⁵ m</b><span data-i>Quarks</span></a></li>
+    <li><a href="#edge" data-depth="edge"><b>&lt;10⁻¹⁸ m</b><span data-i>Edge</span></a></li>
   </ol>
 </nav>
 
@@ -238,7 +238,7 @@
     <dl class="live">
       <div><dt data-i>Stretched leg</dt><dd id="pLeg">0.40 fm</dd></div>
       <div><dt data-i>Energy in the string</dt><dd id="pE">0.00 GeV</dd></div>
-      <div><dt data-i>Pull on the quark</dt><dd data-i id="pF">14.7 tonnes</dd></div>
+      <div><dt data-i>Pull on the quark</dt><dd data-i id="pF">14.7 metric tons</dd></div>
       <div><dt data-i>Left before it breaks</dt><dd id="pLeft">0.85 fm</dd></div>
     </dl>
     <p class="reaction" id="pReact" aria-live="polite"></p>
@@ -250,7 +250,7 @@
     <details class="math">
       <summary data-i>The math</summary>
       <p data-i class="equation">V<sub>3Q</sub> = −A ħc Σ 1/r<sub>ij</sub> + σ L<sub>min</sub></p>
-      <p data-i><b>σ = 0.90 GeV/fm</b>, the string tension. One GeV per femtometer is 1.602 × 10⁵ newtons, about 16.3 tonnes-force, so this string pulls with <b>14.7 tonnes</b>, whatever its length. <b>L<sub>min</sub></b> is the total length of the three legs, which meet at a junction where every angle is 120°. A = 0.137 is the short-range Coulomb-like part.</p>
+      <p data-i><b>σ = 0.90 GeV/fm</b>, the string tension. One GeV per femtometer is 1.602 × 10⁵ newtons, about 16.3 metric tons of force, so this string pulls with <b>14.7 metric tons</b>, whatever its length. <b>L<sub>min</sub></b> is the total length of the three legs, which meet at a junction where every angle is 120°. A = 0.137 is the short-range Coulomb-like part.</p>
       <p data-i>The potential is the Y-shaped form fitted to lattice quantum chromodynamics (QCD) by Takahashi et al. (2001, 2002). The 1.25 fm breaking distance comes from a quark&ndash;antiquark string in lattice QCD (Bali et al., 2005), computed with sea quarks heavier than real ones; using it for one leg of a proton is an approximation. What the vacuum makes when the string breaks follows from conservation alone. In 2025 this string breaking was watched directly in quantum simulators running simplified versions of the theory.</p>
     </details>
   </div>
@@ -277,7 +277,7 @@
 <!-- =============================================================== get -->
 <section class="get" id="get" aria-labelledby="t-get">
   <h2 data-i id="t-get">Take it with you</h2>
-  <p data-i class="lede">The app opens on the same table and goes deeper: every orbital of every element, the nuclear shell model, decay chains, and a guided tour. It is a single file of HTML, CSS and JavaScript: no network access, no tracking. Run it on a Mac, on Windows, or on Linux, or open it in any modern browser. It is free and open source.</p>
+  <p data-i class="lede">The app opens on the same table and goes deeper: every orbital of every element, the nuclear shell model, decay chains, and a guided tour. It is a single file of HTML, CSS, and JavaScript: no network access, no tracking. Run it on a Mac, on Windows, or on Linux, or open it in any modern browser. It is free and open source.</p>
   <div class="actions dl">
     <a data-i class="btn btn-primary" data-os="mac" href="https://github.com/normansrule/atom/releases/latest/download/Atom-mac.zip">Download for Mac</a>
     <a data-i class="btn" data-os="win" href="https://github.com/normansrule/atom/releases/latest/download/Atom-Windows-Setup.exe">Download for Windows</a>
@@ -288,7 +288,7 @@
   <p class="qual"><label data-i for="siteQual">Picture quality</label> <select id="siteQual"><option data-i value="auto">Auto</option><option data-i value="low">Low</option><option data-i value="medium">Medium</option><option data-i value="high">High</option></select> <span id="siteQualNote"></span></p>
   <div class="shots">
     <figure><img data-i-attr="alt" src="media/app-dark.jpg" alt="The Atom app opening on its periodic table, floating in a nebula: 118 squares, each glowing with its element's outermost electron cloud in phase colors, with hydrogen's readout in the gap above the transition metals and the Shapes, Origins, Frontier, and Yours lenses under the title" width="1440" height="960" loading="lazy" decoding="async"><figcaption data-i>The app opens on the same living table.</figcaption></figure>
-    <figure><img data-i-attr="alt" src="media/app-light.png" alt="The Atom app in its light theme, zoomed into a neutron of iron-56 with one quark pulled out on its gluon string, and the string's length, energy and pull listed beside it" width="1440" height="960" loading="lazy" decoding="async"><figcaption data-i>Inside iron, on the light table: pulling a quark, with the live numbers.</figcaption></figure>
+    <figure><img data-i-attr="alt" src="media/app-light.png" alt="The Atom app in its light theme, zoomed into a neutron of iron-56 with one quark pulled out on its gluon string, and the string's length, energy, and pull listed beside it" width="1440" height="960" loading="lazy" decoding="async"><figcaption data-i>Inside iron, on the light table: pulling a quark, with the live numbers.</figcaption></figure>
   </div>
   <p data-i class="fine">Mac: Apple silicon or Intel, macOS 12 or later. Windows: 10 or 11, 64-bit, with an installer or a <a href="https://github.com/normansrule/atom/releases/latest/download/Atom-Windows-portable.zip">portable zip</a>. Linux: 64-bit, as an AppImage for any distribution or a <a href="https://github.com/normansrule/atom/releases/latest/download/Atom-Linux.deb">.deb for Debian and Ubuntu</a>. The builds aren&rsquo;t signed by Apple or Microsoft yet, so the first launch asks you to confirm it once: on a Mac, choose Open Anyway in System Settings, under Privacy &amp; Security; on Windows, choose More info, then Run anyway. Every file&rsquo;s checksum is on the <a href="https://github.com/normansrule/atom/releases/latest">releases page</a>, and the <a href="https://github.com/normansrule/atom">source code</a> is on GitHub.</p>
 </section>
