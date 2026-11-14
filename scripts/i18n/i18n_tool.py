@@ -91,7 +91,7 @@ def fnv(key, salt=0):
 
 # where a key is used decides which served slice carries it
 SOURCES = [("app/atom.html", "app"), ("docs/index.html", "site"), ("docs/teachers.html", "teachers"), ("docs/404.html", "404"),
-           ("docs/assets/site.js", "site.js"), ("docs/handout.html", "handout")]
+           ("docs/assets/site.js", "site.js"), ("docs/assets/deep.js", "deep.js"), ("docs/handout.html", "handout")]
 SITE_PARTS = ["docs/assets/atom-i18n.js", "docs/assets/atom-data.js", "docs/assets/atom-engines.js", "docs/assets/atom-ptable.js"]
 LABS_PART = "docs/assets/atom-labs.js"
 

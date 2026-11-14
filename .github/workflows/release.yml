@@ -10,6 +10,11 @@
 #   APPLE_ID              the Apple ID email of your developer account
 #   APPLE_TEAM_ID         your 10-character Team ID
 #   APPLE_APP_PASSWORD    an app-specific password made at account.apple.com
+#
+# Optional secrets for the Windows builds. Without them they are unsigned and
+# Windows asks people to confirm the first launch. SIGNING.md has the steps.
+#   WINDOWS_CERT_PFX       base64 of a code-signing certificate (.pfx)
+#   WINDOWS_CERT_PASSWORD  the password that .pfx was exported with
 name: Release
 on:
   push:
@@ -28,18 +33,21 @@ jobs:
     name: Website and in-browser app still pass
     needs: check
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # three engines one after another: about five minutes each on these machines, so leave room
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 22
       - run: npm install --no-save --no-audit --no-fund playwright@1.64.1 axe-core@4.14.0 html-validate@11.17.0
-      - run: npx playwright install --with-deps chromium webkit
-      - run: npx html-validate docs/index.html docs/404.html docs/teachers.html app/atom.html
+      - run: npx playwright install --with-deps chromium webkit firefox
+      - run: npx html-validate docs/index.html docs/404.html docs/teachers.html docs/handout.html app/atom.html
+      - run: python3 scripts/check_css.py
+      - run: python3 scripts/check_budget.py
       - run: node scripts/smoke.mjs
       - run: ATOM_BROWSER=webkit node scripts/smoke.mjs
-        continue-on-error: true
+      - run: ATOM_BROWSER=firefox node scripts/smoke.mjs
       - run: cmp app/atom.html docs/app/index.html
 
   mac:
@@ -90,6 +98,8 @@ jobs:
     needs: check
     runs-on: windows-latest
     timeout-minutes: 30
+    env:
+      HAS_WIN_CERT: ${{ secrets.WINDOWS_CERT_PFX != '' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -100,9 +110,28 @@ jobs:
       - name: Install the build tools
         working-directory: desktop
         run: npm ci
+      - name: Load the signing certificate (only if the secrets exist)
+        if: env.HAS_WIN_CERT == 'true'
+        shell: bash
+        env:
+          PFX: ${{ secrets.WINDOWS_CERT_PFX }}
+          PFX_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          # electron-builder signs the app and the installer when it finds these two; without this step it finds neither
+          { echo "WIN_CSC_LINK<<ATOM_EOF"; printf '%s' "$PFX" | tr -d '\r\n'; echo; echo "ATOM_EOF"; } >> "$GITHUB_ENV"
+          { echo "WIN_CSC_KEY_PASSWORD<<ATOM_EOF"; printf '%s\n' "$PFX_PASSWORD"; echo "ATOM_EOF"; } >> "$GITHUB_ENV"
       - name: Build the installer and the portable zip
         working-directory: desktop
         run: node build.mjs win
+      - name: The builds carry a valid signature (only if the certificate exists)
+        if: env.HAS_WIN_CERT == 'true'
+        shell: pwsh
+        run: |
+          Get-ChildItem desktop/dist -Filter *.exe | ForEach-Object {
+            $s = Get-AuthenticodeSignature $_.FullName
+            "$($_.Name): $($s.Status) $($s.SignerCertificate.Subject)"
+            if ($s.Status -ne 'Valid') { throw "$($_.Name) is not validly signed" }
+          }
       - name: Start the app and run its self-test
         run: |
           npm install --no-save --no-audit --no-fund playwright-core@1.64.1
@@ -165,6 +194,7 @@ jobs:
       contents: write
     env:
       MAC_SIGNED: ${{ secrets.MACOS_CERT_P12 != '' }}
+      WIN_SIGNED: ${{ secrets.WINDOWS_CERT_PFX != '' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
@@ -195,10 +225,16 @@ jobs:
 
           EOF
           if [ "$MAC_SIGNED" = "true" ]; then
-            echo "The Mac app is signed and notarized by Apple. The Windows builds aren't signed by Microsoft yet, so Windows may ask you to confirm the first launch: choose **More info**, then **Run anyway**. The checksums of every file are in **SHA256SUMS.txt**." >> notes.md
+            echo "The Mac app is signed and notarized by Apple, so it opens without a warning." >> notes.md
           else
-            echo "These builds aren't signed by Apple or Microsoft yet, so the first launch asks you to confirm. On a Mac: try to open Atom, then choose **Open Anyway** in System Settings > Privacy & Security. On Windows: choose **More info**, then **Run anyway**. The checksums of every file are in **SHA256SUMS.txt**." >> notes.md
+            echo "The Mac app isn't signed by Apple yet, so the first launch asks you to confirm: try to open Atom, then choose **Open Anyway** in System Settings > Privacy & Security." >> notes.md
           fi
+          if [ "$WIN_SIGNED" = "true" ]; then
+            echo "The Windows builds are signed. A new certificate has to earn its reputation with Microsoft, so for the first weeks Windows may still ask you to confirm: choose **More info**, then **Run anyway**." >> notes.md
+          else
+            echo "The Windows builds aren't signed by Microsoft yet, so Windows asks you to confirm the first launch: choose **More info**, then **Run anyway**." >> notes.md
+          fi
+          echo "The checksums of every file are in **SHA256SUMS.txt**." >> notes.md
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}

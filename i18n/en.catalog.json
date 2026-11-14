@@ -259,6 +259,20 @@
 "n": 1,
 "slice": "site"
 },
+"1947, inside the kaon; understood as a quark in 1964": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"1968, at SLAC": {
+"in": [
+"app"
+],
+"n": 2,
+"slice": "labs"
+},
 "2 &middot; Charge from quark content": {
 "in": [
 "app"
@@ -1491,6 +1505,13 @@
 "n": 1,
 "slice": "site"
 },
+"A beam that starts as muon neutrinos, computed from the measured mixing angles: the share found as each kind as the beam travels. Blue is the electron kind, amber the muon kind, green the tau kind. The disc is one neutrino at the marked distance.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "A block is named for the subshell being filled across that part of the table. {El}'s configuration is {cfg}, and it sits in the {bk}-block.": {
 "in": [
 "app"
@@ -1533,6 +1554,13 @@
 "n": 1,
 "slice": "labs"
 },
+"A chart of three colored bands that swap widths along the horizontal axis: the chance that a neutrino that started as a muon neutrino is found as an electron, a muon, or a tau neutrino, against distance divided by energy.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "A claim: a particle made of pure glue": {
 "in": [
 "app"
@@ -1561,12 +1589,40 @@
 "n": 1,
 "slice": "labs"
 },
+"A down quark became an up quark, so the neutron is now a proton. The W boson carried the charge away and became an electron and an antineutrino.": {
+"in": [
+"deep.js"
+],
+"n": 1,
+"slice": "site"
+},
+"A down quark in the neutron turns into an up quark by giving off a W⁻, which becomes an electron and an antineutrino. The neutron is now a proton. This is beta decay.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"A drawing of how most of it was made: {kind}.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "site"
+},
 "A drawing of the calculation": {
 "in": [
 "app"
 ],
 "n": 1,
 "slice": "labs"
+},
+"A field, drawn as rows of a rippling sheet. The two bright ripples are electrons. When they come close, a ripple in the electromagnetic field, a photon, passes between them and they turn away. The faint shimmer everywhere is the vacuum. A drawing of the idea, not a simulation.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
 },
 "A first lesson, minute by minute": {
 "in": [
@@ -1600,6 +1656,48 @@
 "A free periodic table that calculates every element from the equations and lets you build, predict, and work through the physics of any atom. No accounts, no servers, nothing sent anywhere. It works in any browser, offline after the first visit, and in more than one language: the menu in the top bar lists them.": {
 "in": [
 "handout"
+],
+"n": 1,
+"slice": "site"
+},
+"A heavier copy of the down quark. Its slow decays let experiments compare matter with antimatter.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"A heavier copy still, 3,477 times the electron's mass. It lasts 0.29 trillionths of a second.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"A heavy copy of the down quark. It turns up in the kaons that cosmic rays make in the air.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"A heavy copy of the electron, 207 times its mass. Cosmic rays send about one a minute through each square centimeter of you.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"A heavy copy of the up quark, found in 1974 inside a particle called the J/ψ.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"A ladder of sizes running downward from an atom at 10⁻¹⁰ meters. A solid line reaches past a nucleus and a proton to 4 × 10⁻¹⁹ meters, the smallest size any experiment has tested. A dotted line continues for sixteen powers of ten to the Planck length, 1.6 × 10⁻³⁵ meters, where a small loop wobbles.": {
+"in": [
+"site"
 ],
 "n": 1,
 "slice": "site"
@@ -1702,6 +1800,13 @@
 "n": 1,
 "slice": "labs"
 },
+"A neutron decays": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "A neutron is up, down, down, so it brings two: {downs} + 2 = {o}.": {
 "in": [
 "app"
@@ -1743,6 +1848,13 @@
 ],
 "n": 1,
 "slice": "labs"
+},
+"A pair: an electron and a positron, made from the energy you added. It takes at least 1.022 MeV, twice an electron's rest energy.": {
+"in": [
+"deep.js"
+],
+"n": 1,
+"slice": "site"
 },
 "A paper clip, about 1 g": {
 "in": [
@@ -1814,9 +1926,30 @@
 "n": 1,
 "slice": "labs"
 },
+"A ripple in the Higgs field, the field that gives the other particles their rest mass.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"A rule to watch": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "A ruthenium-cobalt liner announced by Applied Materials in 2024 thins copper wire linings to 2 nanometers, and Intel has shown etched ruthenium wires for future chips.": {
 "in": [
 "app"
+],
+"n": 1,
+"slice": "site"
+},
+"A sheet of rippling lines. Two bright ripples, two electrons, approach each other; a wavy line, a photon, passes between them, and they turn away. A faint shimmer covers the whole sheet.": {
+"in": [
+"site"
 ],
 "n": 1,
 "slice": "site"
@@ -1911,6 +2044,13 @@
 ],
 "n": 1,
 "slice": "site"
+},
+"ATLAS Collaboration. (2012). Observation of a new particle in the search for the Standard Model Higgs boson with the ATLAS detector at the LHC. <i>Physics Letters B, 716</i>(1), 1–29. https://doi.org/10.1016/j.physletb.2012.08.020": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "app"
 },
 "Abel, C., et al. (2020). Measurement of the permanent electric dipole moment of the neutron. <i>Physical Review Letters, 124</i>(8), 081803. https://doi.org/10.1103/PhysRevLett.124.081803": {
 "in": [
@@ -2101,6 +2241,13 @@
 ],
 "n": 1,
 "slice": "labs"
+},
+"Add energy": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
 },
 "Add one neutron to {iso}. How many down quarks does the nucleus hold now?": {
 "in": [
@@ -2435,6 +2582,13 @@
 "slice": "labs"
 },
 "An atom has {z, plural, one {# proton} other {# protons}} and {e, plural, one {# electron} other {# electrons}}. What is its charge?": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"An electron and its antiparticle, the positron, meet and are gone. Their mass leaves as two photons of 511 keV each. A PET scan is made from pairs of photons like these.": {
 "in": [
 "app"
 ],
@@ -3228,6 +3382,13 @@
 "n": 1,
 "slice": "app"
 },
+"Below the quarks, fields": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "Bent": {
 "in": [
 "app"
@@ -3304,6 +3465,20 @@
 ],
 "n": 1,
 "slice": "labs"
+},
+"Beta decay drawn in time from left to right. A neutron holds an up quark and two down quarks. One down quark turns into an up quark and gives off a W boson, drawn as a wavy line. The W ends, and an electron and an antineutrino fly away from that point.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
+"Beta decay, in time from left to right. A free neutron lasts 878 seconds on average before this happens.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
 },
 "Beta-minus decay": {
 "in": [
@@ -3946,6 +4121,13 @@
 "n": 1,
 "slice": "app"
 },
+"CMS Collaboration. (2012). Observation of a new boson at a mass of 125 GeV with the CMS experiment at the LHC. <i>Physics Letters B, 716</i>(1), 30–61. https://doi.org/10.1016/j.physletb.2012.08.021": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "app"
+},
 "Ca-40 is doubly magic, with 20 protons and 20 neutrons, which is why calcium is unusually abundant for its atomic number. Your skeleton holds about a kilogram of it.": {
 "in": [
 "app"
@@ -4381,6 +4563,27 @@
 "n": 2,
 "slice": "site"
 },
+"Carries the strong force between quarks. It feels that force itself, which is why a quark can never be pulled free.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Carries the weak force without changing what a particle is. Counting its decays showed there are three kinds of neutrino.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Carries the weak force, and carries charge, so it can turn one kind of particle into another.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Cassiterite (SnO2), mostly in granite-related greisen and vein deposits and in alluvial placers weathered out of them. The Southeast Asian tin belt runs from Myanmar through Thailand to Indonesia.": {
 "in": [
 "app"
@@ -4518,7 +4721,7 @@
 "in": [
 "app"
 ],
-"n": 2,
+"n": 3,
 "slice": "labs"
 },
 "Charge it feels": {
@@ -6110,6 +6313,13 @@
 "n": 1,
 "slice": "labs"
 },
+"Electrons repel": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Element": {
 "in": [
 "app"
@@ -6405,6 +6615,13 @@
 "n": 1,
 "slice": "site"
 },
+"Even empty space is not still. The fields jitter at their lowest energy, and the jitter is measured: it shifts hydrogen’s energy levels by about a part in a million, the Lamb shift, found in 1947.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "Every battery is a trade between how far an ion falls, how many a gram can hold, and what the materials cost the planet.": {
 "in": [
 "app"
@@ -6483,6 +6700,13 @@
 "n": 1,
 "slice": "labs"
 },
+"Every scene so far sits on the solid part of this ladder. The dotted part has never been looked at. The loop at the bottom stands for one idea of what might be there, a vibrating string 10⁻³⁵ m long. It is an idea: no experiment has found a sign of strings, of extra dimensions, or of any piece smaller than a quark.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "Every square is a full dossier": {
 "in": [
 "app"
@@ -6511,12 +6735,26 @@
 "n": 7,
 "slice": "site"
 },
+"Everything in this table needs only the up quark, the down quark, and the electron. Nature made two heavier copies of each, and a neutrino for each of the three. Experiments at CERN counted the neutrino kinds: 2.996 ± 0.007. Nobody knows why three.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "Everything light and corrosion-resistant: aircraft, vehicles, cans, window frames, power transmission lines, foil, and as a rocket-fuel component.": {
 "in": [
 "app"
 ],
 "n": 1,
 "slice": "site"
+},
+"Everything on the periodic table is made of three of these: the up quark, the down quark, and the electron. The Standard Model is the whole list, seventeen particles, and the rules for how they push, pull, and change one another. It has passed every test since the 1970s, and it leaves out gravity and dark matter. Pick a particle, then watch four of the rules at work.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "Everything you have ever touched is some count of these three particles. Protons decide the element, neutrons decide whether it lasts, and electrons decide how it bonds.": {
 "in": [
@@ -6813,6 +7051,20 @@
 "n": 1,
 "slice": "labs"
 },
+"Feels gravity, and none of the three forces of the Standard Model itself.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Feels {forces}, and gravity.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Fermium-257 is the heaviest nuclide that can be made by neutron capture in a reactor: at fermium the chain terminates because Fm-258 fissions in 370 microseconds. Everything heavier has to be made by fusing two nuclei together.": {
 "in": [
 "app"
@@ -6844,6 +7096,13 @@
 "Fertilizer — the K in NPK, and about 95% of potash use. Also glass, soap, and potassium nitrate in propellants.": {
 "in": [
 "app"
+],
+"n": 1,
+"slice": "site"
+},
+"Fields": {
+"in": [
+"site"
 ],
 "n": 1,
 "slice": "site"
@@ -7046,6 +7305,13 @@
 "n": 1,
 "slice": "site"
 },
+"Follow a decay chain": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Follow the table": {
 "in": [
 "app"
@@ -7158,6 +7424,13 @@
 "n": 1,
 "slice": "labs"
 },
+"Force carriers": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Forge gold": {
 "in": [
 "app"
@@ -7199,6 +7472,13 @@
 ],
 "n": 1,
 "slice": "site"
+},
+"Found": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "Found a translation that reads wrong? Every string lives in <code>app/i18n/es.js</code> on GitHub, and a corrected line is a one-line pull request.": {
 "in": [
@@ -7461,6 +7741,13 @@
 "n": 1,
 "slice": "labs"
 },
+"Galaxies hold together as if they carried five times more matter than the kind in this table. Nothing in the Standard Model fits it, and no detector has caught a particle of it.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "Galena (PbS), nearly always with zinc and silver, in sediment-hosted and Mississippi Valley type deposits.": {
 "in": [
 "app"
@@ -7703,6 +7990,13 @@
 "Graphite: China, Mozambique, Madagascar, Brazil. Diamond: Russia, Botswana, DR Congo, Australia, Canada. Coal: China, India, Indonesia, USA.": {
 "in": [
 "app"
+],
+"n": 1,
+"slice": "site"
+},
+"Gravity is the one force with no place in the Standard Model. A quantum theory of it should matter at the Planck length, 1.6 × 10⁻³⁵ m, sixteen powers of ten below anything tested. String theory and loop quantum gravity are attempts; neither has made a prediction that an experiment has confirmed.": {
+"in": [
+"site"
 ],
 "n": 1,
 "slice": "site"
@@ -8045,6 +8339,20 @@
 "n": 1,
 "slice": "labs"
 },
+"Higgs": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Higgs boson": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "High": {
 "in": [
 "app",
@@ -8091,6 +8399,13 @@
 "Historically used in radiotherapy 'radon seeds'. Now essentially only of interest as a hazard and as a geological tracer for earthquakes and groundwater.": {
 "in": [
 "app"
+],
+"n": 1,
+"slice": "site"
+},
+"Hit the field hard enough and it rings. The ring is the Higgs boson, found at CERN on July 4, 2012, at <b>125.13 GeV</b>, 133 times the mass of a proton.": {
+"in": [
+"site"
 ],
 "n": 1,
 "slice": "site"
@@ -8196,6 +8511,13 @@
 "How does beryllium hold up under years of neutron bombardment in a fusion blanket, as helium and tritium build up inside it?": {
 "in": [
 "app"
+],
+"n": 1,
+"slice": "site"
+},
+"How does gravity fit?": {
+"in": [
+"site"
 ],
 "n": 1,
 "slice": "site"
@@ -8838,6 +9160,13 @@
 "n": 1,
 "slice": "app"
 },
+"International Atomic Energy Agency. (n.d.). Live chart of nuclides: Nuclear structure and decay data. Retrieved November 13, 2026, from https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "app"
+},
 "Iodide ions drift inside perovskite solar cells under light and heat, degrading them; how can they be pinned in place?": {
 "in": [
 "app"
@@ -9020,6 +9349,13 @@
 "n": 1,
 "slice": "site"
 },
+"It comes in eight combinations of color. The antiparticle of a gluon is another gluon.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "It has more neutrons than {el} can hold steadily, so a neutron will turn into a proton (beta-minus decay), making {lc}-{a}.": {
 "in": [
 "app"
@@ -9033,6 +9369,20 @@
 ],
 "n": 1,
 "slice": "labs"
+},
+"It is its own antiparticle.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"It is not where most of your mass comes from. The Higgs field gives the three quarks in a proton about 9 MeV. The other 99 percent of the proton, and of you, is the energy of the gluon field.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
 },
 "It melts at 29.8 C, so it liquefies in your hand. Mendeleev predicted it as 'eka-aluminum' and when Lecoq de Boisbaudran measured a density that disagreed, Mendeleev wrote to say the measurement was wrong. It was.": {
 "in": [
@@ -9063,6 +9413,27 @@
 "slice": "labs"
 },
 "It was {el}, not {other}. Its strongest visible lines are {lines}.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Its antiparticle has the opposite charge, {q}, and the opposite color.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Its antiparticle has the opposite charge, {q}.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Its antiparticle is an antineutrino. Whether the two are really one particle is not known.": {
 "in": [
 "app"
 ],
@@ -9161,6 +9532,13 @@
 "n": 1,
 "slice": "site"
 },
+"Jarlskog, G., &amp; Jarlskog, C. (1990). <i>The Nobel Prize in Physics 1990: Illustrated presentation</i>. The Royal Swedish Academy of Sciences. https://www.nobelprize.org/prizes/physics/1990/9592-the-nobel-prize-in-physics-1990/": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "app"
+},
 "Jean Charles Galissard de Marignac": {
 "in": [
 "app"
@@ -9227,9 +9605,23 @@
 "n": 1,
 "slice": "labs"
 },
+"KATRIN Collaboration. (2025). Direct neutrino-mass measurement based on 259 days of KATRIN data. <i>Science, 388</i>(6743), 180–185. https://arxiv.org/abs/2406.13516": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "app"
+},
 "Kazakhstan (about 43% of world mine supply, mostly in-situ leach), Canada, Namibia, Australia, Uzbekistan, Niger, Russia.": {
 "in": [
 "app"
+],
+"n": 1,
+"slice": "site"
+},
+"Keep falling and you do not find smaller pieces. Experiments that could have seen a size as small as <b>4 × 10⁻¹⁹ m</b> find the electron and the quarks still behaving as points.": {
+"in": [
+"site"
 ],
 "n": 1,
 "slice": "site"
@@ -9505,6 +9897,13 @@
 "n": 1,
 "slice": "site"
 },
+"Leptons": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Lesson": {
 "in": [
 "teachers"
@@ -9593,6 +9992,13 @@
 ],
 "n": 5,
 "slice": "site"
+},
+"Light. It carries the electromagnetic force and has no mass, so that force reaches any distance.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "Light: the atom&rsquo;s fingerprint": {
 "in": [
@@ -10050,6 +10456,13 @@
 "n": 1,
 "slice": "site"
 },
+"Made in the Sun's core and in every beta decay. Almost nothing stops it.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Made in {ks}.": {
 "in": [
 "app",
@@ -10064,6 +10477,13 @@
 ],
 "n": 1,
 "slice": "app"
+},
+"Made when cosmic rays strike the air, and in accelerator beams. It can arrive as another kind.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "Made, not mined: ~95% by steam methane reforming (China, USA, Russia, EU). Green H2 from electrolysis is a few per cent and growing.": {
 "in": [
@@ -10271,10 +10691,11 @@
 },
 "Mass": {
 "in": [
-"app"
+"app",
+"site"
 ],
-"n": 1,
-"slice": "labs"
+"n": 3,
+"slice": "site"
 },
 "Mass defect": {
 "in": [
@@ -10305,6 +10726,13 @@
 "slice": "labs"
 },
 "Mass unit": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Masses and charges are the Particle Data Group's 2026 values. Each drawing runs in time from left to right and shows what happens, not how often or how fast.": {
 "in": [
 "app"
 ],
@@ -10350,7 +10778,7 @@
 "in": [
 "app"
 ],
-"n": 1,
+"n": 2,
 "slice": "labs"
 },
 "Matter waves": {
@@ -10994,6 +11422,13 @@
 "n": 1,
 "slice": "site"
 },
+"Neutrinos feel only this force and gravity. About 60 billion of them from the Sun pass through each square centimeter of you every second, and nearly all go on through the whole Earth. They come in three kinds and change from one kind to another as they fly, which can happen only if they have mass: less than 0.45 eV, under a millionth of an electron’s. Nobody knows why so little.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "Neutron cross section": {
 "in": [
 "app"
@@ -11319,6 +11754,13 @@
 "Noble gas": {
 "in": [
 "app"
+],
+"n": 1,
+"slice": "site"
+},
+"Nobody has looked here: sixteen powers of ten.": {
+"in": [
+"deep.js"
 ],
 "n": 1,
 "slice": "site"
@@ -11800,6 +12242,13 @@
 "n": 1,
 "slice": "labs"
 },
+"One field is different. The Higgs field is not zero anywhere, even in empty space, and a particle that feels it is harder to speed up or slow down. That resistance is its rest mass. The electron feels the field faintly, the top quark about 340,000 times more, and the photon not at all.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "One mole of it, 6.022 × 10²³ units, weighs {tot} grams. Each element's share of the mass is its atomic mass times how many of its atoms there are.": {
 "in": [
 "app"
@@ -11869,6 +12318,13 @@
 ],
 "n": 1,
 "slice": "site"
+},
+"One of the three quarks in every proton, and two of the three in every neutron.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "One of the twenty elements whose ground state breaks the aufbau order: chromium is [Ar] 3d5 4s1, not 3d4 4s2, because a half-filled d shell plus a half-filled s shell is lower in energy.": {
 "in": [
@@ -11944,7 +12400,7 @@
 "in": [
 "site"
 ],
-"n": 4,
+"n": 7,
 "slice": "site"
 },
 "Open 25 element cards.": {
@@ -12473,7 +12929,7 @@
 "in": [
 "app"
 ],
-"n": 1,
+"n": 2,
 "slice": "labs"
 },
 "Particles: press one to add it, or drag it onto the atom": {
@@ -12482,6 +12938,13 @@
 ],
 "n": 1,
 "slice": "labs"
+},
+"Particles: the seventeen particles of the Standard Model, and four of its rules drawn as they happen.": {
+"in": [
+"teachers"
+],
+"n": 1,
+"slice": "site"
 },
 "Paschen": {
 "in": [
@@ -12930,6 +13393,13 @@
 ],
 "n": 1,
 "slice": "labs"
+},
+"Play the decay": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
 },
 "Plot that per-nucleon binding against size and it rises, peaks near <b>iron</b>, then falls. Below the peak, joining nuclei releases energy: <em>fusion</em>. Above it, splitting them does: <em>fission</em>. The <b>Nucleus</b> tab draws this curve with your nuclide marked.": {
 "in": [
@@ -13498,7 +13968,7 @@
 "app",
 "site"
 ],
-"n": 6,
+"n": 7,
 "slice": "site"
 },
 "Quarks carry a charge called <b>color</b> (red, green, blue &mdash; nothing to do with light). Only color-neutral bundles exist free: three quarks, one of each color, make 'white'. The carriers are <b>gluons</b>, and there are eight of them.": {
@@ -13507,6 +13977,20 @@
 ],
 "n": 1,
 "slice": "app"
+},
+"Quarks carry a kind of charge called color, drawn here as red, green, and blue. They hold together by trading gluons, and each trade swaps the colors of the two quarks. The three colors always add up to none.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Quarks trade color": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "Qubit": {
 "in": [
@@ -13984,6 +14468,13 @@
 "n": 1,
 "slice": "labs"
 },
+"Ring the field": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "Roentgenium is predicted to be chemically quite unlike gold despite sitting under it, and possibly to favor the +3 state. Like darmstadtium, its configuration is calculated rather than measured.": {
 "in": [
 "app"
@@ -14044,6 +14535,13 @@
 "slice": "site"
 },
 "Run the decay calculator with carbon-14 and find how much is left after 11,400 years (two half-lives).": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Run the experiment": {
 "in": [
 "app"
 ],
@@ -14974,6 +15472,13 @@
 "n": 1,
 "slice": "labs"
 },
+"Spin": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Split the atom": {
 "in": [
 "app"
@@ -15178,6 +15683,13 @@
 "slice": "site"
 },
 "Step {MA} of {length} · {kind}": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"Step {k} of {n}: {iso}, half-life {hl}. It goes by {mode} to {next}.": {
 "in": [
 "app"
 ],
@@ -15741,6 +16253,13 @@
 "n": 1,
 "slice": "app"
 },
+"That ring was a Higgs boson. It lasted about 10⁻²² seconds and left as two photons, one of the two signatures it was found by.": {
+"in": [
+"deep.js"
+],
+"n": 1,
+"slice": "site"
+},
 "That's the bottom of the well: the distance this model likes best.": {
 "in": [
 "app"
@@ -15930,6 +16449,20 @@
 "n": 1,
 "slice": "labs"
 },
+"The W weighs as much as 86 protons, so the weak force reaches only about 10⁻¹⁸ m and almost never acts. That slowness is why the Sun lasts ten billion years: its first step, two protons becoming deuterium, has to wait for the weak force.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
+"The W⁺ and the W⁻ are each other's antiparticles.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "The allowed orbits of {ionName}, with the electron jumping from orbit {nu} to orbit {nl} and giving off light.": {
 "in": [
 "app"
@@ -16000,6 +16533,13 @@
 ],
 "n": 1,
 "slice": "site"
+},
+"The chain ends at {iso}, which is stable. It took {a, plural, one {# alpha decay} other {# alpha decays}} and {b, plural, one {# beta decay} other {# beta decays}} to get here from {start}.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "The charge the outer electron feels, after the inner electrons shield S of it.": {
 "in": [
@@ -16246,6 +16786,13 @@
 "n": 1,
 "slice": "app"
 },
+"The force that changes what a thing is": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "The gaps are real: nodes": {
 "in": [
 "app"
@@ -16309,6 +16856,13 @@
 "n": 1,
 "slice": "site"
 },
+"The heaviest particle known, about as heavy as an atom of tungsten. It decays before it can join anything.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "The highest melting point of any metal, 3695 K, and the lowest vapor pressure. Its symbol W is from wolfram; the mineral was said to devour tin during smelting 'like a wolf devours a sheep'.": {
 "in": [
 "app"
@@ -16357,6 +16911,13 @@
 ],
 "n": 1,
 "slice": "site"
+},
+"The last of the matter particles to be seen, in 2000 at Fermilab.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "The last stable-ish element to be discovered in nature, in 1925. Re-187 beta decays with a half-life of 41.6 billion years and the Re-Os pair dates ore deposits and meteorites. Rhenium has the third highest melting point of any element.": {
 "in": [
@@ -16591,6 +17152,13 @@
 "n": 1,
 "slice": "site"
 },
+"The particle of chemistry: every bond in every molecule is electrons shared or handed over.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "The periodic table": {
 "in": [
 "app"
@@ -16668,6 +17236,13 @@
 "n": 1,
 "slice": "app"
 },
+"The same push, again and again. The photon has no rest mass and never stops. The electron jumps ahead; the top quark barely moves. Between pushes nothing slows down: the field resists a change in motion, not motion. The lanes are not to scale. At true scale the electron would cross the page 340,000 times before the top quark crossed it once.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "The second is defined by cesium-133, which ticks 9,192,631,770 times a second, and in 2025 Caltech trapped 6,100 cesium atoms as qubits in one array, among the largest ever built.": {
 "in": [
 "app"
@@ -16695,6 +17270,13 @@
 ],
 "n": 1,
 "slice": "app"
+},
+"The seventeen particles": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "The shape has a name: an orbital": {
 "in": [
@@ -17132,6 +17714,20 @@
 "n": 1,
 "slice": "labs"
 },
+"Three forces push and pull. The fourth, the weak force, turns one particle into another. Inside a neutron a down quark becomes an up quark, so the neutron becomes a proton. The charge that was lost leaves as a W boson, which lasts about 3 × 10⁻²⁵ seconds and becomes an electron and an antineutrino. That is beta decay, the decay carbon dating counts.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
+"Three lanes across a field of dots. A photon crosses at a steady speed. An electron and a top quark get the same push again and again: the electron jumps ahead each time, and the top quark, carrying a crowd of dots, barely moves.": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "Three quarters of all ordinary matter by mass. The proton is the only nucleus with no neutron, and the only atom for which the Schrödinger equation can be solved exactly — which is why every orbital in this app is hydrogenic.": {
 "in": [
 "app"
@@ -17456,6 +18052,13 @@
 "n": 1,
 "slice": "app"
 },
+"Two electrons never touch. One gives off a photon, the other takes it in, and both change course. Every push and pull of electricity and magnetism is photons traded this way.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Two famous anomalies, closed": {
 "in": [
 "site"
@@ -17483,6 +18086,13 @@
 ],
 "n": 1,
 "slice": "app"
+},
+"Two of the three quarks in every proton, and one of the three in every neutron.": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "Two of {el}'s spectral lines are at {a} and {b}. Which photon carries more energy?": {
 "in": [
@@ -17878,6 +18488,13 @@
 "n": 1,
 "slice": "app"
 },
+"W boson": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Wang, M., Huang, W. J., Kondev, F. G., Audi, G., &amp; Naimi, S. (2021). The AME 2020 atomic mass evaluation (II): Tables, graphs and references. <i>Chinese Physics C, 45</i>(3), 030003. https://doi.org/10.1088/1674-1137/abddaf": {
 "in": [
 "app",
@@ -17927,6 +18544,13 @@
 ],
 "n": 2,
 "slice": "labs"
+},
+"Weak force": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
 },
 "WebGL 2 is not available here, so the cloud is drawn from Monte-Carlo samples on the Canvas.": {
 "in": [
@@ -18013,6 +18637,13 @@
 "n": 1,
 "slice": "site"
 },
+"What is the dark matter?": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "What is the electron's wavelength in orbit 2 of {ionName}, in picometers?": {
 "in": [
 "app"
@@ -18045,6 +18676,13 @@
 "What opens": {
 "in": [
 "teachers"
+],
+"n": 1,
+"slice": "site"
+},
+"What physics finds instead is fields. Every kind of particle is a ripple in a field that fills all of space. Every electron is a ripple in the one electron field, which is why all electrons are exactly alike. A force is one field tugging on another, and the tug travels as a ripple too: the photon, the gluon.": {
+"in": [
+"site"
 ],
 "n": 1,
 "slice": "site"
@@ -18174,6 +18812,13 @@
 "app"
 ],
 "n": 2,
+"slice": "site"
+},
+"Where mass comes from": {
+"in": [
+"site"
+],
+"n": 1,
 "slice": "site"
 },
 "Where reactions happen": {
@@ -18443,6 +19088,13 @@
 "n": 1,
 "slice": "app"
 },
+"Why three families?": {
+"in": [
+"site"
+],
+"n": 1,
+"slice": "site"
+},
 "Why would only whole steps of ℏ be allowed?": {
 "in": [
 "app"
@@ -18465,6 +19117,13 @@
 "slice": "labs"
 },
 "With 2 electrons, each one is pulled by the nucleus and pushed by the other, and no exact formula exists. The standard shortcut:": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"With reduced motion on, the finished spectrum is shown at once.": {
 "in": [
 "app"
 ],
@@ -18917,6 +19576,13 @@
 "n": 1,
 "slice": "labs"
 },
+"Z boson": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "Z* = argmax<sub>Z</sub> B(Z,A) &nbsp;&rarr;&nbsp; Z*({A}) = <span class=\"hl\">{zstar}</span>": {
 "in": [
 "app"
@@ -18937,6 +19603,13 @@
 ],
 "n": 1,
 "slice": "labs"
+},
+"ZEUS Collaboration. (2016). Limits on the effective quark radius from inclusive ep scattering at HERA. <i>Physics Letters B, 757</i>, 468–472. https://arxiv.org/abs/1604.01280": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "app"
 },
 "Zhang, C., et al. (2024). Frequency ratio of the ²²⁹ᵐTh nuclear isomeric transition and the ⁸⁷Sr atomic clock. <i>Nature, 633</i>, 63–70. https://doi.org/10.1038/s41586-024-07839-6": {
 "in": [
@@ -19086,6 +19759,20 @@
 "n": 1,
 "slice": "labs"
 },
+"a nucleus": {
+"in": [
+"deep.js"
+],
+"n": 1,
+"slice": "site"
+},
+"a proton": {
+"in": [
+"deep.js"
+],
+"n": 1,
+"slice": "site"
+},
 "a proton (uud)": {
 "in": [
 "app"
@@ -19199,6 +19886,13 @@
 "n": 2,
 "slice": "labs"
 },
+"alpha decay: two protons and two neutrons leave": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "alpha, SF": {
 "in": [
 "app"
@@ -19230,6 +19924,13 @@
 "ammonium perrhenate": {
 "in": [
 "app"
+],
+"n": 1,
+"slice": "site"
+},
+"an atom": {
+"in": [
+"deep.js"
 ],
 "n": 1,
 "slice": "site"
@@ -19416,6 +20117,13 @@
 "n": 1,
 "slice": "site"
 },
+"beta decay: a neutron becomes a proton": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "beta-, EC": {
 "in": [
 "app"
@@ -19513,6 +20221,13 @@
 ],
 "n": 1,
 "slice": "site"
+},
+"bottom quark": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "bounces between the shells": {
 "in": [
@@ -19710,6 +20425,13 @@
 ],
 "n": 1,
 "slice": "app"
+},
+"charm quark": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "chloride": {
 "in": [
@@ -19944,6 +20666,13 @@
 "n": 1,
 "slice": "labs"
 },
+"down quark": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "down to": {
 "in": [
 "app"
@@ -20014,6 +20743,20 @@
 "n": 1,
 "slice": "site"
 },
+"electromagnetism": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"electron": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "electron capture": {
 "in": [
 "app"
@@ -20034,6 +20777,13 @@
 ],
 "n": 1,
 "slice": "app"
+},
+"electron neutrino": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "electrons hidden inside the proton": {
 "in": [
@@ -20314,6 +21064,13 @@
 ],
 "n": 1,
 "slice": "site"
+},
+"gluon": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "gluons 50%": {
 "in": [
@@ -21004,6 +21761,20 @@
 "n": 1,
 "slice": "labs"
 },
+"muon": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"muon neutrino": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "n*  (Slater effective n)": {
 "in": [
 "app"
@@ -21041,10 +21812,11 @@
 },
 "neutron": {
 "in": [
-"app"
+"app",
+"deep.js"
 ],
-"n": 5,
-"slice": "labs"
+"n": 7,
+"slice": "site"
 },
 "neutron  udd": {
 "in": [
@@ -21438,6 +22210,13 @@
 "n": 1,
 "slice": "site"
 },
+"photon": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "plutonium dioxide": {
 "in": [
 "app"
@@ -21501,6 +22280,13 @@
 "n": 1,
 "slice": "site"
 },
+"proposed in 1905, confirmed in 1922": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "protactinium oxide": {
 "in": [
 "app"
@@ -21510,9 +22296,10 @@
 },
 "proton": {
 "in": [
-"app"
+"app",
+"deep.js"
 ],
-"n": 6,
+"n": 8,
 "slice": "site"
 },
 "proton  uud": {
@@ -21556,6 +22343,13 @@
 ],
 "n": 1,
 "slice": "app"
+},
+"quarks and electrons are smaller than this": {
+"in": [
+"deep.js"
+],
+"n": 1,
+"slice": "site"
 },
 "quarks and gluons": {
 "in": [
@@ -22019,6 +22813,13 @@
 "n": 1,
 "slice": "site"
 },
+"strange quark": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "stretched leg": {
 "in": [
 "app"
@@ -22117,6 +22918,20 @@
 "n": 1,
 "slice": "site"
 },
+"tau": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"tau neutrino": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "terbium oxide": {
 "in": [
 "app"
@@ -22162,6 +22977,13 @@
 "the Curies' radium; parent of radon-222": {
 "in": [
 "app"
+],
+"n": 1,
+"slice": "site"
+},
+"the Planck length": {
+"in": [
+"deep.js"
 ],
 "n": 1,
 "slice": "site"
@@ -22299,6 +23121,13 @@
 "n": 1,
 "slice": "site"
 },
+"the strong force": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "the three legs to the junction, which sits where they meet at 120&deg; (the Fermat point)": {
 "in": [
 "app"
@@ -22314,6 +23143,13 @@
 "slice": "labs"
 },
 "the two electrons that were added last, from 3d": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"the weak force": {
 "in": [
 "app"
 ],
@@ -22403,6 +23239,13 @@
 ],
 "n": 1,
 "slice": "site"
+},
+"top quark": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "total B": {
 "in": [
@@ -22523,6 +23366,13 @@
 "n": 1,
 "slice": "labs"
 },
+"under {n} eV": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "unknown": {
 "in": [
 "app"
@@ -22543,6 +23393,13 @@
 ],
 "n": 1,
 "slice": "app"
+},
+"up quark": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "upper": {
 "in": [
@@ -23427,6 +24284,20 @@
 "n": 1,
 "slice": "labs"
 },
+"{n, plural, one {# microsecond} other {# microseconds}}": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"{n, plural, one {# millisecond} other {# milliseconds}}": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "{n, plural, one {# minute} other {# minutes}}": {
 "in": [
 "app"
@@ -23581,12 +24452,33 @@
 "n": 1,
 "slice": "labs"
 },
+"{n} GeV": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
+"{n} MeV": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
+},
 "{n} barns": {
 "in": [
 "app"
 ],
 "n": 1,
 "slice": "app"
+},
+"{n} billion billion years": {
+"in": [
+"app"
+],
+"n": 1,
+"slice": "labs"
 },
 "{n} billion years": {
 "in": [
@@ -23608,6 +24500,13 @@
 ],
 "n": 1,
 "slice": "app"
+},
+"{n} km per GeV": {
+"in": [
+"deep.js"
+],
+"n": 1,
+"slice": "site"
 },
 "{n} meters": {
 "in": [

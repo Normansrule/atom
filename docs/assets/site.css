@@ -164,7 +164,7 @@ sub,sup{font-size:.7em;line-height:0}
 .gauge a{display:flex;align-items:baseline;justify-content:flex-end;gap:8px;text-decoration:none;
   color:var(--ink3);padding:4px 0 4px 8px;font-size:14px;transition:color 200ms ease}
 .gauge a b{font-weight:500;font-stretch:90%;font-size:14px}
-.gauge a span{width:64px;text-align:right}
+.gauge a span{min-width:64px;text-align:right;white-space:nowrap}
 .gauge a.on{color:var(--ink)}
 .gauge a.on b{color:var(--acc)}
 .gauge a::after{content:"";width:3px;height:16px;background:transparent;align-self:center;transition:background-color 200ms ease}
@@ -552,6 +552,8 @@ html.lens-on .pt-foot{display:none}
 
 /* the card: where it was made, and what it is building */
 .pd-obar{display:flex;height:14px;gap:2px;margin:0 0 10px}
+.pd-ocv{display:block;width:100%;height:132px;margin:4px 0 12px}
+
 .pd-obar i{display:block;height:100%}
 .pd-olist{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:15px;color:var(--ink)}
 .pd-olist i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
@@ -700,6 +702,19 @@ html.card-open .ms-dock{right:calc(min(520px,42vw) + 16px)}
 @media (prefers-reduced-motion:no-preference){ .ms-stop.hot .ms-dot{animation:mspulse 1.8s ease-in-out infinite} }
 @keyframes mspulse{50%{stroke-width:6}}
 .ms-list ul{max-height:min(52vh,calc(100svh - 440px))}
+
+/* ------------------------------------------------------------------ below the quarks
+   the drawn scenes of the last stretch (assets/deep.js): each figure is a canvas on its own ground */
+.deep .plate{width:min(680px,100%)}
+.deep-fig{margin:20px 0}
+.deep-c{display:block;width:100%;height:clamp(220px,30vw,300px);background:var(--bg2)}
+.deep-c.deep-short{height:clamp(170px,22vw,210px)}
+.deep-c.deep-tall{height:460px}
+.deep-fig figcaption{font-size:15px;color:var(--ink2);margin-top:8px;max-width:60ch}
+.deep-act{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:12px 0 16px}
+.deep-say{flex:1 1 16em;font-size:15px;color:var(--ink2)}
+.deep-ladderfig{width:min(560px,100%);background:var(--veil);padding:16px;margin:0 0 40px}
+.deep-ladderfig figcaption{max-width:none}
 
 /* without JavaScript the scene cannot draw, so say so plainly */
 .noscript{position:relative;z-index:30;margin:0;padding:16px var(--m);background:var(--acc);color:var(--onacc);font:600 16px/1.4 "Archivo",sans-serif}

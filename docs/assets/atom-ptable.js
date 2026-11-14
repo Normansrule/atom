@@ -128,7 +128,11 @@ var PTable=(function(){
     if(G && AtomGL.selfCheck(QM.YlmReal)>1e-9) G=null;
     if(!G) wrap.classList.add("pt-nogl");
     api.gl=G;
-    var handles=[], bornAt=[], nextZ=1, pop=[], rects=[], dirty=true, visible=true, calm=!!opt.calm, lensW=[];
+    var handles=[], bornAt=[], nextZ=1, pop=[], rects=[], dirty=true, visible=true, calm=!!opt.calm, lensW=[], lensFrom=[], lensAt=[], sweepEnd=0;
+    /* a change of lens crosses the table left to right in under half a second: each square eases from the
+       weight it had to its new one, starting when the sweep reaches it (at once in calm mode) */
+    function lensK(z, now){ var a=lensAt[z]; if(a===undefined||calm) return lensW[z]; var u=(now-a)/260; if(u<=0) return lensFrom[z]; if(u>=1) return lensW[z];
+      u=u*u*(3-2*u); return lensFrom[z]+(lensW[z]-lensFrom[z])*u; }
     for(Z=0;Z<=118;Z++) lensW[Z]=1;
     /* Lenses: the same table read three ways. "shapes" is the orbitals;
        "origin" is where each element was made; "frontier" is what it is
@@ -136,6 +140,7 @@ var PTable=(function(){
     api.lens="shapes"; api.filter="";
     api.setLens=function(lens, filter){
       api.lens=lens; api.filter=filter||""; wrap.setAttribute("data-lens",lens);
+      var nowL=performance.now(), xs=rects.filter(function(r){ return r; }).map(function(r){ return r[0]; }), x0=xs.length?Math.min.apply(null,xs):0, x1=xs.length?Math.max.apply(null,xs):1, first=lensW[1]===undefined;
       for(var z=1;z<=118;z++){
         var w=1;
         if(lens==="origin"){ var m=ORIGIN[z-1]; w=filter?Math.max(0.12,Math.min(1,(m[filter]||0)*1.6)):0.55; }
@@ -144,9 +149,11 @@ var PTable=(function(){
         var lv=(typeof AtomLabs!=="undefined")?AtomLabs.progress.level(z):0;
         if(lens==="yours") w=[0.12,0.5,0.8,1][lv];
         if(lens==="yours") tiles[z].setAttribute("data-lv",lv); else tiles[z].removeAttribute("data-lv");
-        lensW[z]=w; tiles[z].classList.toggle("pt-dim", w<0.3);
+        var wait=(calm||first||!rects[z])?0:(rects[z][0]-x0)/Math.max(1,x1-x0)*420;
+        lensFrom[z]=first?w:lensK(z,nowL); lensW[z]=w; lensAt[z]=nowL+wait;
+        (function(t,dim){ if(wait<8) t.classList.toggle("pt-dim",dim); else setTimeout(function(){ if(api.lens===lens&&api.filter===(filter||"")) t.classList.toggle("pt-dim",dim); },wait+120); })(tiles[z],w<0.3);
       }
-      dirty=true;
+      sweepEnd=(calm||first)?0:nowL+720; dirty=true;
     };
     for(Z=0;Z<=118;Z++){ pop[Z]=0; }
     /* offsets, not client rects: the table is scaled and slid around by its
@@ -169,7 +176,7 @@ var PTable=(function(){
     function paint(z, now, t, anim, th, big){
       var hh=handles[z]; if(!hh) return;
       var r=rects[z], age=calm?1:Math.min(1,(now-bornAt[z])/520), s=big?1+0.16*pop[z]:1, rw=r[2]*s, rh=r[3]*s;
-      var fade=age*age*(3-2*age), fk=(api.focus&&api.focus.z!==z?1-api.focus.k:1)*lensW[z];
+      var fade=age*age*(3-2*age), fk=(api.focus&&api.focus.z!==z?1-api.focus.k:1)*lensK(z,now);
       G.clearRect(r[0]-rw/2,r[1]-rh/2,rw,rh);
       if(fk<=0.01) return;
       G.draw({cloud:hh,rect:[r[0]-rw/2,r[1]-rh/2,rw,rh],yaw:z*0.37+(anim?t*0.16:0),pitch:0.42,
@@ -194,7 +201,7 @@ var PTable=(function(){
       var th=opt.theme(), w=api.cw, h=api.ch;
       G.size(w,h,Math.min(window.devicePixelRatio||1,1.5),opt.small?320000:820000);
       var cvw=cv.width, cvh=cv.height; if(cvw!==lastW||cvh!==lastH){ lastW=cvw; lastH=cvh; dirty=true; }
-      if(api.focus) dirty=true;
+      if(api.focus||now<sweepEnd) dirty=true;
       if(dirty){
         dirty=false; G.clear();
         for(z=1;z<=118;z++) if(handles[z]) paint(z,now,t,anim,th,pop[z]>0.004);
@@ -284,7 +291,7 @@ var PTable=(function(){
         "<div>"+TT("<span>Compounds</span><b>{u}</b>",{u:(u[3]?esc(u[3]):(e[5]==="ng"?TT("almost none"):TT("none known")))})+"</div>"))+"</div>");
     /* where it was made, and what it is building */
     var om=ORIGIN[Z-1], ks=Object.keys(om).sort(function(a,b){ return om[b]-om[a]; }); o=SEC.origin;
-    o.push("<section class=\"pd-sec pd-origin\">"+"<h3>"+((TT("Where it was made")))+"</h3>"+"<div class=\"pd-obar\" role=\"img\" aria-label=\""+(((ks.map(function(k){ return TT("{pct} percent {kind}",{pct:Math.round(om[k]*100),kind:AtomI18N.low(ORIGIN_KINDS[k].name)}); }).join(", "))))+"\">"+(((ks.map(function(k){ return "<i style=\"flex-basis:"+((((om[k]*100).toFixed(0))))+"%;background:var(--o-"+(((k)))+")\"></i>"; }).join(''))))+"</div>"+"<ul class=\"pd-olist\">"+(((ks.map(function(k){ return "<li>"+"<i style=\"background:var(--o-"+((k))+")\"></i>"+((ORIGIN_KINDS[k].name))+" <b>"+((Math.round(om[k]*100)))+"%</b>"+"</li>"; }).join(''))))+"</ul>"+((((ORIGIN_NOTE[Z]?'<p>'+ORIGIN_NOTE[Z]+'</p>':''))))+"<p class=\"pd-fine\">"+((TT("Approximate shares of the Solar System&rsquo;s supply, after Johnson (2019). Neutron-star mergers stand in for all rapid neutron capture; rare supernovae may make some of it.")))+"</p>"+"</section>");
+    o.push("<section class=\"pd-sec pd-origin\">"+"<h3>"+(((TT("Where it was made"))))+"</h3>"+"<div class=\"pd-obar\" role=\"img\" aria-label=\""+((((ks.map(function(k){ return TT("{pct} percent {kind}",{pct:Math.round(om[k]*100),kind:AtomI18N.low(ORIGIN_KINDS[k].name)}); }).join(", ")))))+"\">"+((((ks.map(function(k){ return "<i style=\"flex-basis:"+((((om[k]*100).toFixed(0))))+"%;background:var(--o-"+(((k)))+")\"></i>"; }).join('')))))+"</div>"+"<canvas class=\"pd-ocv\" data-ok=\""+(ks[0])+"\" role=\"img\" aria-label=\""+(esc(TT("A drawing of how most of it was made: {kind}.",{kind:AtomI18N.low(ORIGIN_KINDS[ks[0]].name)})))+"\">"+"</canvas>"+"<ul class=\"pd-olist\">"+((((ks.map(function(k){ return "<li>"+"<i style=\"background:var(--o-"+((k))+")\"></i>"+((ORIGIN_KINDS[k].name))+" <b>"+((Math.round(om[k]*100)))+"%</b>"+"</li>"; }).join('')))))+"</ul>"+(((((ORIGIN_NOTE[Z]?'<p>'+ORIGIN_NOTE[Z]+'</p>':'')))))+"<p class=\"pd-fine\">"+(((TT("Approximate shares of the Solar System&rsquo;s supply, after Johnson (2019). Neutron-star mergers stand in for all rapid neutron capture; rare supernovae may make some of it."))))+"</p>"+"</section>");
     var fr=FRONTIER[Z-1]; o=SEC.future;
     o.push("<section class=\"pd-sec pd-future\">"+"<h3>"+TT("Building the future")+"</h3>"+((fr[0].length?'<p class="pd-tags">'+fr[0].map(function(t){ return "<span style=\"--tc:var(--t-"+((t))+")\">"+((TECH_KINDS[t].name))+"</span>"; }).join('')+'</p>':''))+"<p>"+(esc(fr[1]))+((fr[3]?" <a class=\"pd-src\" href=\""+(esc(fr[3]))+"\" target=\"_blank\" rel=\"noopener\">"+(TT("Source"))+"</a>":''))+"</p>"+"<div class=\"pd-problem\">"+TT("<span>Open problem</span>")+"<p>"+(esc(fr[2]))+"</p>"+"</div>"+"</section>");
     /* the electrons */
@@ -326,7 +333,49 @@ var PTable=(function(){
         return "<button type=\"button\" role=\"tab\" id=\"pdT-"+(((((t[0])))))+"\" data-pdt=\""+(((((t[0])))))+"\" aria-controls=\"pdP-"+(((((t[0])))))+"\" aria-selected=\""+(((((on)))))+"\" tabindex=\""+((((((on?0:-1))))))+"\">"+(((((t[1])))))+"</button>"; }).join(''))))+"</div>"+(((PD_TABS.map(function(t){ return "<div class=\"pd-pane\" role=\"tabpanel\" id=\"pdP-"+(((((t[0])))))+"\" aria-labelledby=\"pdT-"+(((((t[0])))))+"\""+((((((t[0]===pdTab?'':' hidden'))))))+">"+(((((SEC[t[0]].join(""))))))+"</div>"; }).join(''))));
   }
   /* the host calls this once: clicks and arrow keys on the card's tabs */
+  /* the Origin tab's drawing: how most of the element was made, as a six-second loop. Seven small scenes,
+     one for each kind of origin (b the Big Bang, c cosmic rays, n merging neutron stars, m an exploding
+     massive star, l a dying low-mass star, w an exploding white dwarf, h a laboratory). It draws only while
+     it is on screen, and one still frame in calm mode. A sketch of the event, not a simulation of it. */
+  function originAnim(cv){
+    cv.setAttribute("data-on","1"); var g=cv.getContext("2d"), k=cv.getAttribute("data-ok"), t0=performance.now(), vis=false, raf=0, TAU=6.2832;
+    function rnd(i){ var x=Math.sin(i*12.9898)*43758.5453; return x-Math.floor(x); }
+    function dot(x,y,r,a){ g.globalAlpha=Math.max(0,Math.min(1,a)); g.beginPath(); g.arc(x,y,Math.max(0.1,r),0,TAU); g.fill(); }
+    function ring(x,y,r,a,lw){ g.globalAlpha=Math.max(0,Math.min(1,a)); g.lineWidth=lw||2; g.beginPath(); g.arc(x,y,Math.max(0.1,r),0,TAU); g.stroke(); }
+    function clump(x,y,n,r,a){ for(var q=0;q<n;q++){ var an=q*2.4, rr=q?r*0.9*Math.sqrt(q/n)*1.6:0; dot(x+Math.cos(an)*rr,y+Math.sin(an)*rr,r*0.62,a); } }
+    function frame(now){
+      raf=0; if(!cv.isConnected||!vis||document.hidden) return;
+      var calm=document.documentElement.classList.contains("calm")||!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      var b=cv.getBoundingClientRect(), d=Math.min(2,window.devicePixelRatio||1), w=b.width, h=b.height; if(w<2) return;
+      if(cv.width!==Math.round(w*d)||cv.height!==Math.round(h*d)){ cv.width=Math.round(w*d); cv.height=Math.round(h*d); }
+      g.setTransform(d,0,0,d,0,0); g.clearRect(0,0,w,h);
+      var cs=getComputedStyle(cv), c1=cs.getPropertyValue("--o-"+k).trim()||cs.color, u=calm?0.74:((now-t0)/6000)%1, cx=w/2, cy=h/2, R=Math.min(w*0.3,h*0.44), i, an, sp, v;
+      g.fillStyle=c1; g.strokeStyle=c1; g.lineCap="round";
+      if(k==="b"){ dot(cx,cy,(1-u)*12,1-u*1.6); for(i=0;i<70;i++){ an=rnd(i)*TAU; sp=0.2+0.8*rnd(i+50); dot(cx+Math.cos(an)*u*R*2.6*sp,cy+Math.sin(an)*u*R*1.25*sp,1.3+rnd(i+9)*1.5,1-u*0.8); } }
+      else if(k==="c"){ if(u<0.3){ v=u/0.3; g.globalAlpha=1; g.lineWidth=2.5; g.beginPath(); g.moveTo(cx-(1-v)*w*0.5-34,cy); g.lineTo(cx-(1-v)*w*0.5-4,cy); g.stroke(); clump(cx,cy,9,6,1); }
+        else { v=(u-0.3)/0.7; ring(cx,cy,6+v*30,(1-v*3),2); [[-0.7,4],[0.35,3],[2.6,2]].forEach(function(f){ clump(cx+Math.cos(f[0])*v*w*0.36,cy+Math.sin(f[0])*v*h*0.42,f[1],5,1-v*0.7); }); } }
+      else if(k==="n"){ if(u<0.55){ v=u/0.55; var rr=R*1.1*(1-v)+5; an=v*v*38; dot(cx+Math.cos(an)*rr*1.5,cy+Math.sin(an)*rr*0.6,5,1); dot(cx-Math.cos(an)*rr*1.5,cy-Math.sin(an)*rr*0.6,5,1);
+          for(i=1;i<7;i++){ var a2=an-i*0.16; dot(cx+Math.cos(a2)*rr*1.5,cy+Math.sin(a2)*rr*0.6,2.4,0.5-i*0.07); dot(cx-Math.cos(a2)*rr*1.5,cy-Math.sin(a2)*rr*0.6,2.4,0.5-i*0.07); } }
+        else { v=(u-0.55)/0.45; dot(cx,cy,10*(1-v)+3,1-v*0.6); for(i=0;i<64;i++){ an=rnd(i)*TAU; sp=0.25+0.75*rnd(i+31); dot(cx+Math.cos(an)*v*R*2.8*sp,cy+Math.sin(an)*v*R*0.8*sp,1.2+rnd(i+5)*1.6,1-v*0.85); } } }
+      else if(k==="m"){ if(u<0.35) dot(cx,cy,R*0.6*(1+0.03*Math.sin(u*90)),0.85);
+        else if(u<0.45){ v=(u-0.35)/0.1; dot(cx,cy,R*0.6*(1-v)+R*0.07*v,0.9); }
+        else { v=(u-0.45)/0.55; dot(cx,cy,R*0.07,1); ring(cx,cy,R*0.1+v*R*1.9,1-v*0.9,6*(1-v)+1); for(i=0;i<28;i++){ an=i/28*TAU+rnd(i); dot(cx+Math.cos(an)*v*R*2.2*(0.6+0.4*rnd(i)),cy+Math.sin(an)*v*R*1.1*(0.6+0.4*rnd(i)),1.6,1-v); } } }
+      else if(k==="l"){ dot(cx,cy,R*0.34*(1-0.62*u),0.9); for(i=0;i<4;i++){ v=(u+i/4)%1; ring(cx,cy,R*0.36+v*R*1.5,(1-v)*0.75,2.5); } }
+      else if(k==="w"){ var wx=cx-R*0.9, sx=cx+R*1.1+(u>0.6?(u-0.6)*R*1.4:0); ring(sx,cy,R*0.5,0.7,2); dot(sx,cy,R*0.5,0.18);
+        if(u<0.6){ v=u/0.6; for(i=0;i<9;i++){ var s=((i/9)+u*3)%1; dot(sx-R*0.5+(wx-sx+R*0.5)*s,cy-Math.sin(s*3.1416)*R*0.42,2,0.25+0.6*s); } dot(wx,cy,5+v*3,0.7+0.3*v); }
+        else { v=(u-0.6)/0.4; dot(wx,cy,8+v*R*2.3,(1-v)*0.9); ring(wx,cy,8+v*R*2.5,1-v,3); } }
+      else { g.globalAlpha=0.9; g.lineWidth=3; g.beginPath(); g.moveTo(cx,cy-R*0.7); g.lineTo(cx,cy+R*0.7); g.stroke();
+        if(u<0.5){ v=u/0.5; for(i=0;i<5;i++){ var bx=cx-w*0.42+(v+i*0.12)*w*0.42; if(bx<cx-4) dot(bx,cy,3,0.9); } }
+        else { v=(u-0.5)/0.5; ring(cx,cy,4+v*26,1-v*2.5,2); clump(cx+v*w*0.3,cy,12,5,1); if(v>0.6) clump(cx+v*w*0.3+(v-0.6)*60,cy-(v-0.6)*90,2,4,1); } }
+      g.globalAlpha=1; if(!calm) raf=requestAnimationFrame(frame);
+    }
+    function kick(){ if(!raf) raf=requestAnimationFrame(frame); }
+    if(window.IntersectionObserver) new IntersectionObserver(function(es){ vis=es[es.length-1].isIntersecting; if(vis) kick(); }).observe(cv); else { vis=true; kick(); }
+    document.addEventListener("visibilitychange",function(){ if(cv.isConnected) kick(); });
+  }
   function wireDetail(host, onTab){
+    var seekO=function(){ [].forEach.call(host.querySelectorAll("canvas.pd-ocv:not([data-on])"),originAnim); };
+    if(window.MutationObserver) new MutationObserver(seekO).observe(host,{childList:true,subtree:true}); seekO();
     function pick(t,focus){ pdTab=t; [].forEach.call(host.querySelectorAll("[data-pdt]"),function(b){ var on=b.getAttribute("data-pdt")===t; b.setAttribute("aria-selected",on?"true":"false"); b.tabIndex=on?0:-1; if(on&&focus) b.focus(); });
       [].forEach.call(host.querySelectorAll(".pd-pane"),function(p){ p.hidden=p.id!=="pdP-"+t; }); if(onTab) onTab(t); }
     host.addEventListener("click",function(e){ var b=e.target.closest("[data-pdt]"); if(b) pick(b.getAttribute("data-pdt")); });
@@ -449,7 +498,7 @@ var AtomWorld=(function(){
 " vec2 px=gl_FragCoord.xy/uScale; px.y=uRes.y-px.y;",
 " vec3 c=vec3(0.);",
 " if(uCos>.001){ vec3 k=cosmos(px); float q=1.;",
-"  if(uQuiet.z>uQuiet.x){ vec2 dq=max(max(uQuiet.xy-px,px-uQuiet.zw),0.); q=mix(.35,1.,smoothstep(0.,72.,length(dq))); }",   /* quieter behind the title and readout */
+"  if(uQuiet.z>uQuiet.x){ vec2 dq=max(max(uQuiet.xy-px,px-uQuiet.zw),0.); q=mix(.16,1.,smoothstep(0.,72.,length(dq))); }",   /* quieter behind the title and readout: at .35 their small lines fell under 4.5:1 while an element's birth flashed (veil20.py) */
 "  c+=(k+birth(px)*.85)*q*uCos; }",
 " if(uLit>.001) c+=lit(px)*uLit;",
 " if(uVac>.001) c+=vac(px)*uVac;",

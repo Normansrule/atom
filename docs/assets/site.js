@@ -635,7 +635,7 @@ function measure(){
 }
 if(window.ResizeObserver){ var sectRO=new ResizeObserver(function(){ SECT=null; }); sectRO.observe(D.querySelector("main")||D.body);
   var pinRO=new ResizeObserver(function(){ fitPins(); }); pinPlates.forEach(function(x){ pinRO.observe(x[1]); }); }
-var gaugeLinks=null, gaugeMap={table:"top",cloud:"cloud",light:"light",empty:"empty",nucleus:"nucleus",proton:"proton",pull:"pull",edge:"edge"};
+var gaugeLinks=null, gaugeMap={table:"top",cloud:"cloud",light:"light",empty:"empty",nucleus:"nucleus",proton:"proton",pull:"pull",fields:"fields",mass:"mass",weak:"weak",edge:"edge"};
 function markGauge(){ var k=gaugeMap[active]||"edge"; if(!gaugeLinks||(gaugeLinks[0]&&!gaugeLinks[0].isConnected)) gaugeLinks=[].slice.call(D.querySelectorAll(".gauge a")); gaugeLinks.forEach(function(a){ a.classList.toggle("on",a.getAttribute("data-depth")===k); }); }
 
 /* ------------------------------------------------------------------ pointer: turn the atom, pull the quark */
@@ -1026,7 +1026,7 @@ function drawFallbackCloud(o, fov, c, alpha){
 }
 
 /* ------------------------------------------------------------------ the world behind the page */
-var WTARGET={table:[1,0,0], cloud:[0.25,1,0], light:[0,1,0], empty:[0,0.55,0.35], nucleus:[0,0.15,0.75], proton:[0,0,0.35], pull:[0,0,0.3], edge:[0.65,0,0.3], bench:[1,0,0], end:[1,0,0]};
+var WTARGET={table:[1,0,0], cloud:[0.25,1,0], light:[0,1,0], empty:[0,0.55,0.35], nucleus:[0,0.15,0.75], proton:[0,0,0.35], pull:[0,0,0.3], fields:[0,0,0.45], mass:[0,0,0.4], weak:[0.15,0,0.4], edge:[0.65,0,0.3], bench:[1,0,0], end:[1,0,0]};
 function drawWorld(now, dt){
   if(!WORLD) return;
   var tg=WTARGET[active]||WTARGET.end, k=CALM?1:Math.min(1,dt/420);
@@ -1150,6 +1150,7 @@ function frame(now){
     case "nucleus": fov=Math.max(5.5e-15,2.6*nucleusOf(SEL).R*1e-15); nucA=1; if(bindReveal<1&&!CALM){ bindReveal=Math.min(1,bindReveal+dt/1800); drawBinding(); } break;
     case "proton": fov=1.5e-15; protA=1; tube=0.7; fieldA=1; vac=0.45; break;
     case "pull": fov=1.4e-15; pullA=1; fieldA=1; tube=1; vac=0.6; break;
+    case "fields": case "mass": case "weak":   /* below the quarks: the vacuum field alone, behind the drawn figures */
     case "edge": fieldA=1; vac=1; tube=0; break;
     default: break;   /* the labs, the tour list, and the downloads: the sky alone, nothing else to draw */
   }
@@ -1380,6 +1381,14 @@ function boot(){
   window.addEventListener("hashchange",shared); setTimeout(shared,300);
 }
 AtomI18N.ready.then(boot);   /* the language pack, if one is chosen, arrives first */
+/* the scenes below the quarks draw themselves from their own file, fetched when the reader is about a
+   screen and a half away (or at once, when the address points at one of them) */
+(function(){ var first=D.getElementById("fields"), last=D.getElementById("deepLadder"), done=false; if(!first) return;
+  function go(){ if(done) return; done=true; var s=D.createElement("script"); s.src="assets/deep.js"; D.head.appendChild(s); }
+  if(/^#(fields|mass|weak|edge)$/.test(location.hash)||!window.IntersectionObserver){ go(); return; }
+  var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ go(); io.disconnect(); } }); },{rootMargin:"1400px 0px"});
+  io.observe(first); if(last) io.observe(last);
+})();
 /* the site keeps itself for offline use (a classroom cart, a plane); the
    worker is registered after the first screen is up so it never competes
    with it, and only where it can run (https, or a local test server). It

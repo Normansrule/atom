@@ -30,7 +30,8 @@ python3 scripts/i18n/i18n_tool.py extract .      # the catalog must come out unc
 python3 scripts/i18n/i18n_tool.py check .        # every pack: missing 0, stale 0, problems 0
 python3 scripts/i18n/i18n_tool.py build .        # the served language files, from i18n/*.json
 python3 scripts/stamp_sw.py                      # the service worker's build stamp, from the files it names
-python3 scripts/check_css.py                     # braces balance; a browser will not tell you when they do not
+python3 scripts/check_css.py                     # braces balance, and every color-mix() has a plain fallback; a browser will not tell you
+python3 scripts/check_budget.py                  # the site's weight against scripts/budgets.json
 ```
 
 The same checks run on every pull request, along with builds of the Mac app on a real Mac and of the Windows and Linux apps, each started and self-tested.

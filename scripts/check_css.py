@@ -8,6 +8,13 @@ drawn straight onto the moving scene. A browser forgives a style sheet; this doe
 not. It reads the .css files under docs/assets and the <style> blocks of the pages,
 and exits 1 on a "}" with nothing open, a "{" never closed, or a declaration
 (name: value;) sitting at the top level.
+
+It also holds one rule the sheets were written to: Safari before 16.2 has no
+color-mix(), and drops a declaration that uses it. So every such declaration
+needs a plain one for the same property before it in the same rule, and a custom
+property that mixes needs a plain value inside an "@supports not (color:
+color-mix(...))" block. Without that, an older iPad shows nothing where the
+color should be.
 """
 import glob, os, re, sys
 
@@ -51,10 +58,28 @@ def check(name, css):
     if depth: bad.append("%d \"{\" never closed" % depth)
     return bad
 
+def fallbacks(name, css):
+    """Every color-mix() has something an older Safari can use instead."""
+    bad = []
+    css = re.sub(r"/\*.*?\*/", lambda m: re.sub(r"[^\n]", " ", m.group(0)), css, flags=re.S)
+    plain = set()               # custom properties given a plain value where color-mix() is not supported
+    for m in re.finditer(r"@supports\s+not\s*\(\s*color\s*:\s*color-mix", css):
+        i = css.find("{", m.end()); depth, j = 1, i + 1
+        while j < len(css) and depth: depth += {"{": 1, "}": -1}.get(css[j], 0); j += 1
+        plain.update(re.findall(r"(--[\w-]+)\s*:", css[i:j]))
+    for m in re.finditer(r"([^{}]*)\{([^{}]*)\}", css):
+        decls = [d.strip() for d in m.group(2).split(";") if ":" in d]
+        for k, d in enumerate(decls):
+            if "color-mix(" not in d: continue
+            prop = d.split(":", 1)[0].strip()
+            ok = prop in plain if prop.startswith("--") else any(e.split(":", 1)[0].strip() == prop and "color-mix(" not in e for e in decls[:k])
+            if not ok: bad.append("line %d: %s uses color-mix() in %r with no plain value before it" % (css.count("\n", 0, m.start(2)) + 1, prop, " ".join(m.group(1).split())[-50:]))
+    return bad
+
 if __name__ == "__main__":
-    n = fails = 0
+    n = fails = mixes = 0
     for name, css in sheets():
-        n += 1
-        for b in check(name, css): fails += 1; print("FAIL %s: %s" % (name, b))
-    print("%d style sheets: %s" % (n, "braces balance and every declaration is inside a rule" if not fails else "%d problems" % fails))
+        n += 1; mixes += css.count("color-mix(")
+        for b in check(name, css) + fallbacks(name, css): fails += 1; print("FAIL %s: %s" % (name, b))
+    print("%d style sheets: %s" % (n, "braces balance, every declaration is inside a rule, and every color-mix() has a plain fallback" if not fails else "%d problems" % fails))
     sys.exit(1 if fails else 0)

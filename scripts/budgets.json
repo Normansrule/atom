@@ -1,0 +1,14 @@
+{
+  "about": "Limits that fail the build when a change crosses them. bytes: gzip -9 of the files, in KB (scripts/check_budget.py). time: milliseconds on a page loaded with the CPU slowed four times (scripts/smoke.mjs, Chromium only); CI machines have no graphics card, so the frame time only warns. Raise a limit on purpose, in the same commit as the change that needs it, and say why.",
+  "bytes": {
+    "first screen (index.html, site.css, and the five scripts it starts with)": {"kb": 215, "files": ["docs/index.html", "docs/assets/site.css", "docs/assets/atom-i18n.js", "docs/assets/atom-data.js", "docs/assets/atom-engines.js", "docs/assets/atom-ptable.js", "docs/assets/site.js"]},
+    "the labs, fetched on approach": {"kb": 145, "files": ["docs/assets/atom-labs.js", "docs/assets/atom-labs.css"]},
+    "the scenes below the quarks, fetched on approach": {"kb": 10, "files": ["docs/assets/deep.js"]},
+    "the font": {"kb": 90, "raw": true, "files": ["docs/assets/fonts/archivo-var.woff2"]},
+    "the teacher guide": {"kb": 10, "files": ["docs/teachers.html"]},
+    "the handout": {"kb": 6, "files": ["docs/handout.html"]},
+    "the whole app in one file": {"kb": 485, "files": ["app/atom.html"]}
+  },
+  "packs": {"site slice (before the first screen in that language)": {"kb": 110, "suffix": ".site.js"}, "labs slice": {"kb": 60, "suffix": ".labs.js"}},
+  "time": {"cpuSlowdown": 4, "firstPictureMs": 2500, "tableReadyMs": 4000, "blockedMs": 5000, "frameWarnMs": 120}
+}

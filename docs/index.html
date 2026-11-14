@@ -80,6 +80,9 @@
     <li><a href="#nucleus" data-depth="nucleus"><b>10⁻¹⁴ m</b><span data-i>Nucleus</span></a></li>
     <li><a href="#proton" data-depth="proton"><b>10⁻¹⁵ m</b><span data-i>Proton</span></a></li>
     <li><a href="#pull" data-depth="pull"><b>10⁻¹⁵ m</b><span data-i>Quarks</span></a></li>
+    <li><a href="#fields" data-depth="fields"><b>10⁻¹⁸ m</b><span data-i>Fields</span></a></li>
+    <li><a href="#mass" data-depth="mass"><b>10⁻¹⁸ m</b><span data-i>Mass</span></a></li>
+    <li><a href="#weak" data-depth="weak"><b>10⁻¹⁸ m</b><span data-i>Weak force</span></a></li>
     <li><a href="#edge" data-depth="edge"><b>&lt;10⁻¹⁸ m</b><span data-i>Edge</span></a></li>
   </ol>
 </nav>
@@ -258,11 +261,55 @@
   <p data-i class="pull-hint" aria-hidden="true" id="pullHint">Drag a quark</p>
 </section>
 
+<!-- =============================================================== below the quarks -->
+<section class="chapter deep" id="fields" data-scene="fields" aria-labelledby="t-fields">
+  <div class="plate">
+    <h2 data-i id="t-fields">Below the quarks, fields</h2>
+    <p data-i>Keep falling and you do not find smaller pieces. Experiments that could have seen a size as small as <b>4 × 10⁻¹⁹ m</b> find the electron and the quarks still behaving as points.</p>
+    <p data-i>What physics finds instead is fields. Every kind of particle is a ripple in a field that fills all of space. Every electron is a ripple in the one electron field, which is why all electrons are exactly alike. A force is one field tugging on another, and the tug travels as a ripple too: the photon, the gluon.</p>
+    <figure class="deep-fig"><canvas data-i-attr="aria-label" class="deep-c" id="deepFields" role="img" aria-label="A sheet of rippling lines. Two bright ripples, two electrons, approach each other; a wavy line, a photon, passes between them, and they turn away. A faint shimmer covers the whole sheet."></canvas>
+    <figcaption data-i>A field, drawn as rows of a rippling sheet. The two bright ripples are electrons. When they come close, a ripple in the electromagnetic field, a photon, passes between them and they turn away. The faint shimmer everywhere is the vacuum. A drawing of the idea, not a simulation.</figcaption></figure>
+    <p data-i>Even empty space is not still. The fields jitter at their lowest energy, and the jitter is measured: it shifts hydrogen&rsquo;s energy levels by about a part in a million, the Lamb shift, found in 1947.</p>
+    <p class="deep-act"><button data-i type="button" class="btn btn-small" id="deepPair">Add energy</button> <span class="deep-say" id="deepPairSay" role="status"></span></p>
+  </div>
+</section>
+
+<section class="chapter deep" id="mass" data-scene="mass" aria-labelledby="t-mass">
+  <div class="plate">
+    <h2 data-i id="t-mass">Where mass comes from</h2>
+    <p data-i>One field is different. The Higgs field is not zero anywhere, even in empty space, and a particle that feels it is harder to speed up or slow down. That resistance is its rest mass. The electron feels the field faintly, the top quark about 340,000 times more, and the photon not at all.</p>
+    <figure class="deep-fig"><canvas data-i-attr="aria-label" class="deep-c" id="deepMass" role="img" aria-label="Three lanes across a field of dots. A photon crosses at a steady speed. An electron and a top quark get the same push again and again: the electron jumps ahead each time, and the top quark, carrying a crowd of dots, barely moves."></canvas>
+    <figcaption data-i>The same push, again and again. The photon has no rest mass and never stops. The electron jumps ahead; the top quark barely moves. Between pushes nothing slows down: the field resists a change in motion, not motion. The lanes are not to scale. At true scale the electron would cross the page 340,000 times before the top quark crossed it once.</figcaption></figure>
+    <p data-i>Hit the field hard enough and it rings. The ring is the Higgs boson, found at CERN on July 4, 2012, at <b>125.13 GeV</b>, 133 times the mass of a proton.</p>
+    <p class="deep-act"><button data-i type="button" class="btn btn-small" id="deepRing">Ring the field</button> <span class="deep-say" id="deepRingSay" role="status"></span></p>
+    <p data-i class="note">It is not where most of your mass comes from. The Higgs field gives the three quarks in a proton about 9 MeV. The other 99 percent of the proton, and of you, is the energy of the gluon field.</p>
+  </div>
+</section>
+
+<section class="chapter deep" id="weak" data-scene="weak" aria-labelledby="t-weak">
+  <div class="plate">
+    <h2 data-i id="t-weak">The force that changes what a thing is</h2>
+    <p data-i>Three forces push and pull. The fourth, the weak force, turns one particle into another. Inside a neutron a down quark becomes an up quark, so the neutron becomes a proton. The charge that was lost leaves as a W boson, which lasts about 3 × 10⁻²⁵ seconds and becomes an electron and an antineutrino. That is beta decay, the decay carbon dating counts.</p>
+    <figure class="deep-fig"><canvas data-i-attr="aria-label" class="deep-c" id="deepWeak" role="img" aria-label="Beta decay drawn in time from left to right. A neutron holds an up quark and two down quarks. One down quark turns into an up quark and gives off a W boson, drawn as a wavy line. The W ends, and an electron and an antineutrino fly away from that point."></canvas>
+    <figcaption data-i>Beta decay, in time from left to right. A free neutron lasts 878 seconds on average before this happens.</figcaption></figure>
+    <p class="deep-act"><button data-i type="button" class="btn btn-small" id="deepDecay">Play the decay</button> <span class="deep-say" id="deepDecaySay" role="status"></span></p>
+    <p data-i>The W weighs as much as 86 protons, so the weak force reaches only about 10⁻¹⁸ m and almost never acts. That slowness is why the Sun lasts ten billion years: its first step, two protons becoming deuterium, has to wait for the weak force.</p>
+    <p data-i>Neutrinos feel only this force and gravity. About 60 billion of them from the Sun pass through each square centimeter of you every second, and nearly all go on through the whole Earth. They come in three kinds and change from one kind to another as they fly, which can happen only if they have mass: less than 0.45 eV, under a millionth of an electron&rsquo;s. Nobody knows why so little.</p>
+    <figure class="deep-fig"><canvas data-i-attr="aria-label" class="deep-c deep-short" id="deepOsc" role="img" aria-label="A chart of three colored bands that swap widths along the horizontal axis: the chance that a neutrino that started as a muon neutrino is found as an electron, a muon, or a tau neutrino, against distance divided by energy."></canvas>
+    <figcaption data-i>A beam that starts as muon neutrinos, computed from the measured mixing angles: the share found as each kind as the beam travels. Blue is the electron kind, amber the muon kind, green the tau kind. The disc is one neutrino at the marked distance.</figcaption></figure>
+  </div>
+</section>
+
 <!-- =============================================================== the edge -->
 <section class="chapter edge" id="edge" data-scene="edge" aria-labelledby="t-edge">
   <h2 data-i id="t-edge">What nobody knows yet</h2>
   <p data-i class="lede">Below 10⁻¹⁸ m nobody has seen anything: electrons and quarks are still points. The open questions aren&rsquo;t about smaller pieces, they&rsquo;re about why the pieces behave as they do. Each is labeled with where it stands.</p>
+  <figure class="deep-fig deep-ladderfig"><canvas data-i-attr="aria-label" class="deep-c deep-tall" id="deepLadder" role="img" aria-label="A ladder of sizes running downward from an atom at 10⁻¹⁰ meters. A solid line reaches past a nucleus and a proton to 4 × 10⁻¹⁹ meters, the smallest size any experiment has tested. A dotted line continues for sixteen powers of ten to the Planck length, 1.6 × 10⁻³⁵ meters, where a small loop wobbles."></canvas>
+  <figcaption data-i>Every scene so far sits on the solid part of this ladder. The dotted part has never been looked at. The loop at the bottom stands for one idea of what might be there, a vibrating string 10⁻³⁵ m long. It is an idea: no experiment has found a sign of strings, of extra dimensions, or of any piece smaller than a quark.</figcaption></figure>
   <ul class="questions">
+    <li><span data-i class="status">Open</span><h3 data-i>What is the dark matter?</h3><p data-i>Galaxies hold together as if they carried five times more matter than the kind in this table. Nothing in the Standard Model fits it, and no detector has caught a particle of it.</p></li>
+    <li><span data-i class="status">Open</span><h3 data-i>How does gravity fit?</h3><p data-i>Gravity is the one force with no place in the Standard Model. A quantum theory of it should matter at the Planck length, 1.6 × 10⁻³⁵ m, sixteen powers of ten below anything tested. String theory and loop quantum gravity are attempts; neither has made a prediction that an experiment has confirmed.</p></li>
+    <li><span data-i class="status">Open</span><h3 data-i>Why three families?</h3><p data-i>Everything in this table needs only the up quark, the down quark, and the electron. Nature made two heavier copies of each, and a neutrino for each of the three. Experiments at CERN counted the neutrino kinds: 2.996 ± 0.007. Nobody knows why three.</p></li>
     <li><span data-i class="status">Open</span><h3 data-i>Why can&rsquo;t a quark ever escape?</h3><p data-i>Computers reproduce confinement, but nobody has proved the theory requires it. Doing so, the Yang&ndash;Mills mass gap, is one of the seven Millennium Prize problems.</p></li>
     <li><span data-i class="status">Open</span><h3 data-i>Where does the proton&rsquo;s spin come from?</h3><p data-i>Quark spins supply only about 30%. The Electron-Ion Collider, now being built in Brookhaven&rsquo;s old collider tunnel, should settle the rest in the mid-2030s.</p></li>
     <li><span data-i class="status">Claim</span><h3 data-i>Is there a particle made only of glue?</h3><p data-i>In 2026 the BESIII experiment reported that X(2370) is mostly a glueball. One experiment&rsquo;s reading, not yet confirmed by anyone else.</p></li>

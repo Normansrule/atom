@@ -5,14 +5,14 @@
    scripts/stamp_sw.py and checked by scripts/smoke.mjs), so a corrected
    file always reaches a returning reader. The language files are not in the
    list: the page says which language it is in and only those are kept. */
-var VERSION = "2.0.0";
-var BUILD = "6ce8d5a6";
+var VERSION = "2.1.0";
+var BUILD = "509a755f";
 var CACHE = "atom-site-" + VERSION + "-" + BUILD;
 var CORE = [
   "./", "index.html", "404.html", "teachers.html", "handout.html", "manifest.webmanifest",
   "assets/site.css", "assets/atom-labs.css",
   "assets/atom-i18n.js",
-  "assets/atom-data.js", "assets/atom-engines.js", "assets/atom-ptable.js", "assets/atom-labs.js", "assets/site.js",
+  "assets/atom-data.js", "assets/atom-engines.js", "assets/atom-ptable.js", "assets/atom-labs.js", "assets/site.js", "assets/deep.js",
   "assets/fonts/archivo-var.woff2",
   "assets/favicon-64.png", "assets/apple-touch-icon.png", "assets/icon-192.png", "assets/icon-512.png",
   "media/app-dark.jpg", "media/app-light.png"

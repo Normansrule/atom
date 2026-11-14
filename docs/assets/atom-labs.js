@@ -486,6 +486,35 @@ var AtomLabs=(function(){
     return {k:z>=84?4:(z<v-0.5?2:(z>v+0.5?3:5)), est:true};
   }
 
+  /* ------------------------------------------------------------ the Standard Model's seventeen particles
+     Masses in MeV from the Particle Data Group's Review of Particle Physics, 2026 edition (the quark
+     masses are the running masses PDG quotes; the top's is its direct measurement). q3 is the electric
+     charge in thirds of e; fam is q (quark), l (lepton), b (force carrier), h (Higgs); row and col place
+     it on the usual chart. A neutrino's mass is an upper limit (KATRIN, 2025), so mev is null. */
+  var SMP=[
+    {id:"u", s:"u", fam:"q", row:0, col:0, q3:2, mev:2.16, d:2, spin:"1/2", f:"sew"},
+    {id:"c", s:"c", fam:"q", row:0, col:1, q3:2, mev:1272.9, d:3, spin:"1/2", f:"sew"},
+    {id:"t", s:"t", fam:"q", row:0, col:2, q3:2, mev:172600, d:1, spin:"1/2", f:"sew"},
+    {id:"d", s:"d", fam:"q", row:1, col:0, q3:-1, mev:4.70, d:2, spin:"1/2", f:"sew"},
+    {id:"s", s:"s", fam:"q", row:1, col:1, q3:-1, mev:92.9, d:1, spin:"1/2", f:"sew"},
+    {id:"b", s:"b", fam:"q", row:1, col:2, q3:-1, mev:4186, d:3, spin:"1/2", f:"sew"},
+    {id:"e", s:"e⁻", fam:"l", row:2, col:0, q3:-3, mev:0.51099895, d:3, spin:"1/2", f:"ew"},
+    {id:"mu", s:"μ⁻", fam:"l", row:2, col:1, q3:-3, mev:105.6583755, d:2, spin:"1/2", f:"ew"},
+    {id:"tau", s:"τ⁻", fam:"l", row:2, col:2, q3:-3, mev:1776.93, d:3, spin:"1/2", f:"ew"},
+    {id:"ne", s:"ν", sub:"e", fam:"l", row:3, col:0, q3:0, mev:null, spin:"1/2", f:"w"},
+    {id:"nm", s:"ν", sub:"μ", fam:"l", row:3, col:1, q3:0, mev:null, spin:"1/2", f:"w"},
+    {id:"nt", s:"ν", sub:"τ", fam:"l", row:3, col:2, q3:0, mev:null, spin:"1/2", f:"w"},
+    {id:"g", s:"g", fam:"b", row:0, col:3, q3:0, mev:0, spin:"1", f:"s"},
+    {id:"ph", s:"γ", fam:"b", row:1, col:3, q3:0, mev:0, spin:"1", f:""},
+    {id:"Z", s:"Z", fam:"b", row:2, col:3, q3:0, mev:91187.9, d:2, spin:"1", f:"w"},
+    {id:"W", s:"W", fam:"b", row:3, col:3, q3:3, mev:80362.5, d:2, spin:"1", f:"ew"},
+    {id:"H", s:"H", fam:"h", row:0, col:4, q3:0, mev:125130, d:2, spin:"0", f:"w"}];
+  /* a mass in the unit a physicist would say it in: MeV below 1,000, GeV above */
+  function smMass(p){ if(p.mev===null) return TT("under {n} eV",{n:AtomI18N.N(0.45,2)}); if(p.mev===0) return "0";
+    return p.mev>=1000 ? TT("{n} GeV",{n:AtomI18N.N(p.mev/1000,p.d)}) : TT("{n} MeV",{n:AtomI18N.N(p.mev,p.d)}); }
+  function smSym(p){ return esc(p.s)+(p.sub?"<sub>"+p.sub+"</sub>":""); }
+  function smCharge(p){ var a=Math.abs(p.q3), v=a===0?"0":(a===3?"1":a+"/3"); return p.id==="W"?"±1":(p.q3>0?"+":(p.q3<0?"−":""))+v; }
+
   /* ------------------------------------------------------------ questions
      Each type knows which elements it can ask about (ok), how to pick the
      rest of the question from a random stream (param), and how to build the
@@ -773,7 +802,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     /* #lab=math&z=79&step=8: any lab, with what to show in it. Numbers are
        bounded, words are matched against a short list, anything else is dropped */
     var m=/^lab=([a-z]+)(?:&(.*))?$/.exec(h);
-    if(m){ var LABS_OK={build:1,boxes:1,molecule:1,compare:1,trends:1,nuclides:1,hear:1,pes:1,sun:1,math:1,predict:1,calc:1,bench:1,lessons:1,you:1}, a={}, lab=m[1];
+    if(m){ var LABS_OK={build:1,boxes:1,molecule:1,compare:1,trends:1,nuclides:1,hear:1,pes:1,sun:1,particles:1,math:1,predict:1,calc:1,bench:1,lessons:1,you:1}, a={}, lab=m[1];
       if(!LABS_OK[lab]) return null;
       if(lab==="boxes"){ lab="build"; a.boxes=true; }
       a.lab=lab;
@@ -814,9 +843,9 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
   /* seven tabs; Explore and Experiment hold more than one lab, on a rail under
      the tabs. A lab is still named by its own id everywhere (show("hear"),
      the "lab:hear" event), whichever tab holds it. */
-  var GROUPS=[["build",TT("Build"),["build"]],["explore",TT("Explore"),["compare","trends","nuclides","hear","pes","sun"]],["math",TT("The math"),["math"]],["predict",TT("Predict"),["predict"]],
+  var GROUPS=[["build",TT("Build"),["build"]],["explore",TT("Explore"),["compare","trends","nuclides","hear","pes","sun","particles"]],["math",TT("The math"),["math"]],["predict",TT("Predict"),["predict"]],
     ["experiment",TT("Experiment"),["calc","bench"]],["lessons",TT("Lessons"),["lessons"]],["you",TT("You"),["you"]]];
-  var PANE_NAME={math:TT("The math"),compare:TT("Compare"),trends:TT("Trends"),nuclides:TT("Nuclides"),hear:TT("Hear"),pes:TT("Electron energies"),sun:TT("The Sun"),calc:TT("Calculate"),bench:TT("Workbench")};
+  var PANE_NAME={math:TT("The math"),compare:TT("Compare"),trends:TT("Trends"),nuclides:TT("Nuclides"),hear:TT("Hear"),pes:TT("Electron energies"),sun:TT("The Sun"),particles:TT("Particles",{}),calc:TT("Calculate"),bench:TT("Workbench")};
   var TABS=[]; GROUPS.forEach(function(g){ g[2].forEach(function(p){ TABS.push([p,PANE_NAME[p]||g[1],g[0]]); }); });
   function groupOf(p){ for(var i=0;i<GROUPS.length;i++) if(GROUPS[i][0]===p||GROUPS[i][2].indexOf(p)>=0) return GROUPS[i]; return null; }
   var GOALS=[
@@ -1435,7 +1464,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       for(z=0;z<=118;z++){ var row=new Uint8Array(201); for(n=0;n<=200;n++){ var c=nclass(z,z+n); row[n]=c.k; if(c.k&&n>mx) mx=n; } M.push(row); }
       NU.map=M; NU.maxN=Math.min(200,mx+2);
     }
-    function nuSet(z,n,follow){ NU.z=Math.max(0,Math.min(118,z)); NU.n=Math.max(0,Math.min(NU.maxN,n)); if(!follow) NU.follow=false; renderNuc(); }
+    function nuSet(z,n,follow){ if(NU.chain&&!NU.chainStep){ NU.chain=null; var cp=pane("nuclides"), cq=cp&&cp.querySelector(".lb-nchain"); if(cq) cq.textContent=""; } NU.z=Math.max(0,Math.min(118,z)); NU.n=Math.max(0,Math.min(NU.maxN,n)); if(!follow) NU.follow=false; renderNuc(); }
     function nuName(z,a){ return z===0?(a===1?TT("a free neutron"):TT("{n} neutrons",{n:a})):isoName(z,a); }
     function renderNuc(){
       var P=pane("nuclides"); if(!P||!built.nuclides) return; var z=NU.z, n=NU.n, a=z+n, k=NU.map[z][n], info=z?nuclide(z,a):nuclide(0,n);
@@ -1474,8 +1503,9 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       label(g,TT("Neutrons →"),G.x0+(NU.maxN+1)*cs/2,h-6,T);
       g.save(); g.translate(14,G.y0-60*cs); g.rotate(-Math.PI/2); label(g,TT("Protons →"),0,0,T); g.restore();
       MAGIC.forEach(function(m){ if(m>=20&&m<=NU.maxN) label(g,String(m),G.x0+m*cs+cs/2,G.y0+16,T); });
+      var chainMoving=drawNucChain(g,G,T,now);
       drawNucZoom();
-      return false;
+      return chainMoving;
     }
     function drawNucZoom(){
       var c=host.querySelector('[data-c="nucz"]'); if(!c||!c.offsetParent) return;
@@ -1500,6 +1530,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       P.addEventListener("click",function(e){ var b=e.target.closest("[data-nx]"); if(!b||b.disabled) return; var k=b.getAttribute("data-nx");
         if(k==="build"){ B.p=NU.z; B.n=NU.n; B.e=NU.z; show("build"); setBMode("atom"); changed(); }
         if(k==="common"&&NU.z>=1) nuSet(NU.z,commonA(NU.z)-NU.z); });
+      nucChainUI(P);
       renderNuc();
     };
     REFRESH.nuclides=function(){ renderNuc(); };
@@ -1660,8 +1691,9 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
          note says so. Every bar first, then every label, so no bar crosses a label. */
       var room=y1-y0-62;
       peaks.forEach(function(p){ var mate=p.l<2&&peaks.some(function(q){ return q!==p&&q.n===p.n&&q.l<2; });
-        p.pair=mate; p.x=X(p.mj)+(mate?(p.l===0?-6:6):0); p.y=y1-room*p.count/mx;
+        p.pair=mate; p.x=X(p.mj)+(mate?(p.l===0?-6:6):0); p.y=y1-room*p.count/mx*peGrow(now,p);
         g.fillStyle=col("sub-"+"spdf"[p.l])||T.ink; g.fillRect(p.x-4,p.y,8,y1-p.y); });
+      peRain(g,peaks,y0,now,T);
       /* a label goes above its bar; if another label is already there it steps aside or up a line */
       var placed=[];
       function put(text,cx,y){ var tw=g.measureText(text).width+8, tries=[[0,0],[8,0],[-8,0],[16,0],[-16,0],[0,-18],[10,-18],[-10,-18],[0,-36]], k, bx, by;
@@ -1675,7 +1707,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
         put(p.name+" ×"+p.count,X(p.mj),topY-8-(p.l===0?18:0)); });
       peaks.filter(function(p){ return hidden||!p.pair; }).forEach(function(p){ put(hidden?String(p.count):p.name+" ×"+p.count,p.x,p.y-8); });
       g.fillStyle=T.ink; label(g,hidden?TT("A mystery element: read its shells, then name it"):nm(z)+": "+configStr(z,true).replace(/<sup>(\d+)<\/sup>/g,function(m0,d){ return supNum(d); }).replace(/<[^>]+>/g,"").replace(/([spdf])(\d+)/g,function(m0,a,d){ return a+supNum(d); }),(x0+x1)/2,y0-14,T);
-      return false;
+      return !!PE.run&&!opt.calm;
     }
     function pesSay(){
       var P=pane("pes"), z=pesZ(), peaks=pesPeaks(z), top=peaks[0], last=peaks[peaks.length-1];
@@ -1698,7 +1730,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     }
     BUILD.pes=function(P){
       PE.z=PE.z||Z||1;
-      P.innerHTML=(((elDatalist())))+"<div class=\"lb-pes\">"+"<p class=\"lb-note\">"+((TT("Photoelectron spectroscopy: X-rays knock electrons out of the atoms, and each one leaves with the X-ray’s energy minus the energy that held it. Count the electrons by that energy and the shells appear as peaks: one per subshell, as tall as the number of electrons in it, farther left the more tightly they are held. It is how the shell structure of the table was confirmed, and a core skill in AP Chemistry (Topic 1.6).")))+"</p>"+"<div class=\"lb-row\">"+"<label class=\"lb-field\">"+(((TT("Element"))+"<input class=\"lb-input\" data-pz list=\""+((dlId))+"\" autocomplete=\"off\" spellcheck=\"false\">"))+"</label>"+"<button type=\"button\" class=\"lb-btn\" data-pp=\"guess\">"+((TT("Mystery element")))+"</button>"+"<button type=\"button\" class=\"lb-btn ghost\" data-pp=\"follow\" hidden>"+((TT("Follow the table")))+"</button>"+"</div>"+"<div class=\"lb-stagewrap pes\">"+"<canvas class=\"lb-cv\" data-c=\"pes\" role=\"img\" aria-label=\""+((TT("The element’s photoelectron spectrum: one peak per subshell")))+"\">"+"</canvas>"+"</div>"+"<div class=\"lb-pguess\" aria-live=\"polite\">"+"</div>"+"<p class=\"lb-say lb-psay\" aria-live=\"polite\">"+"</p>"+"<p class=\"lb-note\">"+((TT("The energies are Slater’s estimates, the same rule of thumb the rest of Atom uses, so they are only roughly right: closest for the outermost s electrons, a fifth to a half too high for the 1s shell, and two to five times too high for the other inner shells and for outer p electrons (Trends, under Explore, shows that gap). His rules also give the s and p electrons of one shell the same energy, so their two bars stand side by side here; in a measured spectrum they are two separate peaks, with the s peak to the left. Read the pattern: how many peaks, how tall, in what order.")))+"</p>"+"</div>";
+      P.innerHTML=(((elDatalist())))+"<div class=\"lb-pes\">"+"<p class=\"lb-note\">"+((TT("Photoelectron spectroscopy: X-rays knock electrons out of the atoms, and each one leaves with the X-ray’s energy minus the energy that held it. Count the electrons by that energy and the shells appear as peaks: one per subshell, as tall as the number of electrons in it, farther left the more tightly they are held. It is how the shell structure of the table was confirmed, and a core skill in AP Chemistry (Topic 1.6).")))+"</p>"+"<div class=\"lb-row\">"+"<label class=\"lb-field\">"+(((TT("Element"))+"<input class=\"lb-input\" data-pz list=\""+((dlId))+"\" autocomplete=\"off\" spellcheck=\"false\">"))+"</label>"+"<button type=\"button\" class=\"lb-btn\" data-pp=\"guess\">"+((TT("Mystery element")))+"</button>"+"<button type=\"button\" class=\"lb-btn\" data-pp=\"run\">"+((TT("Run the experiment")))+"</button>"+"<button type=\"button\" class=\"lb-btn ghost\" data-pp=\"follow\" hidden>"+((TT("Follow the table")))+"</button>"+"</div>"+"<div class=\"lb-stagewrap pes\">"+"<canvas class=\"lb-cv\" data-c=\"pes\" role=\"img\" aria-label=\""+((TT("The element’s photoelectron spectrum: one peak per subshell")))+"\">"+"</canvas>"+"</div>"+"<div class=\"lb-pguess\" aria-live=\"polite\">"+"</div>"+"<p class=\"lb-say lb-psay\" aria-live=\"polite\">"+"</p>"+"<p class=\"lb-note\">"+((TT("The energies are Slater’s estimates, the same rule of thumb the rest of Atom uses, so they are only roughly right: closest for the outermost s electrons, a fifth to a half too high for the 1s shell, and two to five times too high for the other inner shells and for outer p electrons (Trends, under Explore, shows that gap). His rules also give the s and p electrons of one shell the same energy, so their two bars stand side by side here; in a measured spectrum they are two separate peaks, with the s peak to the left. Read the pattern: how many peaks, how tall, in what order.")))+"</p>"+"</div>";
       var zi=P.querySelector("[data-pz]");
       function setZ(){ var z=zOf(zi.value); if(!z){ if(zi.value.trim()) zi.setAttribute("aria-invalid","true"); return; } PE.follow=false; PE.guess=null; pesRenderGuess(); PE.z=z; REFRESH.pes(); ev("pes:z:"+z); }
       zi.addEventListener("change",setZ); zi.addEventListener("keydown",function(e){ zi.removeAttribute("aria-invalid"); if(e.key==="Enter"){ e.preventDefault(); setZ(); } });
@@ -1711,6 +1743,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
             TT("It was {el}, not {other}. Its peaks, from the left, hold {peaks}: {n} electrons in all.",{z:G.z,other:AtomI18N.theEl(pick),peaks:held,n:G.z});
           if(ok){ var got=Progress.mark("seen",G.z); celebrate(got); } ev("pes:guess:"+(ok?"right":"wrong")); dirty=true; return; }
         if(!p) return; var k=p.getAttribute("data-pp");
+        if(k==="run"){ PE.run=performance.now(); dirty=true; ev("pes:run"); if(opt.calm) toast(TT("With reduced motion on, the finished spectrum is shown at once.")); return; }
         if(k==="guess") pesGuessNew();
         if(k==="follow"){ PE.follow=true; PE.z=Z; REFRESH.pes(); } });
       REFRESH.pes();
@@ -1780,6 +1813,160 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       sunSay();
     };
     REFRESH.sun=function(){ dirty=true; };
+
+    /* ======================================================== Particles (the Standard Model)
+       The seventeen particles on the usual chart, a card for the one you pick,
+       and four of the model's rules drawn as they happen: a photon traded
+       between two electrons, a W turning a neutron into a proton, gluons
+       swapping the colors of quarks, and a particle meeting its antiparticle.
+       The data is SMP in labs-data.js (PDG, 2026 edition). The drawings are
+       diagrams in time, left to right; they are not simulations. */
+    var SM={pick:"e", scene:"repel", t0:0};
+    function smName(id){ return ({u:TT("up quark"),c:TT("charm quark"),t:TT("top quark"),d:TT("down quark"),s:TT("strange quark"),b:TT("bottom quark"),
+      e:TT("electron",{}),mu:TT("muon",{}),tau:TT("tau",{}),ne:TT("electron neutrino"),nm:TT("muon neutrino"),nt:TT("tau neutrino"),
+      g:TT("gluon",{}),ph:TT("photon",{}),Z:TT("Z boson"),W:TT("W boson"),H:TT("Higgs boson")})[id]; }
+    function smSay(id){ return ({
+      u:TT("Two of the three quarks in every proton, and one of the three in every neutron."),
+      d:TT("One of the three quarks in every proton, and two of the three in every neutron."),
+      c:TT("A heavy copy of the up quark, found in 1974 inside a particle called the J/ψ."),
+      s:TT("A heavy copy of the down quark. It turns up in the kaons that cosmic rays make in the air."),
+      t:TT("The heaviest particle known, about as heavy as an atom of tungsten. It decays before it can join anything."),
+      b:TT("A heavier copy of the down quark. Its slow decays let experiments compare matter with antimatter."),
+      e:TT("The particle of chemistry: every bond in every molecule is electrons shared or handed over."),
+      mu:TT("A heavy copy of the electron, 207 times its mass. Cosmic rays send about one a minute through each square centimeter of you."),
+      tau:TT("A heavier copy still, 3,477 times the electron's mass. It lasts 0.29 trillionths of a second."),
+      ne:TT("Made in the Sun's core and in every beta decay. Almost nothing stops it."),
+      nm:TT("Made when cosmic rays strike the air, and in accelerator beams. It can arrive as another kind."),
+      nt:TT("The last of the matter particles to be seen, in 2000 at Fermilab."),
+      g:TT("Carries the strong force between quarks. It feels that force itself, which is why a quark can never be pulled free."),
+      ph:TT("Light. It carries the electromagnetic force and has no mass, so that force reaches any distance."),
+      W:TT("Carries the weak force, and carries charge, so it can turn one kind of particle into another."),
+      Z:TT("Carries the weak force without changing what a particle is. Counting its decays showed there are three kinds of neutrino."),
+      H:TT("A ripple in the Higgs field, the field that gives the other particles their rest mass.")})[id]; }
+    function smFound(id){ return ({u:TT("1968, at SLAC"),d:TT("1968, at SLAC"),s:TT("1947, inside the kaon; understood as a quark in 1964"),c:"1974",b:"1977",t:"1995",
+      e:"1897",mu:"1936",tau:"1975",ne:"1956",nm:"1962",nt:"2000",g:"1979",ph:TT("proposed in 1905, confirmed in 1922"),W:"1983",Z:"1983",H:"2012"})[id]; }
+    function smAnti(p){ if(p.fam==="q") return TT("Its antiparticle has the opposite charge, {q}, and the opposite color.",{q:smCharge({q3:-p.q3})});
+      if(p.fam==="l"&&p.q3) return TT("Its antiparticle has the opposite charge, {q}.",{q:smCharge({q3:-p.q3})});
+      if(p.fam==="l") return TT("Its antiparticle is an antineutrino. Whether the two are really one particle is not known.");
+      if(p.id==="W") return TT("The W⁺ and the W⁻ are each other's antiparticles.");
+      if(p.id==="g") return TT("It comes in eight combinations of color. The antiparticle of a gluon is another gluon.");
+      return TT("It is its own antiparticle."); }
+    function smFeels(p){ var a=[]; if(p.f.indexOf("s")>=0) a.push(TT("the strong force")); if(p.f.indexOf("e")>=0) a.push(TT("electromagnetism",{})); if(p.f.indexOf("w")>=0) a.push(TT("the weak force"));
+      return a.length?TT("Feels {forces}, and gravity.",{forces:AtomI18N.list(a)}):TT("Feels gravity, and none of the three forces of the Standard Model itself."); }
+    function smCard(){ var P=pane("particles"); if(!P) return; var p=SMP.filter(function(x){ return x.id===SM.pick; })[0], box=P.querySelector(".lb-smcard");
+      box.innerHTML="<h3>"+"<span class=\"lb-smsym\" data-fam=\""+(p.fam)+"\" aria-hidden=\"true\">"+(smSym(p))+"</span>"+(esc(AtomI18N.cap(smName(p.id))))+"</h3>"+"<p>"+(esc(smSay(p.id)))+"</p>"+"<dl class=\"lb-smfacts\">"+"<div>"+"<dt>"+(TT("Mass",{}))+"</dt>"+"<dd>"+(esc(smMass(p)))+"</dd>"+"</div>"+"<div>"+"<dt>"+(TT("Charge",{}))+"</dt>"+"<dd>"+(esc(smCharge(p)))+"</dd>"+"</div>"+"<div>"+"<dt>"+(TT("Spin",{}))+"</dt>"+"<dd>"+(p.spin)+"</dd>"+"</div>"+"<div>"+"<dt>"+(TT("Found",{}))+"</dt>"+"<dd>"+(esc(smFound(p.id)))+"</dd>"+"</div>"+"</dl>"+"<p>"+(esc(smFeels(p)))+" "+(esc(smAnti(p)))+"</p>";
+      [].forEach.call(P.querySelectorAll("[data-smp]"),function(b){ b.setAttribute("aria-pressed",b.getAttribute("data-smp")===SM.pick?"true":"false"); }); }
+    var SM_SCENES=["repel","decay","color","annihilate"];
+    function smSceneName(k){ return ({repel:TT("Electrons repel"),decay:TT("A neutron decays"),color:TT("Quarks trade color"),annihilate:TT("Matter meets antimatter")})[k]; }
+    function smSceneSay(k){ return ({
+      repel:TT("Two electrons never touch. One gives off a photon, the other takes it in, and both change course. Every push and pull of electricity and magnetism is photons traded this way."),
+      decay:TT("A down quark in the neutron turns into an up quark by giving off a W⁻, which becomes an electron and an antineutrino. The neutron is now a proton. This is beta decay."),
+      color:TT("Quarks carry a kind of charge called color, drawn here as red, green, and blue. They hold together by trading gluons, and each trade swaps the colors of the two quarks. The three colors always add up to none."),
+      annihilate:TT("An electron and its antiparticle, the positron, meet and are gone. Their mass leaves as two photons of 511 keV each. A PET scan is made from pairs of photons like these.")})[k]; }
+    function smScene(k){ var P=pane("particles"); SM.scene=k; SM.t0=performance.now(); if(!P) return;
+      [].forEach.call(P.querySelectorAll("[data-sms]"),function(b){ b.setAttribute("aria-pressed",b.getAttribute("data-sms")===k?"true":"false"); });
+      P.querySelector(".lb-smsay").textContent=smSceneSay(k);
+      P.querySelector('[data-c="sm"]').setAttribute("aria-label",smSceneName(k)+". "+smSceneSay(k)); dirty=true; }
+    function smWavy(g,x0,y0,x1,y1,amp,waves,ph){ var n=Math.max(12,Math.round(Math.hypot(x1-x0,y1-y0)/3)), dx=x1-x0, dy=y1-y0, L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L;
+      g.beginPath(); for(var i=0;i<=n;i++){ var s=i/n, a=amp*Math.sin(s*waves*6.2832+ph); if(i) g.lineTo(x0+dx*s+nx*a,y0+dy*s+ny*a); else g.moveTo(x0+dx*s+nx*a,y0+dy*s+ny*a); } g.stroke(); }
+    function smCurly(g,x0,y0,x1,y1,r,loops){ var n=loops*14, dx=x1-x0, dy=y1-y0, L=Math.hypot(dx,dy)||1, ux=dx/L, uy=dy/L, nx=-uy, ny=ux;
+      g.beginPath(); for(var i=0;i<=n;i++){ var s=i/n, a=s*loops*6.2832, along=s*L+r*0.9*Math.sin(a)-0, side=r*(Math.cos(a)-1)*-0.5; if(i) g.lineTo(x0+ux*along+nx*side,y0+uy*along+ny*side); else g.moveTo(x0,y0); } g.stroke(); }
+    function smDot(g,x,y,r,c,s,T){ g.fillStyle=c; g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); if(s){ g.fillStyle=T.plate; g.font="700 13px Archivo, sans-serif"; g.textAlign="center"; g.textBaseline="middle"; g.fillText(s,x,y+1); g.textBaseline="alphabetic"; } }
+    function drawSM(now){
+      var c=host.querySelector('[data-c="sm"]'); if(!c||!c.offsetParent) return false;
+      var f=fit(c), g=f.g, w=f.w, h=f.h, T=th(); g.clearRect(0,0,w,h); g.font="600 14px Archivo, sans-serif"; g.lineCap="round";
+      var E=col("sub-s"), PH=col("sub-p"), NU=col("sub-d"), POS=col("hear"), QC=[col("qr"),col("qg"),col("qb")], t=(now-SM.t0)/1000, k=SM.scene;
+      var sm=function(a,b,x){ x=Math.min(1,Math.max(0,(x-a)/(b-a))); return x*x*(3-2*x); };
+      if(opt.calm) t=({repel:3.4,decay:6.5,color:1.2,annihilate:4.6})[k];
+      if(k==="repel"){ var u=t%7, p=sm(0.3,4.6,u), vx=w*0.5, A=[[w*0.08,h*0.84],[vx,h*0.64],[w*0.92,h*0.9]], B=[[w*0.08,h*0.16],[vx,h*0.36],[w*0.92,h*0.1]];
+        [A,B].forEach(function(Q){ var q=p<0.5?p*2:1, x=Q[0][0]+(Q[1][0]-Q[0][0])*q, y=Q[0][1]+(Q[1][1]-Q[0][1])*q; g.strokeStyle=E; g.lineWidth=2.5; g.beginPath(); g.moveTo(Q[0][0],Q[0][1]); g.lineTo(x,y);
+          if(p>=0.5){ var q2=(p-0.5)*2; x=Q[1][0]+(Q[2][0]-Q[1][0])*q2; y=Q[1][1]+(Q[2][1]-Q[1][1])*q2; g.lineTo(x,y); } g.stroke(); smDot(g,x,y,7,E); g.fillStyle=T.ink; label(g,"e⁻",x,y+(Q===A?-16:26),T); });
+        var ex=sm(0.42,0.52,p); if(ex>0){ g.globalAlpha=ex*(0.45+0.55*(1-sm(0.6,1,p))); g.strokeStyle=PH; g.lineWidth=2.5; smWavy(g,vx,A[1][1],vx,A[1][1]+(B[1][1]-A[1][1])*ex,6,4,-t*8); g.globalAlpha=1; g.fillStyle=T.ink; label(g,"γ",vx+22,h*0.5+5,T); }
+      } else if(k==="decay"){ var u2=t%9, cx=w*0.18, cy=h*0.5, R=Math.max(26,Math.min(48,h*0.19)), turned=sm(1.4,2.0,u2), vx2=w*0.56, wx=cx+R+4+(vx2-cx-R-4)*sm(1.9,3.2,u2), out=sm(3.2,5.6,u2);
+        g.strokeStyle=T.ink3; g.lineWidth=1.5; g.beginPath(); g.arc(cx,cy,R,0,6.2832); g.stroke();
+        [["u",0],["d",1],[turned>0.5?"u":"d",2]].forEach(function(q,i){ var a=i*2.0944+(opt.calm?0:now/2000); smDot(g,cx+Math.cos(a)*R*0.5,cy+Math.sin(a)*R*0.5,i===2?10*(1+0.5*Math.sin(3.1416*turned)):10,QC[q[1]],q[0],T); });
+        g.fillStyle=T.ink; label(g,turned>0.5?TT("proton",{}):TT("neutron",{}),cx,Math.min(h-8,cy+R+22),T);
+        if(u2>1.9){ g.strokeStyle=PH; g.lineWidth=2.5; g.globalAlpha=1-0.6*sm(5.6,8.4,u2); smWavy(g,cx+R+4,cy,wx,cy,6,Math.max(1,(wx-cx-R)/26),-t*8); g.globalAlpha=1; if(wx-cx>R+50){ g.fillStyle=T.ink; label(g,"W⁻",(cx+R+wx)/2,cy-16,T); } }
+        if(out>0){ var ex2=vx2+(w-vx2-30)*out, ey=cy-h*0.3*out, ny2=cy+h*0.3*out; g.strokeStyle=E; g.lineWidth=2.5; g.beginPath(); g.moveTo(vx2,cy); g.lineTo(ex2,ey); g.stroke(); smDot(g,ex2,ey,6,E);
+          g.strokeStyle=NU; g.setLineDash([6,5]); g.beginPath(); g.moveTo(vx2,cy); g.lineTo(ex2,ny2); g.stroke(); g.setLineDash([]); smDot(g,ex2,ny2,5,NU);
+          if(out>0.5){ g.fillStyle=T.ink; label(g,"e⁻",ex2-18,ey-12,T); label(g,"ν̄",ex2-18,ny2+22,T); } }
+      } else if(k==="color"){ var cx3=w/2, cy3=h/2, R3=Math.min(w,h)*0.3, step=Math.floor(t/1.7), fr=(t/1.7)%1, order=[0,1,2], i3;
+        for(i3=0;i3<step;i3++){ var a3=i3%3, b3=(i3+1)%3, tmp=order[a3]; order[a3]=order[b3]; order[b3]=tmp; }
+        var from=step%3, to=(step+1)%3, pos=[0,1,2].map(function(q){ var a=q*2.0944-1.5708+(opt.calm?0:t*0.25); return [cx3+Math.cos(a)*R3,cy3+Math.sin(a)*R3]; });
+        g.strokeStyle=T.ink3; g.lineWidth=1; g.setLineDash([3,6]); g.beginPath(); g.arc(cx3,cy3,R3+34,0,6.2832); g.stroke(); g.setLineDash([]);
+        var gx=pos[from][0]+(pos[to][0]-pos[from][0])*sm(0.1,0.9,fr), gy=pos[from][1]+(pos[to][1]-pos[from][1])*sm(0.1,0.9,fr);
+        g.strokeStyle=QC[order[from]]; g.lineWidth=2.5; smCurly(g,pos[from][0],pos[from][1],gx,gy,7,Math.max(1,Math.round(Math.hypot(gx-pos[from][0],gy-pos[from][1])/16)));
+        [0,1,2].forEach(function(q){ var ci=order[q]; if(fr>0.9&&(q===from||q===to)) ci=order[q===from?to:from]; smDot(g,pos[q][0],pos[q][1],16,QC[ci],q===2?"d":"u",T); });
+        g.fillStyle=T.ink; label(g,"g",(pos[from][0]+pos[to][0])/2+ (cx3-(pos[from][0]+pos[to][0])/2)*0.35,(pos[from][1]+pos[to][1])/2+(cy3-(pos[from][1]+pos[to][1])/2)*0.35+5,T);
+      } else { var u4=t%8, p4=sm(0.3,3.6,u4), cy4=h*0.5, xl=w*0.08+(w*0.42)*p4, xr=w*0.92-(w*0.42)*p4, gone=sm(3.6,3.9,u4), fly=sm(3.8,7,u4);
+        if(gone<1){ g.globalAlpha=1-gone; g.strokeStyle=E; g.lineWidth=2.5; g.beginPath(); g.moveTo(w*0.08,cy4); g.lineTo(xl,cy4); g.stroke(); smDot(g,xl,cy4,7,E); g.strokeStyle=POS; g.beginPath(); g.moveTo(w*0.92,cy4); g.lineTo(xr,cy4); g.stroke(); smDot(g,xr,cy4,7,POS);
+          g.fillStyle=T.ink; label(g,"e⁻",xl,cy4-16,T); label(g,"e⁺",xr,cy4-16,T); g.globalAlpha=1; }
+        if(u4>3.6){ if(u4<4.6){ g.globalAlpha=1-(u4-3.6); g.strokeStyle=PH; g.lineWidth=2; g.beginPath(); g.arc(w/2,cy4,6+(u4-3.6)*70,0,6.2832); g.stroke(); g.globalAlpha=1; }
+          var dx4=w*0.4*fly, dy4=h*0.34*fly; g.strokeStyle=PH; g.lineWidth=2.5; smWavy(g,w/2,cy4,w/2-dx4,cy4-dy4,6,Math.max(1,dx4/22),-t*10); smWavy(g,w/2,cy4,w/2+dx4,cy4+dy4,6,Math.max(1,dx4/22),-t*10);
+          if(fly>0.35){ g.fillStyle=T.ink; label(g,"γ",w/2-dx4+8,cy4-dy4+26,T); label(g,"γ",w/2+dx4-8,cy4+dy4-14,T); } } }
+      return !opt.calm;
+    }
+    BUILD.particles=function(P){
+      var tiles=SMP.map(function(p){ return "<button type=\"button\" class=\"lb-smt\" data-smp=\""+(p.id)+"\" data-fam=\""+(p.fam)+"\" aria-pressed=\"false\" data-gr=\""+((p.row+1))+"\" data-gc=\""+((p.col+1))+"\"><b>"+(smSym(p))+"</b><span>"+(esc(smName(p.id)))+"</span>"+"</button>"; }).join("");
+      P.innerHTML="<div class=\"lb-sm\">"+"<p class=\"lb-note\">"+TT("Everything on the periodic table is made of three of these: the up quark, the down quark, and the electron. The Standard Model is the whole list, seventeen particles, and the rules for how they push, pull, and change one another. It has passed every test since the 1970s, and it leaves out gravity and dark matter. Pick a particle, then watch four of the rules at work.")+"</p>"+
+        "<div class=\"lb-smtop\">"+"<div>"+"<div class=\"lb-smgrid\" role=\"group\" aria-label=\""+esc(TT("The seventeen particles"))+"\">"+tiles+"</div>"+
+        "<p class=\"lb-smkey\">"+"<span data-fam=\"q\">"+TT("Quarks",{})+"</span>"+"<span data-fam=\"l\">"+TT("Leptons",{})+"</span>"+"<span data-fam=\"b\">"+TT("Force carriers")+"</span>"+"<span data-fam=\"h\">"+TT("Higgs",{})+"</span>"+"</p>"+"</div>"+
+        "<div class=\"lb-smcard\" role=\"status\"></div>"+"</div>"+
+        "<div class=\"lb-subtabs\" role=\"group\" aria-label=\""+esc(TT("A rule to watch"))+"\">"+SM_SCENES.map(function(k){ return "<button type=\"button\" data-sms=\""+(k)+"\" aria-pressed=\"false\">"+(esc(smSceneName(k)))+"</button>"; }).join("")+"</div>"+
+        "<div class=\"lb-stagewrap sm\">"+"<canvas class=\"lb-cv\" data-c=\"sm\" role=\"img\" aria-label=\"\"></canvas>"+"</div>"+
+        "<p class=\"lb-note lb-smsay\" role=\"status\"></p>"+
+        "<p class=\"lb-note\">"+TT("Masses and charges are the Particle Data Group's 2026 values. Each drawing runs in time from left to right and shows what happens, not how often or how fast.")+"</p>"+"</div>";
+      P.addEventListener("click",function(e){ var b=e.target.closest("[data-smp]"), s=e.target.closest("[data-sms]");
+        if(b){ SM.pick=b.getAttribute("data-smp"); smCard(); ev("particle:"+SM.pick); }
+        if(s){ smScene(s.getAttribute("data-sms")); ev("rule:"+SM.scene); } });
+      smCard(); smScene(SM.scene);
+    };
+    REFRESH.particles=function(){ SM.t0=performance.now(); dirty=true; };
+
+    /* ======================================================== motion in the labs that were already here
+       Nuclides: one of the four natural decay series, played across the chart
+       (main branch; half-lives from the IAEA Live Chart of Nuclides). Electron
+       energies: the spectrum built the way a detector builds it, one electron
+       at a time. Both are whole at once in calm mode. */
+    var CHAINS=[
+      [[92,238,4.468,"Gy","a"],[90,234,24.10,"d","b"],[91,234,1.16,"min","b","m"],[92,234,245.5,"ky","a"],[90,230,75.4,"ky","a"],[88,226,1600,"y","a"],[86,222,3.82,"d","a"],[84,218,3.10,"min","a"],
+       [82,214,27.1,"min","b"],[83,214,19.7,"min","b"],[84,214,163.5,"us","a"],[82,210,22.2,"y","b"],[83,210,5.01,"d","b"],[84,210,138.4,"d","a"],[82,206]],
+      [[90,232,14.0,"Gy","a"],[88,228,5.75,"y","b"],[89,228,6.15,"h","b"],[90,228,1.912,"y","a"],[88,224,3.63,"d","a"],[86,220,55.6,"s","a"],[84,216,145,"ms","a"],[82,212,10.62,"h","b"],
+       [83,212,60.55,"min","b"],[84,212,0.294,"us","a"],[82,208]],
+      [[92,235,704,"My","a"],[90,231,25.57,"h","b"],[91,231,32.57,"ky","a"],[89,227,21.77,"y","b"],[90,227,18.7,"d","a"],[88,223,11.43,"d","a"],[86,219,3.96,"s","a"],[84,215,1.78,"ms","a"],
+       [82,211,36.1,"min","b"],[83,211,2.14,"min","a"],[81,207,4.77,"min","b"],[82,207]],
+      [[93,237,2.144,"My","a"],[91,233,26.98,"d","b"],[92,233,159.2,"ky","a"],[90,229,7880,"y","a"],[88,225,14.9,"d","b"],[89,225,9.92,"d","a"],[87,221,4.9,"min","a"],[85,217,32.6,"ms","a"],
+       [83,213,45.6,"min","b"],[84,213,3.71,"us","a"],[82,209,3.23,"h","b"],[83,209,20.1,"EEy","a"],[81,205]]];
+    function chainHL(s){ var d=String(s[2]).indexOf(".")<0?0:String(s[2]).split(".")[1].length, n=AtomI18N.N(s[2],d), u=s[3];
+      return u==="ms"?TT("{n, plural, one {# millisecond} other {# milliseconds}}",{n:n}):u==="us"?TT("{n, plural, one {# microsecond} other {# microseconds}}",{n:n}):
+        u==="EEy"?TT("{n} billion billion years",{n:n}):amount(n,u); }
+    function chainSay(){ var P=pane("nuclides"), C=NU.chain, p=P&&P.querySelector(".lb-nchain"); if(!p||!C) return; var S=CHAINS[C.i], s=S[C.k], last=C.k===S.length-1;
+      if(last){ var na=0, nb=0; S.forEach(function(x){ if(x[4]==="a") na++; if(x[4]==="b") nb++; });
+        p.textContent=TT("The chain ends at {iso}, which is stable. It took {a, plural, one {# alpha decay} other {# alpha decays}} and {b, plural, one {# beta decay} other {# beta decays}} to get here from {start}.",{iso:isoName(s[0],s[1]),a:na,b:nb,start:isoName(S[0][0],S[0][1])}); }
+      else p.textContent=TT("Step {k} of {n}: {iso}, half-life {hl}. It goes by {mode} to {next}.",{k:C.k+1,n:S.length-1,iso:isoName(s[0],s[1])+(s[5]||""),hl:chainHL(s),mode:modeWords(s[4]==="a"?"alpha":"beta-"),next:isoName(S[C.k+1][0],S[C.k+1][1])+(S[C.k+1][5]||"")}); }
+    function chainStart(i){ var S=CHAINS[i]; NU.chain={i:i,k:opt.calm?S.length-1:0,t0:performance.now()}; var s=S[NU.chain.k]; NU.chainStep=true; nuSet(s[0],s[1]-s[0]); NU.chainStep=false; chainSay(); dirty=true; ev("chain:"+i); }
+    /* called by drawNuc after the map: the path so far, alpha steps in one color and beta steps in another; true while it is still moving */
+    function drawNucChain(g,G,T,now){ var C=NU.chain; if(!C) return false; var S=CHAINS[C.i], cs=G.cs, moving=C.k<S.length-1;
+      if(moving&&now-C.t0>950){ C.k++; C.t0=now; var s=S[C.k]; NU.z=s[0]; NU.n=s[1]-s[0]; renderNuc(); chainSay(); moving=C.k<S.length-1; }
+      var pt=function(s){ return [G.x0+(s[1]-s[0])*cs+cs/2, G.y0-s[0]*cs-cs/2]; }, fr=moving?Math.min(1,(now-C.t0)/700):0;
+      g.lineWidth=2.5; g.lineCap="round";
+      for(var k=0;k<=C.k&&k<S.length-1;k++){ var a=pt(S[k]), b=pt(S[k+1]), part=k<C.k?1:fr; if(part<=0) continue;
+        g.strokeStyle=S[k][4]==="a"?col("build"):col("explore"); g.beginPath(); g.moveTo(a[0],a[1]); g.lineTo(a[0]+(b[0]-a[0])*part,a[1]+(b[1]-a[1])*part); g.stroke(); }
+      for(var q=0;q<=C.k;q++){ var c=pt(S[q]); g.fillStyle=T.plate; g.beginPath(); g.arc(c[0],c[1],4,0,6.2832); g.fill(); g.strokeStyle=T.ink; g.lineWidth=1.5; g.stroke(); g.lineWidth=2.5; }
+      return moving; }
+    function nucChainUI(P){ var side=P.querySelector(".lb-side"); if(!side) return;
+      side.insertAdjacentHTML("beforeend","<div class=\"lb-nchainbox\">"+"<p class=\"lb-nchainhead\">"+TT("Follow a decay chain")+"</p>"+"<div class=\"lb-chips\">"+
+        CHAINS.map(function(S,i){ return "<button type=\"button\" data-nc=\""+i+"\">"+esc(AtomI18N.cap(isoName(S[0][0],S[0][1])))+"</button>"; }).join("")+"</div>"+
+        "<p class=\"lb-note\">"+"<span class=\"lb-nckey a\" aria-hidden=\"true\"></span>"+TT("alpha decay: two protons and two neutrons leave")+" "+"<span class=\"lb-nckey b\" aria-hidden=\"true\"></span>"+TT("beta decay: a neutron becomes a proton")+"</p>"+
+        "<p class=\"lb-say lb-nchain\" role=\"status\"></p>"+"</div>");
+      P.addEventListener("click",function(e){ var b=e.target.closest("[data-nc]"); if(b) chainStart(+b.getAttribute("data-nc")); }); }
+
+    /* Electron energies, run: each bar grows as its electrons are counted, a little unevenly, the way counts come in */
+    function peGrow(now,p){ if(!PE.run||opt.calm) return 1; var u=(now-PE.run)/4200; if(u>=1){ PE.run=0; return 1; }
+      return Math.max(0.02,Math.min(1,u*(0.86+0.28*Math.sin(p.mj*9.7+p.l*2.1))+0.05*Math.sin(now*0.011+p.mj*31)*(1-u))); }
+    function peRain(g,peaks,y0,now,T){ if(!PE.run||opt.calm) return; var u=(now-PE.run)/4200;
+      peaks.forEach(function(p,i){ for(var k=0;k<3;k++){ var ph=((now*0.0011*(1+0.13*k)+i*0.37+k*0.31)%1), y=y0+6+(p.y-y0-10)*ph; if(y>=p.y-3) continue;
+        g.globalAlpha=(1-u)*0.9; g.fillStyle=col("e"); g.beginPath(); g.arc(p.x+(k-1)*2,y,2.2,0,6.2832); g.fill(); } }); g.globalAlpha=1; }
 
     /* ======================================================== The math */
     /* Ten steps through the atom you pick, from the outside in, each with the
@@ -2790,7 +2977,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       if(!dirty&&!anim) return;
       dirty=false;
       anim=cur==="build"?(bmode==="atom"?drawBuild(now):(bmode==="molecule"?drawMol(now):false)):(cur==="calc"?drawCalc(now):(cur==="hear"?drawHear(now):
-        (cur==="trends"?drawTrend(now):(cur==="nuclides"?drawNuc(now):(cur==="math"?drawMath(now):(cur==="pes"?drawPes(now):(cur==="sun"?drawSun(now):false)))))));
+        (cur==="trends"?drawTrend(now):(cur==="nuclides"?drawNuc(now):(cur==="math"?drawMath(now):(cur==="pes"?drawPes(now):(cur==="sun"?drawSun(now):(cur==="particles"?drawSM(now):false))))))));
     };
     api.show=function(t,z){ if(z) api.setElement(z); if(t==="compare"&&z){ CMP.a=z; if(!CMP.b||CMP.b===z) CMP.b=partner(z); CMP.follow=true; } show(t||cur); };
     /* the table picked an element: the labs follow it, except where you chose
@@ -2902,7 +3089,11 @@ function selfTest(){
     t("labs: an ion loses its outermost electrons first (Fe²⁺ is [Ar] 3d⁶, Cu⁺ is [Ar] 3d¹⁰)", fe2==="[Ar] 3d⁶"&&cu1==="[Ar] 3d¹⁰", fe2+" / "+cu1);
     var ch=challengeParse(challengeMake([1,6,8,26],10,["n","q","c","b"],12345)), k1=challengeKeys(ch).join("|"), k2=challengeKeys(challengeParse(ch.code)).join("|");
     t("labs: a challenge code rebuilds the same questions", !!ch&&k1===k2&&challengeKeys(ch).length===10&&challengeKeys(ch).every(function(x){ return !!makeQ(x); }), k1);
-    t("labs: half-lives in the presets parse (5700 y, 1.248 Gy, 24 110 y)", Math.abs(halfLifeSeconds("5700 y")/31557600-5700)<1e-6&&Math.abs(halfLifeSeconds("1.248 Gy")/31557600e9-1.248)<1e-9&&Math.abs(halfLifeSeconds("24 110 y")/31557600-24110)<1e-6, "half-life text misread");
+    (function(){ var q=function(id){ return SMP.filter(function(p){ return p.id===id; })[0].q3; }, n=function(f){ return SMP.filter(function(p){ return p.fam===f; }).length; };
+    t("particles: seventeen in all (6 quarks, 6 leptons, 4 force carriers, the Higgs); two ups and a down add up to +1, an up and two downs to 0, and beta decay keeps the charge (d = u + W⁻)",
+      SMP.length===17&&n("q")===6&&n("l")===6&&n("b")===4&&n("h")===1&&2*q("u")+q("d")===3&&q("u")+2*q("d")===0&&q("d")===q("u")-q("W")&&
+      SMP.every(function(p){ return p.mev===null||p.mev>=0; })&&smCharge({q3:2})==="+2/3"&&smCharge({q3:-1})==="−1/3"&&smCharge({q3:-3})==="−1"); })();
+  t("labs: half-lives in the presets parse (5700 y, 1.248 Gy, 24 110 y)", Math.abs(halfLifeSeconds("5700 y")/31557600-5700)<1e-6&&Math.abs(halfLifeSeconds("1.248 Gy")/31557600e9-1.248)<1e-9&&Math.abs(halfLifeSeconds("24 110 y")/31557600-24110)<1e-6, "half-life text misread");
     /* Explore and the molecule builder */
     var mis=[];
     for(var z=1;z<=118;z++) for(var a=z;a<=z+200;a++){ var nk=nclass(z,a).k, kind=nuclide(z,a).kind; if((nk===0)!==(kind==="unbound")||(nk===1)!==(kind==="stable")) mis.push(z+"-"+a); }

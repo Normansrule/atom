@@ -6,13 +6,13 @@
 :root{
   --lb-build:#ffa25c; --lb-predict:#b99cff; --lb-calc:#3fd8c6; --lb-bench:#ffb020; --lb-hear:#ff8fc4; --lb-you:#6fdc9a; --lb-explore:#8fb3ff; --lb-math:#c9e86b; --lb-lessons:#ffd166;
   --lb-p:#ff9a55; --lb-n:#c3ccd8; --lb-e:#6fd3ff;
-  --lb-sub-s:#6fd3ff; --lb-sub-p:#ff9a55; --lb-sub-d:#6fdc9a; --lb-sub-f:#b99cff;   /* the four kinds of subshell, wherever they are drawn */
+  --lb-sub-s:#6fd3ff; --lb-sub-p:#ff9a55; --lb-sub-d:#6fdc9a; --lb-sub-f:#b99cff; --lb-qr:#ff8c8c; --lb-qg:#4fd892; --lb-qb:#89abff;   /* the four kinds of subshell, wherever they are drawn */
   --lb-ok:#5ed69a; --lb-warn:#f5c451; --lb-bad:#ff9eab; --lb-onk:#141005;
 }
 :root[data-theme="light"]{
   --lb-build:#7a3300; --lb-predict:#4b2a91; --lb-calc:#0b5a52; --lb-bench:#643c00; --lb-hear:#8a1840; --lb-you:#1d5e2c; --lb-explore:#1f3f8f; --lb-math:#3e5a00; --lb-lessons:#6b4a00;
   --lb-p:#733000; --lb-n:#33435c; --lb-e:#09467a;
-  --lb-sub-s:#09467a; --lb-sub-p:#733000; --lb-sub-d:#1d5e2c; --lb-sub-f:#4b2a91;
+  --lb-sub-s:#09467a; --lb-sub-p:#733000; --lb-sub-d:#1d5e2c; --lb-sub-f:#4b2a91; --lb-qr:#851a19; --lb-qg:#0b4f2b; --lb-qb:#193f93;
   --lb-ok:#0b4f2c; --lb-warn:#5c4000; --lb-bad:#861826; --lb-onk:#ffffff;
 }
 /* the grounds are the host's: --panel, --panel2, --sunk, --line and --line2
@@ -261,7 +261,7 @@
 .lb-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:var(--fs-ui,14px);color:var(--ink2);margin-bottom:8px}
 .lb-legend span{display:inline-flex;align-items:center;gap:6px}
 .lb-legend span::before{content:"";width:14px;height:14px;border-radius:4px;border:2px solid var(--ink3)}
-.lb-legend .l2::before{background:color-mix(in srgb,var(--ink3) 45%,transparent)}
+.lb-legend .l2::before{background:var(--ink3);background:color-mix(in srgb,var(--ink3) 45%,transparent)}
 .lb-legend .l3::before{background:var(--ink3)}
 .lb-mini{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));grid-template-rows:repeat(7,auto) 8px repeat(2,auto);gap:2px;max-width:640px}
 .lb-mini button{--cat:var(--ink3);aspect-ratio:1;min-width:0;padding:0;border-radius:4px;border:1px solid var(--lb-line);background:transparent;
@@ -297,6 +297,7 @@
   .lb-tabs [role="tab"]{flex:none;padding:12px}
   .lb-subtabs{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .lb-subtabs button{flex:none}
+  .lb-tabs::-webkit-scrollbar,.lb-subtabs::-webkit-scrollbar{display:none}
   .lb-tray{gap:4px;padding:8px 4px}
   .lb-tok{gap:4px;padding:4px 6px 4px 4px;min-height:40px}
   .lb-tok b{width:28px;height:28px;font-size:var(--fs-ui,14px)}
@@ -334,8 +335,8 @@
 .pd-mine span::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--lb-you);box-sizing:border-box}
 .pd-mine span.on::before{background:var(--lb-you)}
 /* ---------------------------------------------------------------- the card's tabs */
-.pd-tabs{position:sticky;top:0;z-index:3;display:flex;gap:4px;margin:16px 0 0;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;
-  overflow-x:auto;scrollbar-width:none}
+.pd-tabs{position:sticky;top:0;z-index:3;display:flex;gap:4px;margin:16px 0 0;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.pd-tabs::-webkit-scrollbar{display:none}
 .pd-tabs [role="tab"]{position:relative;flex:none;min-height:44px;padding:8px 12px;border:0;background:none;color:var(--ink2);font:inherit;
   font-size:var(--fs-ui,14px);font-weight:600;cursor:pointer}
 .pd-tabs [role="tab"]::after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:3px;border-radius:2px;background:var(--acc);transform:scaleX(0);transition:transform .18s var(--ease-out)}
@@ -613,4 +614,39 @@ dfn.lb-term[aria-expanded="true"]{text-decoration-style:solid}
 .lb-vocab{border-collapse:collapse;width:100%;font-size:14px}
 .lb-vocab td{padding:6px 10px;border-bottom:1px solid #ccc;vertical-align:top}
 @media (max-width:600px){ .lb-learnset{margin-left:0;width:100%;padding-left:0;padding-top:0} }
+/* ------------------------------------------------------------ Particles (the Standard Model)
+   the chart of seventeen, a card for the one picked, and a stage for four of the rules */
+.lb-sm [data-fam="q"]{--f:var(--lb-sub-f)} .lb-sm [data-fam="l"]{--f:var(--lb-sub-d)} .lb-sm [data-fam="b"]{--f:var(--lb-sub-p)} .lb-sm [data-fam="h"]{--f:var(--lb-sub-s)}
+.lb-smtop{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:20px 32px;align-items:start;margin:12px 0 20px}
+.lb-smgrid{display:grid;grid-template-columns:repeat(5,minmax(56px,84px));gap:6px}
+.lb-smt{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:4px;min-height:66px;padding:6px 8px;border:1px solid var(--lb-line2);border-left:4px solid var(--f);
+  border-radius:var(--lb-r,8px);background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.lb-smt b{font-size:20px;font-weight:700;line-height:1.1}
+.lb-smt span{font-size:12px;line-height:1.15;color:var(--ink2)}
+.lb-smt[aria-pressed="true"]{background:var(--lb-raise);box-shadow:0 0 0 2px var(--f)}
+.lb-smt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (hover:hover){ .lb-smt:hover{border-color:var(--f)} }
+.lb-smt[data-gr="1"]{grid-row:1} .lb-smt[data-gr="2"]{grid-row:2} .lb-smt[data-gr="3"]{grid-row:3} .lb-smt[data-gr="4"]{grid-row:4}
+.lb-smt[data-gc="1"]{grid-column:1} .lb-smt[data-gc="2"]{grid-column:2} .lb-smt[data-gc="3"]{grid-column:3} .lb-smt[data-gc="4"]{grid-column:4} .lb-smt[data-gc="5"]{grid-column:5}
+.lb-smkey{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0 0;font-size:var(--fs-micro,13px);color:var(--ink2)}
+.lb-smkey span::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;background:var(--f)}
+.lb-smcard{min-width:0}
+.lb-smcard h3{display:flex;align-items:center;gap:12px;margin:0 0 8px;font-size:var(--fs-h1,26px);line-height:1.15}
+.lb-smsym{display:inline-grid;place-items:center;min-width:52px;height:52px;padding:0 8px;border:2px solid var(--f);border-radius:var(--lb-r,8px);font-size:24px}
+.lb-smcard p{margin:0 0 8px;max-width:60ch}
+.lb-smfacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px;margin:12px 0;max-width:34em}
+.lb-smfacts dt{font-size:var(--fs-micro,13px);color:var(--ink2)}
+.lb-smfacts dd{margin:0;font-weight:600}
+.lb-stagewrap.sm{min-height:0;height:clamp(240px,32vw,330px)}
+.lb-stagewrap.sm .lb-cv{min-height:0}
+.lb-smsay{margin-top:12px}
+@media (max-width:760px){ .lb-smtop{grid-template-columns:minmax(0,1fr)} .lb-smgrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .lb-smt{min-height:48px;align-items:center;justify-content:center;padding:4px} .lb-smt span{display:none} }
+/* Nuclides: the decay chains */
+.lb-nchainbox{margin-top:16px;padding-top:12px;border-top:1px solid var(--lb-line)}
+.lb-nchainhead{margin:0 0 8px;font-weight:600}
+.lb-nchainbox .lb-note{margin:10px 0 0}
+.lb-nckey{display:inline-block;width:16px;height:3px;margin:0 6px 4px 0;background:var(--lb-build)}
+.lb-nckey.b{background:var(--lb-explore);margin-left:12px}
+.lb-nchain:empty{display:none}
 /* ATOM-LABS-CSS END */

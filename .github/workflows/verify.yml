@@ -22,9 +22,8 @@ jobs:
         browser: [chromium, webkit, firefox]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    # WebKit and Firefox are advisory until they have been seen green once;
-    # then delete this line so a Safari-only break fails the push
-    continue-on-error: ${{ matrix.browser != 'chromium' }}
+    # all three are required: WebKit and Firefox were green on 1.7.0, and on 2.0.0 WebKit failed
+    # with Chromium on the same racing check, which now waits for its state
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -40,6 +39,9 @@ jobs:
       - name: Every style sheet's braces balance, and nothing is declared outside a rule
         if: matrix.browser == 'chromium'
         run: python3 scripts/check_css.py
+      - name: The site's weight is within its budgets
+        if: matrix.browser == 'chromium'
+        run: python3 scripts/check_budget.py
       - name: The English catalog matches the pages, and every language pack passes its checks
         if: matrix.browser == 'chromium'
         run: |

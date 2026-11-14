@@ -66,7 +66,19 @@ const failures = [];
   if (bm[1] !== want) { console.log(`  FAIL sw.js says BUILD ${bm[1]} but the files give ${want}: run python3 scripts/stamp_sw.py`); process.exit(1); }
   console.log(`  ok   sw.js build stamp ${want} matches the ${files.length} files it names`);
 }
-const fail = (where, what) => { failures.push(`${where}: ${what}`); console.log(`  FAIL ${where}: ${what}`); };
+const fail = (where, what) => { failures.push(`${where}: ${what}`); console.log(`  FAIL ${where}: ${what}`);
+  // on GitHub the line also becomes an annotation: the run's page shows it to anyone, where the log itself needs a sign-in
+  if (process.env.GITHUB_ACTIONS) console.log(`::error title=Smoke test (${ENGINE})::${(where + ": " + what).replace(/%/g, "%25").replace(/\r?\n/g, " ").slice(0, 900)}`); };
+// Wait for a state, not for a guessed number of milliseconds. 2.0.0's first push failed here in Chromium and
+// WebKit, and only in CI: the depth-gauge check slept 900 ms after a smooth scroll that takes 800 ms on a fast
+// machine and 1.7 s on one core. `taskset -c 0 node scripts/smoke.mjs` is the slow machine; run it before a release.
+const until = (page, fn, arg, ms = 15000) => page.waitForFunction(fn, arg, { timeout: ms }).then(() => true, () => false);
+// the worker is told which language files this reader uses and fetches them itself: offline is fair to ask for once they are kept
+// a 2D canvas has been drawn on: more than one color among a few hundred sampled pixels
+const drawn = (page, sel) => until(page, (q) => { const c = document.querySelector(q); if (!c || !c.width) return false; const g = c.getContext("2d"), d = g.getImageData(0, 0, c.width, c.height).data, seen = new Set();
+  for (let i = 0; i < d.length; i += 4 * Math.max(1, Math.floor(d.length / 4 / 600))) seen.add(d[i] + "," + d[i + 1] + "," + d[i + 2] + "," + d[i + 3]); return seen.size > 1; }, sel);
+const packsKept = (page) => until(page, async () => { const f = AtomI18N.packFiles(); if (!f.length) return true;
+  for (const k of await caches.keys()) { const c = await caches.open(k); if ((await Promise.all(f.map((u) => c.match(u)))).every(Boolean)) return true; } return false; });
 const ok = (where, what) => console.log(`  ok   ${where}: ${what}`);
 
 console.log(`browser: ${ENGINE}`);
@@ -75,7 +87,11 @@ const browser = await launcher.launch(ENGINE === "chromium" ? {
   args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", ...(process.env.ATOM_CHROME_ARGS || "").split(" ").filter(Boolean)],
 } : {});
 
+// SMOKE_ONLY=<regex> runs only the visits whose name matches (a slow sandbox cannot finish them all in one go);
+// SMOKE_SKIP=<regex> leaves those out. CI sets neither.
+const ONLY = process.env.SMOKE_ONLY ? new RegExp(process.env.SMOKE_ONLY) : null, SKIP = process.env.SMOKE_SKIP ? new RegExp(process.env.SMOKE_SKIP) : null;
 async function visit(name, url, check, opts = {}) {
+  if ((ONLY && !ONLY.test(name)) || (SKIP && SKIP.test(name))) return;
   console.log(`\n${name}  ${url}`);
   const page = await browser.newPage({ viewport: opts.viewport || { width: 1440, height: 900 }, ...(opts.context || {}) });
   if (opts.init) await page.addInitScript(opts.init);
@@ -112,12 +128,14 @@ await visit("site", `${BASE}`, async (page, n) => {
   tiles === 118 ? ok(n, "118 squares") : fail(n, `${tiles} squares`);
   const title = await page.title();
   /Atom/.test(title) ? ok(n, `title "${title}"`) : fail(n, `title "${title}"`);
-  await page.click(".pt-el[data-z='79']"); await page.waitForTimeout(1200);
+  await page.click(".pt-el[data-z='79']"); await page.locator("#sheet").waitFor({ state: "visible", timeout: 15000 }).catch(() => {}); await page.waitForTimeout(800);
   (await page.locator("#sheet").isVisible()) ? ok(n, "gold's card opens") : fail(n, "the card did not open");
+  await page.click('#sheet [data-pdt="origin"]').catch(() => {});
+  (await drawn(page, "#sheet canvas.pd-ocv")) ? ok(n, "the card's Origin tab draws how gold was made") : fail(n, "the origin drawing stayed blank");
   // the labs arrive on their own once a reader heads for them
   await page.keyboard.press("Escape");
   await page.evaluate(() => document.getElementById("labs").scrollIntoView());
-  await page.waitForFunction(() => window.AtomLabs && document.querySelectorAll("#labsHost [role=tab]").length === 7, null, { timeout: 15000 }).catch(() => {});
+  await page.waitForFunction(() => window.AtomLabs && document.querySelectorAll("#labsHost [role=tab]").length === 7, null, { timeout: 30000 }).catch(() => {});
   const tabs = await page.locator("#labsHost [role=tab]").count();
   tabs === 7 ? ok(n, "the labs load on approach, seven tabs") : fail(n, `the labs did not load (${tabs} tabs)`);
   const labBad = await page.evaluate(() => window.AtomLabs ? AtomLabs.selfTest().filter((x) => !x[1]).map((x) => x[0]) : ["no AtomLabs"]);
@@ -127,7 +145,8 @@ await visit("site", `${BASE}`, async (page, n) => {
   const veil = await page.evaluate(() => { const c = getComputedStyle(document.querySelector(".labs-panel")).backgroundColor, m = c.match(/[\d.]+/g) || [];
     return { c, a: c === "transparent" ? 0 : c.includes("/") ? +m[m.length - 1] : /^rgba\(/.test(c) ? +m[3] : 1 }; });
   veil.a >= 0.9 ? ok(n, `the labs' text has its ground (${veil.c})`) : fail(n, `the labs panel is see-through (${veil.c}): --veil is not set`);
-  await page.evaluate(() => document.getElementById("lbTab-math").click()); await page.waitForTimeout(400);
+  await page.evaluate(() => document.getElementById("lbTab-math").click());
+  await until(page, () => /gold/i.test((document.querySelector("#labsHost .lb-mtitle") || {}).textContent || ""));
   const mt = await page.evaluate(() => (document.querySelector("#labsHost .lb-mtitle") || {}).textContent || "");
   /gold/i.test(mt) ? ok(n, "The math opens on gold") : fail(n, `The math did not open (${mt})`);
   // back to the top with everything loaded, so the accessibility pass that
@@ -136,11 +155,11 @@ await visit("site", `${BASE}`, async (page, n) => {
   // offline: once the worker has the site, the page loads with the network cut
   const swOk = await page.evaluate(() => navigator.serviceWorker ? navigator.serviceWorker.ready.then(() => true).catch(() => false) : false).catch(() => false);
   if (swOk) {
-    await page.waitForTimeout(1500);
+    await packsKept(page); await page.waitForTimeout(1500);
     const ctx = page.context();
     await ctx.setOffline(true);
     let loaded = false;
-    try { const r = await page.reload({ waitUntil: "load", timeout: 15000 }); await page.waitForTimeout(3000); loaded = !!r && (await page.locator(".pt-el").count()) === 118; } catch (e) { loaded = false; }
+    try { const r = await page.reload({ waitUntil: "load", timeout: 30000 }); await until(page, () => document.querySelectorAll(".pt-el").length === 118); await page.waitForTimeout(1000); loaded = !!r && (await page.locator(".pt-el").count()) === 118; } catch (e) { loaded = false; }
     await ctx.setOffline(false);
     loaded ? ok(n, "loads offline from the service worker (118 squares)") : fail(n, "did not load offline");
   } else fail(n, "the service worker did not register");
@@ -195,7 +214,7 @@ for (const code of ["es"]) {
     const fe = await page.evaluate(() => ELEMENTS[25][2]);
     fe !== "Iron" ? ok(n, `element names localized (${fe})`) : fail(n, "element names still English");
     await page.evaluate(() => document.getElementById("labs").scrollIntoView());
-    await page.waitForFunction(() => window.AtomLabs && document.querySelectorAll("#labsHost [role=tab]").length === 7, null, { timeout: 15000 }).catch(() => {});
+    await page.waitForFunction(() => window.AtomLabs && document.querySelectorAll("#labsHost [role=tab]").length === 7, null, { timeout: 30000 }).catch(() => {});
     const tabs = await page.locator("#labsHost [role=tab]").count();
     tabs === 7 ? ok(n, "the labs load, seven tabs") : fail(n, `the labs did not load (${tabs} tabs)`);
     const left2 = await page.evaluate(() => AtomI18N.missing.length);
@@ -208,17 +227,18 @@ for (const code of ["es"]) {
         ? ok(n, `articles, contractions and plurals: ${said[0]}; ${said[1]}; ${said[2]}`) : fail(n, "a sentence is put together wrong: " + said.join(" | "));
     }
     // the depth gauge is translated and still marks where the reader is
-    await page.evaluate(() => document.getElementById("cloud").scrollIntoView()); await page.waitForTimeout(900);
+    await page.evaluate(() => document.getElementById("cloud").scrollIntoView());
+    await until(page, () => { const a = document.querySelector(".gauge a.on, .gauge a[aria-current]"); return !!a && a.getAttribute("data-depth") === "cloud"; });
     const here = await page.evaluate(() => { const a = document.querySelector(".gauge a.on, .gauge a[aria-current]"); return a ? a.getAttribute("data-depth") + ":" + a.textContent.trim() : null; });
     here && /^cloud:/.test(here) && !/Atom$/.test(here) ? ok(n, `the depth gauge marks the scene (${here.replace(/\s+/g, " ")})`) : fail(n, `the depth gauge did not mark the cloud scene (${here})`);
     await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(400);
     // offline in this language: the pack files are kept with the site
     const swOk = await page.evaluate(() => navigator.serviceWorker ? navigator.serviceWorker.ready.then(() => true).catch(() => false) : false).catch(() => false);
     if (swOk) {
-      await page.waitForTimeout(1500);
+      await packsKept(page); await page.waitForTimeout(1500);
       const ctx = page.context(); await ctx.setOffline(true);
       let state = null;
-      try { await page.reload({ waitUntil: "load", timeout: 15000 }); await page.waitForTimeout(2500); state = await page.evaluate(() => ({ lang: document.documentElement.lang, tiles: document.querySelectorAll(".pt-el").length, failed: AtomI18N.failed, name: ELEMENTS[25][2] })); } catch (e) { state = null; }
+      try { await page.reload({ waitUntil: "load", timeout: 30000 }); await until(page, () => document.querySelectorAll(".pt-el").length === 118); await page.waitForTimeout(1000); state = await page.evaluate(() => ({ lang: document.documentElement.lang, tiles: document.querySelectorAll(".pt-el").length, failed: AtomI18N.failed, name: ELEMENTS[25][2] })); } catch (e) { state = null; }
       await ctx.setOffline(false);
       state && state.lang === code && state.tiles === 118 && !state.failed && state.name !== "Iron" ? ok(n, `loads offline in ${code} (${state.name})`) : fail(n, "offline in " + code + ": " + JSON.stringify(state));
     } else fail(n, "the service worker did not register");
@@ -226,14 +246,18 @@ for (const code of ["es"]) {
   });
   // Term help: a unit's symbol is matched in its own case only, and a term's card opens from the keyboard
   await visit(`term help in ${code}`, `${BASE}?lang=${code}&terms=1#lab=predict`, async (page, n) => {
-    await page.waitForFunction(() => document.querySelector("#labsHost .lb-qtext"), null, { timeout: 15000 }).catch(() => {});
+    await page.waitForFunction(() => document.querySelector("#labsHost .lb-qtext"), null, { timeout: 30000 }).catch(() => {});
     const marked = await page.evaluate(async () => { const q = document.querySelector("#labsHost .lb-qtext"); if (!q) return null;
-      q.textContent = "Pm 140 pm. Fm 5 MeV."; await new Promise((r) => setTimeout(r, 500)); return [].map.call(q.querySelectorAll("dfn.lb-term"), (d) => d.textContent).join(","); });
+      q.textContent = "Pm 140 pm. Fm 5 MeV."; const seen = () => [].map.call(q.querySelectorAll("dfn.lb-term"), (d) => d.textContent).join(",");
+      for (let i = 0; i < 40 && seen() !== "pm,MeV"; i++) await new Promise((r) => setTimeout(r, 250));   // the marker runs on a throttled observer
+      await new Promise((r) => setTimeout(r, 400)); return seen(); });
     marked === "pm,MeV" ? ok(n, "pm and MeV are marked; the symbols Pm and Fm are not") : fail(n, `marked: ${marked}`);
     const card = await page.evaluate(async () => { const d = document.querySelector("#labsHost .lb-qtext dfn.lb-term"); if (!d) return null; d.focus();
-      d.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); await new Promise((r) => setTimeout(r, 100));
+      d.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      for (let i = 0; i < 40 && !document.querySelector("#labsHost .lb-termcard"); i++) await new Promise((r) => setTimeout(r, 100));
       const c = document.querySelector("#labsHost .lb-termcard"), open = d.getAttribute("aria-expanded");
-      d.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); await new Promise((r) => setTimeout(r, 100));
+      d.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      for (let i = 0; i < 40 && document.querySelector("#labsHost .lb-termcard"); i++) await new Promise((r) => setTimeout(r, 100));
       return { text: c ? c.textContent : null, role: c ? c.getAttribute("role") : null, open, closed: !document.querySelector("#labsHost .lb-termcard") }; });
     card && card.text && card.role === "status" && card.open === "true" && card.closed ? ok(n, `a term's card opens with Enter and closes with Escape (${card.text.slice(0, 40)}…)`) : fail(n, "term card: " + JSON.stringify(card));
   }, { wait: 7000, skipAxe: true });
@@ -244,6 +268,53 @@ for (const code of ["es"]) {
     left === 0 ? ok(n, "build, The math and the lessons ask for nothing the pack lacks") : fail(n, `${left} strings missing: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
   }, { wait: 7000, viewport: { width: 1440, height: 960 } });
 }
+
+// 2.1: the Standard Model lab, a decay chain on the chart of nuclides, and the scenes below the quarks
+await visit("particles", `${BASE}#lab=particles`, async (page, n) => {
+  await until(page, () => document.querySelectorAll("#labsHost [data-smp]").length === 17, null, 30000);
+  const tiles = await page.locator("#labsHost [data-smp]").count();
+  tiles === 17 ? ok(n, "seventeen particles on the chart") : fail(n, `${tiles} particles`);
+  await page.click('#labsHost [data-smp="t"]');
+  const card = await page.evaluate(() => (document.querySelector("#labsHost .lb-smcard") || {}).textContent || "");
+  /172\.6/.test(card) && /\+2\/3/.test(card) ? ok(n, "the top quark's card gives its mass and charge") : fail(n, "top quark card: " + card.slice(0, 120));
+  let scenes = 0;
+  for (const k of ["repel", "decay", "color", "annihilate"]) { await page.click(`#labsHost [data-sms="${k}"]`); if ((await drawn(page, '#labsHost [data-c="sm"]')) && (await page.evaluate(() => document.querySelector('#labsHost [data-c="sm"]').getAttribute("aria-label").length > 40))) scenes++; }
+  scenes === 4 ? ok(n, "four rules draw, each with its description") : fail(n, `${scenes} of 4 rules drew`);
+}, { wait: 7000 });
+
+await visit("a decay chain", `${BASE}#lab=nuclides`, async (page, n) => {
+  await until(page, () => !!document.querySelector('#labsHost [data-nc="1"]'), null, 30000);
+  await page.click('#labsHost [data-nc="1"]');
+  const end = await until(page, () => { const z = document.querySelector('#labsHost [data-nu="z"]'), q = document.querySelector('#labsHost [data-nu="n"]'); return !!z && z.value === "82" && q.value === "126"; }, null, 45000);
+  const said = await page.evaluate(() => (document.querySelector("#labsHost .lb-nchain") || {}).textContent || "");
+  end && /6 alpha/.test(said) && /4 beta/.test(said) ? ok(n, "thorium-232 plays down to lead-208: six alpha decays and four beta") : fail(n, "the thorium chain: " + said.slice(0, 160));
+}, { wait: 7000, skipAxe: true });
+
+for (const code of ["en", "es"]) {
+  await visit(`below the quarks in ${code}`, `${BASE}?lang=${code}#weak`, async (page, n) => {
+    (await until(page, () => !!window.AtomDeep, null, 30000)) ? ok(n, "the deep scenes load when the address points at them") : fail(n, "assets/deep.js did not load");
+    let figs = 0;
+    for (const id of ["deepFields", "deepMass", "deepWeak", "deepOsc", "deepLadder"]) { await page.evaluate((q) => document.getElementById(q).scrollIntoView({ block: "center" }), id); if (await drawn(page, "#" + id)) figs++; }
+    figs === 5 ? ok(n, "five figures draw") : fail(n, `${figs} of 5 figures drew`);
+    const osc = await page.evaluate(() => { const a = AtomDeep.oscillate(0), b = AtomDeep.oscillate(500), sum = b[0] + b[1] + b[2]; return { start: a.map((x) => +x.toFixed(6)), sum: +sum.toFixed(9), tau: +b[2].toFixed(3) }; });
+    osc.start.join() === "0,1,0" && osc.sum === 1 && osc.tau > 0.9 ? ok(n, `neutrino mixing: a muon beam is all muon at the start, the three shares add to one, and it is ${Math.round(osc.tau * 100)} percent tau at 500 km per GeV`) : fail(n, "oscillation: " + JSON.stringify(osc));
+    await page.evaluate(() => document.getElementById("weak").scrollIntoView());
+    (await until(page, () => { const a = document.querySelector(".gauge a.on"); return !!a && a.getAttribute("data-depth") === "weak"; })) ? ok(n, "the depth gauge marks the weak force") : fail(n, "the gauge did not mark the weak force");
+    await page.click("#deepDecay");
+    const said = await page.evaluate(() => document.getElementById("deepDecaySay").textContent);
+    said.length > 40 && (code === "en" ? /proton/.test(said) : /prot[oó]n/.test(said) && !/became/.test(said)) ? ok(n, "the decay button says what happened") : fail(n, "decay caption: " + said.slice(0, 120));
+    const left = await page.evaluate(() => AtomI18N.missing.length);
+    left === 0 ? ok(n, "nothing the scenes ask for is missing from the pack") : fail(n, `${left} strings missing: ${await page.evaluate(() => AtomI18N.missing.slice(0, 5).join(" | "))}`);
+    await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(400);
+  }, { wait: 3000 });
+}
+await visit("particles in es", `${BASE}?lang=es#lab=particles`, async (page, n) => {
+  await until(page, () => document.querySelectorAll("#labsHost [data-smp]").length === 17, null, 30000);
+  for (const id of ["u", "ne", "g", "H"]) await page.click(`#labsHost [data-smp="${id}"]`);
+  for (const k of ["repel", "decay", "color", "annihilate"]) await page.click(`#labsHost [data-sms="${k}"]`);
+  const left = await page.evaluate(() => AtomI18N.missing.length);
+  left === 0 ? ok(n, "the particles, their cards, and the four rules are all in the pack") : fail(n, `${left} strings missing: ${await page.evaluate(() => AtomI18N.missing.slice(0, 6).join(" | "))}`);
+}, { wait: 7000, skipAxe: true });
 
 // a language Atom does not have, and a name every object has: the page stays English and says nothing
 for (const bad of ["xx", "constructor", "ar"]) {
@@ -262,7 +333,7 @@ await visit("storage refused, in es", `${BASE}handout.html?lang=es`, async (page
 await visit("teachers", `${BASE}teachers.html`, async (page, n) => {
   const links = await page.$$eval("main a[href^='./#lab=']", (as) => as.map((a) => a.getAttribute("href")));
   links.length >= 9 ? ok(n, `${links.length} lab links`) : fail(n, `${links.length} lab links`);
-  const unknown = links.map((h) => (/#lab=([a-z]+)/.exec(h) || [])[1]).filter((p) => !/^(build|boxes|molecule|compare|trends|nuclides|hear|pes|sun|math|predict|calc|bench|lessons|you)$/.test(p));
+  const unknown = links.map((h) => (/#lab=([a-z]+)/.exec(h) || [])[1]).filter((p) => !/^(build|boxes|molecule|compare|trends|nuclides|hear|pes|sun|particles|math|predict|calc|bench|lessons|you)$/.test(p));
   unknown.length ? fail(n, "links to labs that do not exist: " + unknown.join(", ")) : ok(n, "every lab link names a real lab");
   (await page.locator("table").count()) >= 2 ? ok(n, "the link table and the standards table") : fail(n, "a table is missing");
 }, { wait: 1500 });
@@ -291,6 +362,29 @@ await visit("teachers in es", `${BASE}teachers.html?lang=es`, async (page, n) =>
 await visit("404", `${BASE}no-such-page`, async (page, n) => {
   (await page.locator("a[href]").count()) > 0 ? ok(n, "the 404 page links home") : fail(n, "no link home");
 }, { allow404: true, skipAxe: false, wait: 500 });
+
+// the time budgets (scripts/budgets.json): the first screen on a slow machine. Chromium only: it is the one engine that can
+// slow its own CPU. First picture is first contentful paint; "table ready" is all 118 squares in the page; "blocked" is the
+// time the main thread was held past 50 ms at a stretch while loading. CI has no graphics card, so frame time only warns.
+if (ENGINE === "chromium" && !(ONLY && !ONLY.test("budget")) && !(SKIP && SKIP.test("budget"))) {
+  const T = JSON.parse(fs.readFileSync(path.join(ROOT, "..", "scripts", "budgets.json"), "utf8")).time, n = "budget";
+  console.log(`\n${n}  ${BASE} at ${T.cpuSlowdown}x CPU`);
+  const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+  await page.addInitScript(() => { window.__b = { long: 0 }; try { new PerformanceObserver((l) => l.getEntries().forEach((e) => { window.__b.long += Math.max(0, e.duration - 50); })).observe({ type: "longtask", buffered: true }); } catch (e) {}
+    const t = setInterval(() => { if (document.querySelectorAll(".pt-el").length === 118) { window.__b.table = performance.now(); clearInterval(t); } }, 10); });
+  const cdp = await page.context().newCDPSession(page); await cdp.send("Emulation.setCPUThrottlingRate", { rate: T.cpuSlowdown });
+  await page.goto(ORIGIN + BASE, { waitUntil: "load" }); await until(page, () => window.__b && window.__b.table > 0, null, 30000); await page.waitForTimeout(1500);
+  const m = await page.evaluate(() => new Promise((res) => { const fcp = (performance.getEntriesByType("paint").find((e) => e.name === "first-contentful-paint") || {}).startTime || 0, gaps = []; let last = 0;
+    const f = (now) => { if (last) gaps.push(now - last); last = now; if (gaps.length < 60 && performance.now() < 60000) requestAnimationFrame(f); else { gaps.sort((a, b) => a - b); res({ fcp, table: window.__b.table, long: window.__b.long, frame: gaps[Math.floor(gaps.length / 2)] || 0 }); } };
+    requestAnimationFrame(f); setTimeout(() => { gaps.sort((a, b) => a - b); res({ fcp, table: window.__b.table, long: window.__b.long, frame: gaps[Math.floor(gaps.length / 2)] || 0 }); }, 8000); }));
+  const r = (x) => Math.round(x);
+  m.fcp > 0 && m.fcp <= T.firstPictureMs ? ok(n, `first picture in ${r(m.fcp)} ms (limit ${T.firstPictureMs})`) : fail(n, `first picture took ${r(m.fcp)} ms, over the ${T.firstPictureMs} ms limit`);
+  m.table > 0 && m.table <= T.tableReadyMs ? ok(n, `all 118 squares in ${r(m.table)} ms (limit ${T.tableReadyMs})`) : fail(n, `the table took ${r(m.table)} ms, over the ${T.tableReadyMs} ms limit`);
+  m.long <= T.blockedMs ? ok(n, `main thread held ${r(m.long)} ms past 50 ms while loading (limit ${T.blockedMs})`) : fail(n, `the main thread was held ${r(m.long)} ms while loading, over the ${T.blockedMs} ms limit`);
+  console.log(`  note ${n}: a frame every ${r(m.frame)} ms at rest on this machine` + (m.frame > T.frameWarnMs ? ` (over ${T.frameWarnMs} ms; a machine without a graphics card draws the sky in software)` : ""));
+  if (m.frame > T.frameWarnMs && process.env.GITHUB_ACTIONS) console.log(`::warning title=Frame time::a frame every ${r(m.frame)} ms on the CI machine, which has no graphics card`);
+  await page.close();
+}
 
 await browser.close();
 server.close();

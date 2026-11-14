@@ -2,6 +2,40 @@
 
 Atom follows [semantic versioning](https://semver.org). The newest release is at the top.
 
+## [2.1.0] - 2026-11-13
+
+Atom goes below the quarks. The website's fall continues through three new drawn scenes (fields, mass, and the weak force) to a ladder that reaches the Planck length; the labs gain the Standard Model; and several places that stood still now move. Underneath, the bar for a release is higher: all three browser engines must pass, the site's weight and loading time have budgets, every page and lab is checked against WCAG 2.2 AA, and Windows signing is ready for a certificate. Version 2.0.0 reached the website but never had a desktop release; this release carries all of it.
+
+### Below the quarks (website)
+- **Fields.** No smaller pieces are found: experiments see the electron and the quarks still acting as points at 4 × 10⁻¹⁹ m. What physics finds instead is fields, drawn here as a rippling sheet with two electrons that trade a photon and turn away. **Add energy** makes a pair, an electron and a positron.
+- **Where mass comes from.** The Higgs field as resistance to a change in motion, not as drag: the same push on a photon, an electron, and a top quark. **Ring the field** makes a Higgs boson (125.13 GeV, found July 4, 2012) that leaves as two photons. The scene also says what the Higgs does not do: it gives a proton's quarks about 9 MeV of its 938.
+- **The force that changes what a thing is.** Beta decay played in time, quark by quark, with the W boson that carries the charge away. Then neutrinos: a beam born as muon neutrinos, with the share of each kind computed from the measured mixing angles as it travels.
+- **A ladder to the Planck length.** From the atom at 10⁻¹⁰ m down to 1.6 × 10⁻³⁵ m: a solid line as far as experiments have looked, a dotted one for the sixteen powers of ten nobody has. Strings and loops are named as ideas that no experiment has confirmed. Three open questions join the list: dark matter, gravity, and why there are three families.
+- Each figure draws only while it is on screen, holds one still frame when reduced motion is on, and says in its caption that it is a drawing of an idea. The depth gauge gains Fields, Mass, and Weak force.
+
+### Particles, a new lab
+- **The Standard Model, under Explore.** Seventeen particles on the usual chart. Pick one for its card: mass, charge, spin, when it was found, which forces it feels, and its antiparticle. Masses and charges are the Particle Data Group's 2026 values.
+- **Four rules, drawn as they happen:** two electrons trade a photon; a W boson turns a neutron into a proton; quarks swap color through a gluon; an electron meets a positron and leaves as two photons of 511 keV.
+- In the website and the desktop apps, in English and Spanish. `#lab=particles` opens it, and the teacher guide lists it.
+
+### Motion
+- **Follow a decay chain** (Nuclides). The four natural series play across the chart of nuclides, one step at a time, each with its half-life: uranium-238 reaches lead-206 after eight alpha decays and six beta. Half-lives are the IAEA's.
+- **Run the experiment** (Electron energies). The spectrum builds the way a detector builds it, one electron at a time.
+- **The table's lenses sweep.** A change of lens crosses the table from left to right in under half a second.
+- **Every element's card draws its origin.** The Origin tab shows how most of the element was made, as a six-second sketch: the Big Bang, a cosmic-ray collision, merging neutron stars, an exploding massive star, a dying low-mass star, an exploding white dwarf, or a laboratory beam.
+
+### For everyone
+- **The title and the readout hold their contrast.** They stand on the moving sky by design. During an element's birth flash their small lines fell as low as 2.65:1; the sky is now quieter behind them, and no line there falls under 4.5:1 (the large title stays above 5:1).
+- **Checked against WCAG 2.2 AA.** Every page and each of the sixteen lab views, in both themes and both languages: one finding, a note on the handout that sat outside any landmark, fixed.
+
+### The bar for a release
+- **Three engines, all required.** Chromium, WebKit, and Firefox must each pass before a push is green or a release is built. A failed check now appears on the run's public page, so a red run can be read without signing in.
+- **The smoke test waits for states.** 2.0.0's first push failed in Chromium and WebKit, and only on the build machines: one check slept 900 ms after a smooth scroll that takes 0.8 s on a fast machine and 1.7 s on one core. Every check that follows an action now waits for the state it tests. 140 checks, passing on four cores and on one.
+- **Budgets.** `scripts/budgets.json` sets limits that fail the build: 215 KB compressed for the first screen (it is 202), 145 KB for the labs, 110 KB for a language's first slice, and, on a page with the CPU slowed four times, 2.5 seconds to the first picture and 4 seconds to all 118 squares. The build machines have no graphics card, so frame time is reported and only warns.
+- **Older Safari and Firefox, checked without running them.** Every script and style sheet was read against the support tables for Safari 16.4 and Firefox 115 and later. The scripts name nothing those browsers lack. The style sheets had one gap: three scrolling strips of tabs (the labs' on a phone, and an element card's) hid their scrollbar with a property Safari learned only in 26.2. They now hide it in older Safari too, and in the Mac app on an older macOS. One legend swatch mixed its color with nothing for a Safari before 16.2 to fall back on; it has a plain color now, and `scripts/check_css.py` fails the build if a mixed color ever lacks one.
+- **Signing.** The release workflow signs the Windows builds when a certificate is present, as it already did for the Mac app, and fails the release if a signature is not valid. [SIGNING.md](SIGNING.md) says what to obtain and where to put it.
+- Six sources join the list: the ATLAS and CMS discovery papers, KATRIN's neutrino-mass limit, ZEUS's limit on the size of a quark, the IAEA's chart of nuclides, and the Royal Swedish Academy's account of the 1968 experiment at SLAC that first saw quarks (the up and down quarks' cards give that year). 3,537 sentences, all in Spanish too.
+
 ## [2.0.0] - 2026-11-11
 
 An overhaul that began with a full audit of 1.7.0 and fixed everything it found. Every sentence Atom shows is now a whole sentence, so Spanish reads as Spanish and the next eighteen languages can; the languages are data, served in pieces; the science and the standards are corrected where the audit caught them out; the learning helps are rebuilt; and the site keeps its shape in a long language on a small screen, online or off. The look and the structure are the ones you know, with one repair you will notice: the labs stand on a solid panel again, as they did in 1.2.

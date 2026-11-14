@@ -698,6 +698,8 @@ html.calm .front-card{animation:none}
 
 /* the card: where it was made, and what it is building */
 .pd-obar{display:flex;height:12px;gap:2px;margin:0 0 8px}
+.pd-ocv{display:block;width:100%;height:132px;margin:4px 0 12px}
+
 .pd-obar i{display:block;height:100%}
 .pd-olist{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:var(--fs-ui);color:var(--ink)}
 .pd-olist i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
@@ -840,13 +842,13 @@ html.calm .front-card{animation:none}
 :root{
   --lb-build:#ffa25c; --lb-predict:#b99cff; --lb-calc:#3fd8c6; --lb-bench:#ffb020; --lb-hear:#ff8fc4; --lb-you:#6fdc9a; --lb-explore:#8fb3ff; --lb-math:#c9e86b; --lb-lessons:#ffd166;
   --lb-p:#ff9a55; --lb-n:#c3ccd8; --lb-e:#6fd3ff;
-  --lb-sub-s:#6fd3ff; --lb-sub-p:#ff9a55; --lb-sub-d:#6fdc9a; --lb-sub-f:#b99cff;   /* the four kinds of subshell, wherever they are drawn */
+  --lb-sub-s:#6fd3ff; --lb-sub-p:#ff9a55; --lb-sub-d:#6fdc9a; --lb-sub-f:#b99cff; --lb-qr:#ff8c8c; --lb-qg:#4fd892; --lb-qb:#89abff;   /* the four kinds of subshell, wherever they are drawn */
   --lb-ok:#5ed69a; --lb-warn:#f5c451; --lb-bad:#ff9eab; --lb-onk:#141005;
 }
 :root[data-theme="light"]{
   --lb-build:#7a3300; --lb-predict:#4b2a91; --lb-calc:#0b5a52; --lb-bench:#643c00; --lb-hear:#8a1840; --lb-you:#1d5e2c; --lb-explore:#1f3f8f; --lb-math:#3e5a00; --lb-lessons:#6b4a00;
   --lb-p:#733000; --lb-n:#33435c; --lb-e:#09467a;
-  --lb-sub-s:#09467a; --lb-sub-p:#733000; --lb-sub-d:#1d5e2c; --lb-sub-f:#4b2a91;
+  --lb-sub-s:#09467a; --lb-sub-p:#733000; --lb-sub-d:#1d5e2c; --lb-sub-f:#4b2a91; --lb-qr:#851a19; --lb-qg:#0b4f2b; --lb-qb:#193f93;
   --lb-ok:#0b4f2c; --lb-warn:#5c4000; --lb-bad:#861826; --lb-onk:#ffffff;
 }
 /* the grounds are the host's: --panel, --panel2, --sunk, --line and --line2
@@ -1095,7 +1097,7 @@ html.calm .front-card{animation:none}
 .lb-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:var(--fs-ui,14px);color:var(--ink2);margin-bottom:8px}
 .lb-legend span{display:inline-flex;align-items:center;gap:6px}
 .lb-legend span::before{content:"";width:14px;height:14px;border-radius:4px;border:2px solid var(--ink3)}
-.lb-legend .l2::before{background:color-mix(in srgb,var(--ink3) 45%,transparent)}
+.lb-legend .l2::before{background:var(--ink3);background:color-mix(in srgb,var(--ink3) 45%,transparent)}
 .lb-legend .l3::before{background:var(--ink3)}
 .lb-mini{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));grid-template-rows:repeat(7,auto) 8px repeat(2,auto);gap:2px;max-width:640px}
 .lb-mini button{--cat:var(--ink3);aspect-ratio:1;min-width:0;padding:0;border-radius:4px;border:1px solid var(--lb-line);background:transparent;
@@ -1131,6 +1133,7 @@ html.calm .front-card{animation:none}
   .lb-tabs [role="tab"]{flex:none;padding:12px}
   .lb-subtabs{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .lb-subtabs button{flex:none}
+  .lb-tabs::-webkit-scrollbar,.lb-subtabs::-webkit-scrollbar{display:none}
   .lb-tray{gap:4px;padding:8px 4px}
   .lb-tok{gap:4px;padding:4px 6px 4px 4px;min-height:40px}
   .lb-tok b{width:28px;height:28px;font-size:var(--fs-ui,14px)}
@@ -1168,8 +1171,8 @@ html.calm .front-card{animation:none}
 .pd-mine span::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--lb-you);box-sizing:border-box}
 .pd-mine span.on::before{background:var(--lb-you)}
 /* ---------------------------------------------------------------- the card's tabs */
-.pd-tabs{position:sticky;top:0;z-index:3;display:flex;gap:4px;margin:16px 0 0;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;
-  overflow-x:auto;scrollbar-width:none}
+.pd-tabs{position:sticky;top:0;z-index:3;display:flex;gap:4px;margin:16px 0 0;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.pd-tabs::-webkit-scrollbar{display:none}
 .pd-tabs [role="tab"]{position:relative;flex:none;min-height:44px;padding:8px 12px;border:0;background:none;color:var(--ink2);font:inherit;
   font-size:var(--fs-ui,14px);font-weight:600;cursor:pointer}
 .pd-tabs [role="tab"]::after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:3px;border-radius:2px;background:var(--acc);transform:scaleX(0);transition:transform .18s var(--ease-out)}
@@ -1447,8 +1450,42 @@ dfn.lb-term[aria-expanded="true"]{text-decoration-style:solid}
 .lb-vocab{border-collapse:collapse;width:100%;font-size:14px}
 .lb-vocab td{padding:6px 10px;border-bottom:1px solid #ccc;vertical-align:top}
 @media (max-width:600px){ .lb-learnset{margin-left:0;width:100%;padding-left:0;padding-top:0} }
+/* ------------------------------------------------------------ Particles (the Standard Model)
+   the chart of seventeen, a card for the one picked, and a stage for four of the rules */
+.lb-sm [data-fam="q"]{--f:var(--lb-sub-f)} .lb-sm [data-fam="l"]{--f:var(--lb-sub-d)} .lb-sm [data-fam="b"]{--f:var(--lb-sub-p)} .lb-sm [data-fam="h"]{--f:var(--lb-sub-s)}
+.lb-smtop{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:20px 32px;align-items:start;margin:12px 0 20px}
+.lb-smgrid{display:grid;grid-template-columns:repeat(5,minmax(56px,84px));gap:6px}
+.lb-smt{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:4px;min-height:66px;padding:6px 8px;border:1px solid var(--lb-line2);border-left:4px solid var(--f);
+  border-radius:var(--lb-r,8px);background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.lb-smt b{font-size:20px;font-weight:700;line-height:1.1}
+.lb-smt span{font-size:12px;line-height:1.15;color:var(--ink2)}
+.lb-smt[aria-pressed="true"]{background:var(--lb-raise);box-shadow:0 0 0 2px var(--f)}
+.lb-smt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (hover:hover){ .lb-smt:hover{border-color:var(--f)} }
+.lb-smt[data-gr="1"]{grid-row:1} .lb-smt[data-gr="2"]{grid-row:2} .lb-smt[data-gr="3"]{grid-row:3} .lb-smt[data-gr="4"]{grid-row:4}
+.lb-smt[data-gc="1"]{grid-column:1} .lb-smt[data-gc="2"]{grid-column:2} .lb-smt[data-gc="3"]{grid-column:3} .lb-smt[data-gc="4"]{grid-column:4} .lb-smt[data-gc="5"]{grid-column:5}
+.lb-smkey{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0 0;font-size:var(--fs-micro,13px);color:var(--ink2)}
+.lb-smkey span::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;background:var(--f)}
+.lb-smcard{min-width:0}
+.lb-smcard h3{display:flex;align-items:center;gap:12px;margin:0 0 8px;font-size:var(--fs-h1,26px);line-height:1.15}
+.lb-smsym{display:inline-grid;place-items:center;min-width:52px;height:52px;padding:0 8px;border:2px solid var(--f);border-radius:var(--lb-r,8px);font-size:24px}
+.lb-smcard p{margin:0 0 8px;max-width:60ch}
+.lb-smfacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px;margin:12px 0;max-width:34em}
+.lb-smfacts dt{font-size:var(--fs-micro,13px);color:var(--ink2)}
+.lb-smfacts dd{margin:0;font-weight:600}
+.lb-stagewrap.sm{min-height:0;height:clamp(240px,32vw,330px)}
+.lb-stagewrap.sm .lb-cv{min-height:0}
+.lb-smsay{margin-top:12px}
+@media (max-width:760px){ .lb-smtop{grid-template-columns:minmax(0,1fr)} .lb-smgrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .lb-smt{min-height:48px;align-items:center;justify-content:center;padding:4px} .lb-smt span{display:none} }
+/* Nuclides: the decay chains */
+.lb-nchainbox{margin-top:16px;padding-top:12px;border-top:1px solid var(--lb-line)}
+.lb-nchainhead{margin:0 0 8px;font-weight:600}
+.lb-nchainbox .lb-note{margin:10px 0 0}
+.lb-nckey{display:inline-block;width:16px;height:3px;margin:0 6px 4px 0;background:var(--lb-build)}
+.lb-nckey.b{background:var(--lb-explore);margin-left:12px}
+.lb-nchain:empty{display:none}
 /* ATOM-LABS-CSS END */
-
 </style>
 </head>
 <body>
@@ -4596,7 +4633,11 @@ var PTable=(function(){
     if(G && AtomGL.selfCheck(QM.YlmReal)>1e-9) G=null;
     if(!G) wrap.classList.add("pt-nogl");
     api.gl=G;
-    var handles=[], bornAt=[], nextZ=1, pop=[], rects=[], dirty=true, visible=true, calm=!!opt.calm, lensW=[];
+    var handles=[], bornAt=[], nextZ=1, pop=[], rects=[], dirty=true, visible=true, calm=!!opt.calm, lensW=[], lensFrom=[], lensAt=[], sweepEnd=0;
+    /* a change of lens crosses the table left to right in under half a second: each square eases from the
+       weight it had to its new one, starting when the sweep reaches it (at once in calm mode) */
+    function lensK(z, now){ var a=lensAt[z]; if(a===undefined||calm) return lensW[z]; var u=(now-a)/260; if(u<=0) return lensFrom[z]; if(u>=1) return lensW[z];
+      u=u*u*(3-2*u); return lensFrom[z]+(lensW[z]-lensFrom[z])*u; }
     for(Z=0;Z<=118;Z++) lensW[Z]=1;
     /* Lenses: the same table read three ways. "shapes" is the orbitals;
        "origin" is where each element was made; "frontier" is what it is
@@ -4604,6 +4645,7 @@ var PTable=(function(){
     api.lens="shapes"; api.filter="";
     api.setLens=function(lens, filter){
       api.lens=lens; api.filter=filter||""; wrap.setAttribute("data-lens",lens);
+      var nowL=performance.now(), xs=rects.filter(function(r){ return r; }).map(function(r){ return r[0]; }), x0=xs.length?Math.min.apply(null,xs):0, x1=xs.length?Math.max.apply(null,xs):1, first=lensW[1]===undefined;
       for(var z=1;z<=118;z++){
         var w=1;
         if(lens==="origin"){ var m=ORIGIN[z-1]; w=filter?Math.max(0.12,Math.min(1,(m[filter]||0)*1.6)):0.55; }
@@ -4612,9 +4654,11 @@ var PTable=(function(){
         var lv=(typeof AtomLabs!=="undefined")?AtomLabs.progress.level(z):0;
         if(lens==="yours") w=[0.12,0.5,0.8,1][lv];
         if(lens==="yours") tiles[z].setAttribute("data-lv",lv); else tiles[z].removeAttribute("data-lv");
-        lensW[z]=w; tiles[z].classList.toggle("pt-dim", w<0.3);
+        var wait=(calm||first||!rects[z])?0:(rects[z][0]-x0)/Math.max(1,x1-x0)*420;
+        lensFrom[z]=first?w:lensK(z,nowL); lensW[z]=w; lensAt[z]=nowL+wait;
+        (function(t,dim){ if(wait<8) t.classList.toggle("pt-dim",dim); else setTimeout(function(){ if(api.lens===lens&&api.filter===(filter||"")) t.classList.toggle("pt-dim",dim); },wait+120); })(tiles[z],w<0.3);
       }
-      dirty=true;
+      sweepEnd=(calm||first)?0:nowL+720; dirty=true;
     };
     for(Z=0;Z<=118;Z++){ pop[Z]=0; }
     /* offsets, not client rects: the table is scaled and slid around by its
@@ -4637,7 +4681,7 @@ var PTable=(function(){
     function paint(z, now, t, anim, th, big){
       var hh=handles[z]; if(!hh) return;
       var r=rects[z], age=calm?1:Math.min(1,(now-bornAt[z])/520), s=big?1+0.16*pop[z]:1, rw=r[2]*s, rh=r[3]*s;
-      var fade=age*age*(3-2*age), fk=(api.focus&&api.focus.z!==z?1-api.focus.k:1)*lensW[z];
+      var fade=age*age*(3-2*age), fk=(api.focus&&api.focus.z!==z?1-api.focus.k:1)*lensK(z,now);
       G.clearRect(r[0]-rw/2,r[1]-rh/2,rw,rh);
       if(fk<=0.01) return;
       G.draw({cloud:hh,rect:[r[0]-rw/2,r[1]-rh/2,rw,rh],yaw:z*0.37+(anim?t*0.16:0),pitch:0.42,
@@ -4662,7 +4706,7 @@ var PTable=(function(){
       var th=opt.theme(), w=api.cw, h=api.ch;
       G.size(w,h,Math.min(window.devicePixelRatio||1,1.5),opt.small?320000:820000);
       var cvw=cv.width, cvh=cv.height; if(cvw!==lastW||cvh!==lastH){ lastW=cvw; lastH=cvh; dirty=true; }
-      if(api.focus) dirty=true;
+      if(api.focus||now<sweepEnd) dirty=true;
       if(dirty){
         dirty=false; G.clear();
         for(z=1;z<=118;z++) if(handles[z]) paint(z,now,t,anim,th,pop[z]>0.004);
@@ -4752,7 +4796,7 @@ var PTable=(function(){
         "<div>"+TT("<span>Compounds</span><b>{u}</b>",{u:(u[3]?esc(u[3]):(e[5]==="ng"?TT("almost none"):TT("none known")))})+"</div>"))+"</div>");
     /* where it was made, and what it is building */
     var om=ORIGIN[Z-1], ks=Object.keys(om).sort(function(a,b){ return om[b]-om[a]; }); o=SEC.origin;
-    o.push("<section class=\"pd-sec pd-origin\">"+"<h3>"+((TT("Where it was made")))+"</h3>"+"<div class=\"pd-obar\" role=\"img\" aria-label=\""+(((ks.map(function(k){ return TT("{pct} percent {kind}",{pct:Math.round(om[k]*100),kind:AtomI18N.low(ORIGIN_KINDS[k].name)}); }).join(", "))))+"\">"+(((ks.map(function(k){ return "<i style=\"flex-basis:"+((((om[k]*100).toFixed(0))))+"%;background:var(--o-"+(((k)))+")\"></i>"; }).join(''))))+"</div>"+"<ul class=\"pd-olist\">"+(((ks.map(function(k){ return "<li>"+"<i style=\"background:var(--o-"+((k))+")\"></i>"+((ORIGIN_KINDS[k].name))+" <b>"+((Math.round(om[k]*100)))+"%</b>"+"</li>"; }).join(''))))+"</ul>"+((((ORIGIN_NOTE[Z]?'<p>'+ORIGIN_NOTE[Z]+'</p>':''))))+"<p class=\"pd-fine\">"+((TT("Approximate shares of the Solar System&rsquo;s supply, after Johnson (2019). Neutron-star mergers stand in for all rapid neutron capture; rare supernovae may make some of it.")))+"</p>"+"</section>");
+    o.push("<section class=\"pd-sec pd-origin\">"+"<h3>"+(((TT("Where it was made"))))+"</h3>"+"<div class=\"pd-obar\" role=\"img\" aria-label=\""+((((ks.map(function(k){ return TT("{pct} percent {kind}",{pct:Math.round(om[k]*100),kind:AtomI18N.low(ORIGIN_KINDS[k].name)}); }).join(", ")))))+"\">"+((((ks.map(function(k){ return "<i style=\"flex-basis:"+((((om[k]*100).toFixed(0))))+"%;background:var(--o-"+(((k)))+")\"></i>"; }).join('')))))+"</div>"+"<canvas class=\"pd-ocv\" data-ok=\""+(ks[0])+"\" role=\"img\" aria-label=\""+(esc(TT("A drawing of how most of it was made: {kind}.",{kind:AtomI18N.low(ORIGIN_KINDS[ks[0]].name)})))+"\">"+"</canvas>"+"<ul class=\"pd-olist\">"+((((ks.map(function(k){ return "<li>"+"<i style=\"background:var(--o-"+((k))+")\"></i>"+((ORIGIN_KINDS[k].name))+" <b>"+((Math.round(om[k]*100)))+"%</b>"+"</li>"; }).join('')))))+"</ul>"+(((((ORIGIN_NOTE[Z]?'<p>'+ORIGIN_NOTE[Z]+'</p>':'')))))+"<p class=\"pd-fine\">"+(((TT("Approximate shares of the Solar System&rsquo;s supply, after Johnson (2019). Neutron-star mergers stand in for all rapid neutron capture; rare supernovae may make some of it."))))+"</p>"+"</section>");
     var fr=FRONTIER[Z-1]; o=SEC.future;
     o.push("<section class=\"pd-sec pd-future\">"+"<h3>"+TT("Building the future")+"</h3>"+((fr[0].length?'<p class="pd-tags">'+fr[0].map(function(t){ return "<span style=\"--tc:var(--t-"+((t))+")\">"+((TECH_KINDS[t].name))+"</span>"; }).join('')+'</p>':''))+"<p>"+(esc(fr[1]))+((fr[3]?" <a class=\"pd-src\" href=\""+(esc(fr[3]))+"\" target=\"_blank\" rel=\"noopener\">"+(TT("Source"))+"</a>":''))+"</p>"+"<div class=\"pd-problem\">"+TT("<span>Open problem</span>")+"<p>"+(esc(fr[2]))+"</p>"+"</div>"+"</section>");
     /* the electrons */
@@ -4794,7 +4838,49 @@ var PTable=(function(){
         return "<button type=\"button\" role=\"tab\" id=\"pdT-"+(((((t[0])))))+"\" data-pdt=\""+(((((t[0])))))+"\" aria-controls=\"pdP-"+(((((t[0])))))+"\" aria-selected=\""+(((((on)))))+"\" tabindex=\""+((((((on?0:-1))))))+"\">"+(((((t[1])))))+"</button>"; }).join(''))))+"</div>"+(((PD_TABS.map(function(t){ return "<div class=\"pd-pane\" role=\"tabpanel\" id=\"pdP-"+(((((t[0])))))+"\" aria-labelledby=\"pdT-"+(((((t[0])))))+"\""+((((((t[0]===pdTab?'':' hidden'))))))+">"+(((((SEC[t[0]].join(""))))))+"</div>"; }).join(''))));
   }
   /* the host calls this once: clicks and arrow keys on the card's tabs */
+  /* the Origin tab's drawing: how most of the element was made, as a six-second loop. Seven small scenes,
+     one for each kind of origin (b the Big Bang, c cosmic rays, n merging neutron stars, m an exploding
+     massive star, l a dying low-mass star, w an exploding white dwarf, h a laboratory). It draws only while
+     it is on screen, and one still frame in calm mode. A sketch of the event, not a simulation of it. */
+  function originAnim(cv){
+    cv.setAttribute("data-on","1"); var g=cv.getContext("2d"), k=cv.getAttribute("data-ok"), t0=performance.now(), vis=false, raf=0, TAU=6.2832;
+    function rnd(i){ var x=Math.sin(i*12.9898)*43758.5453; return x-Math.floor(x); }
+    function dot(x,y,r,a){ g.globalAlpha=Math.max(0,Math.min(1,a)); g.beginPath(); g.arc(x,y,Math.max(0.1,r),0,TAU); g.fill(); }
+    function ring(x,y,r,a,lw){ g.globalAlpha=Math.max(0,Math.min(1,a)); g.lineWidth=lw||2; g.beginPath(); g.arc(x,y,Math.max(0.1,r),0,TAU); g.stroke(); }
+    function clump(x,y,n,r,a){ for(var q=0;q<n;q++){ var an=q*2.4, rr=q?r*0.9*Math.sqrt(q/n)*1.6:0; dot(x+Math.cos(an)*rr,y+Math.sin(an)*rr,r*0.62,a); } }
+    function frame(now){
+      raf=0; if(!cv.isConnected||!vis||document.hidden) return;
+      var calm=document.documentElement.classList.contains("calm")||!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      var b=cv.getBoundingClientRect(), d=Math.min(2,window.devicePixelRatio||1), w=b.width, h=b.height; if(w<2) return;
+      if(cv.width!==Math.round(w*d)||cv.height!==Math.round(h*d)){ cv.width=Math.round(w*d); cv.height=Math.round(h*d); }
+      g.setTransform(d,0,0,d,0,0); g.clearRect(0,0,w,h);
+      var cs=getComputedStyle(cv), c1=cs.getPropertyValue("--o-"+k).trim()||cs.color, u=calm?0.74:((now-t0)/6000)%1, cx=w/2, cy=h/2, R=Math.min(w*0.3,h*0.44), i, an, sp, v;
+      g.fillStyle=c1; g.strokeStyle=c1; g.lineCap="round";
+      if(k==="b"){ dot(cx,cy,(1-u)*12,1-u*1.6); for(i=0;i<70;i++){ an=rnd(i)*TAU; sp=0.2+0.8*rnd(i+50); dot(cx+Math.cos(an)*u*R*2.6*sp,cy+Math.sin(an)*u*R*1.25*sp,1.3+rnd(i+9)*1.5,1-u*0.8); } }
+      else if(k==="c"){ if(u<0.3){ v=u/0.3; g.globalAlpha=1; g.lineWidth=2.5; g.beginPath(); g.moveTo(cx-(1-v)*w*0.5-34,cy); g.lineTo(cx-(1-v)*w*0.5-4,cy); g.stroke(); clump(cx,cy,9,6,1); }
+        else { v=(u-0.3)/0.7; ring(cx,cy,6+v*30,(1-v*3),2); [[-0.7,4],[0.35,3],[2.6,2]].forEach(function(f){ clump(cx+Math.cos(f[0])*v*w*0.36,cy+Math.sin(f[0])*v*h*0.42,f[1],5,1-v*0.7); }); } }
+      else if(k==="n"){ if(u<0.55){ v=u/0.55; var rr=R*1.1*(1-v)+5; an=v*v*38; dot(cx+Math.cos(an)*rr*1.5,cy+Math.sin(an)*rr*0.6,5,1); dot(cx-Math.cos(an)*rr*1.5,cy-Math.sin(an)*rr*0.6,5,1);
+          for(i=1;i<7;i++){ var a2=an-i*0.16; dot(cx+Math.cos(a2)*rr*1.5,cy+Math.sin(a2)*rr*0.6,2.4,0.5-i*0.07); dot(cx-Math.cos(a2)*rr*1.5,cy-Math.sin(a2)*rr*0.6,2.4,0.5-i*0.07); } }
+        else { v=(u-0.55)/0.45; dot(cx,cy,10*(1-v)+3,1-v*0.6); for(i=0;i<64;i++){ an=rnd(i)*TAU; sp=0.25+0.75*rnd(i+31); dot(cx+Math.cos(an)*v*R*2.8*sp,cy+Math.sin(an)*v*R*0.8*sp,1.2+rnd(i+5)*1.6,1-v*0.85); } } }
+      else if(k==="m"){ if(u<0.35) dot(cx,cy,R*0.6*(1+0.03*Math.sin(u*90)),0.85);
+        else if(u<0.45){ v=(u-0.35)/0.1; dot(cx,cy,R*0.6*(1-v)+R*0.07*v,0.9); }
+        else { v=(u-0.45)/0.55; dot(cx,cy,R*0.07,1); ring(cx,cy,R*0.1+v*R*1.9,1-v*0.9,6*(1-v)+1); for(i=0;i<28;i++){ an=i/28*TAU+rnd(i); dot(cx+Math.cos(an)*v*R*2.2*(0.6+0.4*rnd(i)),cy+Math.sin(an)*v*R*1.1*(0.6+0.4*rnd(i)),1.6,1-v); } } }
+      else if(k==="l"){ dot(cx,cy,R*0.34*(1-0.62*u),0.9); for(i=0;i<4;i++){ v=(u+i/4)%1; ring(cx,cy,R*0.36+v*R*1.5,(1-v)*0.75,2.5); } }
+      else if(k==="w"){ var wx=cx-R*0.9, sx=cx+R*1.1+(u>0.6?(u-0.6)*R*1.4:0); ring(sx,cy,R*0.5,0.7,2); dot(sx,cy,R*0.5,0.18);
+        if(u<0.6){ v=u/0.6; for(i=0;i<9;i++){ var s=((i/9)+u*3)%1; dot(sx-R*0.5+(wx-sx+R*0.5)*s,cy-Math.sin(s*3.1416)*R*0.42,2,0.25+0.6*s); } dot(wx,cy,5+v*3,0.7+0.3*v); }
+        else { v=(u-0.6)/0.4; dot(wx,cy,8+v*R*2.3,(1-v)*0.9); ring(wx,cy,8+v*R*2.5,1-v,3); } }
+      else { g.globalAlpha=0.9; g.lineWidth=3; g.beginPath(); g.moveTo(cx,cy-R*0.7); g.lineTo(cx,cy+R*0.7); g.stroke();
+        if(u<0.5){ v=u/0.5; for(i=0;i<5;i++){ var bx=cx-w*0.42+(v+i*0.12)*w*0.42; if(bx<cx-4) dot(bx,cy,3,0.9); } }
+        else { v=(u-0.5)/0.5; ring(cx,cy,4+v*26,1-v*2.5,2); clump(cx+v*w*0.3,cy,12,5,1); if(v>0.6) clump(cx+v*w*0.3+(v-0.6)*60,cy-(v-0.6)*90,2,4,1); } }
+      g.globalAlpha=1; if(!calm) raf=requestAnimationFrame(frame);
+    }
+    function kick(){ if(!raf) raf=requestAnimationFrame(frame); }
+    if(window.IntersectionObserver) new IntersectionObserver(function(es){ vis=es[es.length-1].isIntersecting; if(vis) kick(); }).observe(cv); else { vis=true; kick(); }
+    document.addEventListener("visibilitychange",function(){ if(cv.isConnected) kick(); });
+  }
   function wireDetail(host, onTab){
+    var seekO=function(){ [].forEach.call(host.querySelectorAll("canvas.pd-ocv:not([data-on])"),originAnim); };
+    if(window.MutationObserver) new MutationObserver(seekO).observe(host,{childList:true,subtree:true}); seekO();
     function pick(t,focus){ pdTab=t; [].forEach.call(host.querySelectorAll("[data-pdt]"),function(b){ var on=b.getAttribute("data-pdt")===t; b.setAttribute("aria-selected",on?"true":"false"); b.tabIndex=on?0:-1; if(on&&focus) b.focus(); });
       [].forEach.call(host.querySelectorAll(".pd-pane"),function(p){ p.hidden=p.id!=="pdP-"+t; }); if(onTab) onTab(t); }
     host.addEventListener("click",function(e){ var b=e.target.closest("[data-pdt]"); if(b) pick(b.getAttribute("data-pdt")); });
@@ -4917,7 +5003,7 @@ var AtomWorld=(function(){
 " vec2 px=gl_FragCoord.xy/uScale; px.y=uRes.y-px.y;",
 " vec3 c=vec3(0.);",
 " if(uCos>.001){ vec3 k=cosmos(px); float q=1.;",
-"  if(uQuiet.z>uQuiet.x){ vec2 dq=max(max(uQuiet.xy-px,px-uQuiet.zw),0.); q=mix(.35,1.,smoothstep(0.,72.,length(dq))); }",   /* quieter behind the title and readout */
+"  if(uQuiet.z>uQuiet.x){ vec2 dq=max(max(uQuiet.xy-px,px-uQuiet.zw),0.); q=mix(.16,1.,smoothstep(0.,72.,length(dq))); }",   /* quieter behind the title and readout: at .35 their small lines fell under 4.5:1 while an element's birth flashed (veil20.py) */
 "  c+=(k+birth(px)*.85)*q*uCos; }",
 " if(uLit>.001) c+=lit(px)*uLit;",
 " if(uVac>.001) c+=vac(px)*uVac;",
@@ -6088,6 +6174,35 @@ var AtomLabs=(function(){
     return {k:z>=84?4:(z<v-0.5?2:(z>v+0.5?3:5)), est:true};
   }
 
+  /* ------------------------------------------------------------ the Standard Model's seventeen particles
+     Masses in MeV from the Particle Data Group's Review of Particle Physics, 2026 edition (the quark
+     masses are the running masses PDG quotes; the top's is its direct measurement). q3 is the electric
+     charge in thirds of e; fam is q (quark), l (lepton), b (force carrier), h (Higgs); row and col place
+     it on the usual chart. A neutrino's mass is an upper limit (KATRIN, 2025), so mev is null. */
+  var SMP=[
+    {id:"u", s:"u", fam:"q", row:0, col:0, q3:2, mev:2.16, d:2, spin:"1/2", f:"sew"},
+    {id:"c", s:"c", fam:"q", row:0, col:1, q3:2, mev:1272.9, d:3, spin:"1/2", f:"sew"},
+    {id:"t", s:"t", fam:"q", row:0, col:2, q3:2, mev:172600, d:1, spin:"1/2", f:"sew"},
+    {id:"d", s:"d", fam:"q", row:1, col:0, q3:-1, mev:4.70, d:2, spin:"1/2", f:"sew"},
+    {id:"s", s:"s", fam:"q", row:1, col:1, q3:-1, mev:92.9, d:1, spin:"1/2", f:"sew"},
+    {id:"b", s:"b", fam:"q", row:1, col:2, q3:-1, mev:4186, d:3, spin:"1/2", f:"sew"},
+    {id:"e", s:"e⁻", fam:"l", row:2, col:0, q3:-3, mev:0.51099895, d:3, spin:"1/2", f:"ew"},
+    {id:"mu", s:"μ⁻", fam:"l", row:2, col:1, q3:-3, mev:105.6583755, d:2, spin:"1/2", f:"ew"},
+    {id:"tau", s:"τ⁻", fam:"l", row:2, col:2, q3:-3, mev:1776.93, d:3, spin:"1/2", f:"ew"},
+    {id:"ne", s:"ν", sub:"e", fam:"l", row:3, col:0, q3:0, mev:null, spin:"1/2", f:"w"},
+    {id:"nm", s:"ν", sub:"μ", fam:"l", row:3, col:1, q3:0, mev:null, spin:"1/2", f:"w"},
+    {id:"nt", s:"ν", sub:"τ", fam:"l", row:3, col:2, q3:0, mev:null, spin:"1/2", f:"w"},
+    {id:"g", s:"g", fam:"b", row:0, col:3, q3:0, mev:0, spin:"1", f:"s"},
+    {id:"ph", s:"γ", fam:"b", row:1, col:3, q3:0, mev:0, spin:"1", f:""},
+    {id:"Z", s:"Z", fam:"b", row:2, col:3, q3:0, mev:91187.9, d:2, spin:"1", f:"w"},
+    {id:"W", s:"W", fam:"b", row:3, col:3, q3:3, mev:80362.5, d:2, spin:"1", f:"ew"},
+    {id:"H", s:"H", fam:"h", row:0, col:4, q3:0, mev:125130, d:2, spin:"0", f:"w"}];
+  /* a mass in the unit a physicist would say it in: MeV below 1,000, GeV above */
+  function smMass(p){ if(p.mev===null) return TT("under {n} eV",{n:AtomI18N.N(0.45,2)}); if(p.mev===0) return "0";
+    return p.mev>=1000 ? TT("{n} GeV",{n:AtomI18N.N(p.mev/1000,p.d)}) : TT("{n} MeV",{n:AtomI18N.N(p.mev,p.d)}); }
+  function smSym(p){ return esc(p.s)+(p.sub?"<sub>"+p.sub+"</sub>":""); }
+  function smCharge(p){ var a=Math.abs(p.q3), v=a===0?"0":(a===3?"1":a+"/3"); return p.id==="W"?"±1":(p.q3>0?"+":(p.q3<0?"−":""))+v; }
+
   /* ------------------------------------------------------------ questions
      Each type knows which elements it can ask about (ok), how to pick the
      rest of the question from a random stream (param), and how to build the
@@ -6375,7 +6490,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     /* #lab=math&z=79&step=8: any lab, with what to show in it. Numbers are
        bounded, words are matched against a short list, anything else is dropped */
     var m=/^lab=([a-z]+)(?:&(.*))?$/.exec(h);
-    if(m){ var LABS_OK={build:1,boxes:1,molecule:1,compare:1,trends:1,nuclides:1,hear:1,pes:1,sun:1,math:1,predict:1,calc:1,bench:1,lessons:1,you:1}, a={}, lab=m[1];
+    if(m){ var LABS_OK={build:1,boxes:1,molecule:1,compare:1,trends:1,nuclides:1,hear:1,pes:1,sun:1,particles:1,math:1,predict:1,calc:1,bench:1,lessons:1,you:1}, a={}, lab=m[1];
       if(!LABS_OK[lab]) return null;
       if(lab==="boxes"){ lab="build"; a.boxes=true; }
       a.lab=lab;
@@ -6416,9 +6531,9 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
   /* seven tabs; Explore and Experiment hold more than one lab, on a rail under
      the tabs. A lab is still named by its own id everywhere (show("hear"),
      the "lab:hear" event), whichever tab holds it. */
-  var GROUPS=[["build",TT("Build"),["build"]],["explore",TT("Explore"),["compare","trends","nuclides","hear","pes","sun"]],["math",TT("The math"),["math"]],["predict",TT("Predict"),["predict"]],
+  var GROUPS=[["build",TT("Build"),["build"]],["explore",TT("Explore"),["compare","trends","nuclides","hear","pes","sun","particles"]],["math",TT("The math"),["math"]],["predict",TT("Predict"),["predict"]],
     ["experiment",TT("Experiment"),["calc","bench"]],["lessons",TT("Lessons"),["lessons"]],["you",TT("You"),["you"]]];
-  var PANE_NAME={math:TT("The math"),compare:TT("Compare"),trends:TT("Trends"),nuclides:TT("Nuclides"),hear:TT("Hear"),pes:TT("Electron energies"),sun:TT("The Sun"),calc:TT("Calculate"),bench:TT("Workbench")};
+  var PANE_NAME={math:TT("The math"),compare:TT("Compare"),trends:TT("Trends"),nuclides:TT("Nuclides"),hear:TT("Hear"),pes:TT("Electron energies"),sun:TT("The Sun"),particles:TT("Particles",{}),calc:TT("Calculate"),bench:TT("Workbench")};
   var TABS=[]; GROUPS.forEach(function(g){ g[2].forEach(function(p){ TABS.push([p,PANE_NAME[p]||g[1],g[0]]); }); });
   function groupOf(p){ for(var i=0;i<GROUPS.length;i++) if(GROUPS[i][0]===p||GROUPS[i][2].indexOf(p)>=0) return GROUPS[i]; return null; }
   var GOALS=[
@@ -7037,7 +7152,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       for(z=0;z<=118;z++){ var row=new Uint8Array(201); for(n=0;n<=200;n++){ var c=nclass(z,z+n); row[n]=c.k; if(c.k&&n>mx) mx=n; } M.push(row); }
       NU.map=M; NU.maxN=Math.min(200,mx+2);
     }
-    function nuSet(z,n,follow){ NU.z=Math.max(0,Math.min(118,z)); NU.n=Math.max(0,Math.min(NU.maxN,n)); if(!follow) NU.follow=false; renderNuc(); }
+    function nuSet(z,n,follow){ if(NU.chain&&!NU.chainStep){ NU.chain=null; var cp=pane("nuclides"), cq=cp&&cp.querySelector(".lb-nchain"); if(cq) cq.textContent=""; } NU.z=Math.max(0,Math.min(118,z)); NU.n=Math.max(0,Math.min(NU.maxN,n)); if(!follow) NU.follow=false; renderNuc(); }
     function nuName(z,a){ return z===0?(a===1?TT("a free neutron"):TT("{n} neutrons",{n:a})):isoName(z,a); }
     function renderNuc(){
       var P=pane("nuclides"); if(!P||!built.nuclides) return; var z=NU.z, n=NU.n, a=z+n, k=NU.map[z][n], info=z?nuclide(z,a):nuclide(0,n);
@@ -7076,8 +7191,9 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       label(g,TT("Neutrons →"),G.x0+(NU.maxN+1)*cs/2,h-6,T);
       g.save(); g.translate(14,G.y0-60*cs); g.rotate(-Math.PI/2); label(g,TT("Protons →"),0,0,T); g.restore();
       MAGIC.forEach(function(m){ if(m>=20&&m<=NU.maxN) label(g,String(m),G.x0+m*cs+cs/2,G.y0+16,T); });
+      var chainMoving=drawNucChain(g,G,T,now);
       drawNucZoom();
-      return false;
+      return chainMoving;
     }
     function drawNucZoom(){
       var c=host.querySelector('[data-c="nucz"]'); if(!c||!c.offsetParent) return;
@@ -7102,6 +7218,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       P.addEventListener("click",function(e){ var b=e.target.closest("[data-nx]"); if(!b||b.disabled) return; var k=b.getAttribute("data-nx");
         if(k==="build"){ B.p=NU.z; B.n=NU.n; B.e=NU.z; show("build"); setBMode("atom"); changed(); }
         if(k==="common"&&NU.z>=1) nuSet(NU.z,commonA(NU.z)-NU.z); });
+      nucChainUI(P);
       renderNuc();
     };
     REFRESH.nuclides=function(){ renderNuc(); };
@@ -7262,8 +7379,9 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
          note says so. Every bar first, then every label, so no bar crosses a label. */
       var room=y1-y0-62;
       peaks.forEach(function(p){ var mate=p.l<2&&peaks.some(function(q){ return q!==p&&q.n===p.n&&q.l<2; });
-        p.pair=mate; p.x=X(p.mj)+(mate?(p.l===0?-6:6):0); p.y=y1-room*p.count/mx;
+        p.pair=mate; p.x=X(p.mj)+(mate?(p.l===0?-6:6):0); p.y=y1-room*p.count/mx*peGrow(now,p);
         g.fillStyle=col("sub-"+"spdf"[p.l])||T.ink; g.fillRect(p.x-4,p.y,8,y1-p.y); });
+      peRain(g,peaks,y0,now,T);
       /* a label goes above its bar; if another label is already there it steps aside or up a line */
       var placed=[];
       function put(text,cx,y){ var tw=g.measureText(text).width+8, tries=[[0,0],[8,0],[-8,0],[16,0],[-16,0],[0,-18],[10,-18],[-10,-18],[0,-36]], k, bx, by;
@@ -7277,7 +7395,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
         put(p.name+" ×"+p.count,X(p.mj),topY-8-(p.l===0?18:0)); });
       peaks.filter(function(p){ return hidden||!p.pair; }).forEach(function(p){ put(hidden?String(p.count):p.name+" ×"+p.count,p.x,p.y-8); });
       g.fillStyle=T.ink; label(g,hidden?TT("A mystery element: read its shells, then name it"):nm(z)+": "+configStr(z,true).replace(/<sup>(\d+)<\/sup>/g,function(m0,d){ return supNum(d); }).replace(/<[^>]+>/g,"").replace(/([spdf])(\d+)/g,function(m0,a,d){ return a+supNum(d); }),(x0+x1)/2,y0-14,T);
-      return false;
+      return !!PE.run&&!opt.calm;
     }
     function pesSay(){
       var P=pane("pes"), z=pesZ(), peaks=pesPeaks(z), top=peaks[0], last=peaks[peaks.length-1];
@@ -7300,7 +7418,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
     }
     BUILD.pes=function(P){
       PE.z=PE.z||Z||1;
-      P.innerHTML=(((elDatalist())))+"<div class=\"lb-pes\">"+"<p class=\"lb-note\">"+((TT("Photoelectron spectroscopy: X-rays knock electrons out of the atoms, and each one leaves with the X-ray’s energy minus the energy that held it. Count the electrons by that energy and the shells appear as peaks: one per subshell, as tall as the number of electrons in it, farther left the more tightly they are held. It is how the shell structure of the table was confirmed, and a core skill in AP Chemistry (Topic 1.6).")))+"</p>"+"<div class=\"lb-row\">"+"<label class=\"lb-field\">"+(((TT("Element"))+"<input class=\"lb-input\" data-pz list=\""+((dlId))+"\" autocomplete=\"off\" spellcheck=\"false\">"))+"</label>"+"<button type=\"button\" class=\"lb-btn\" data-pp=\"guess\">"+((TT("Mystery element")))+"</button>"+"<button type=\"button\" class=\"lb-btn ghost\" data-pp=\"follow\" hidden>"+((TT("Follow the table")))+"</button>"+"</div>"+"<div class=\"lb-stagewrap pes\">"+"<canvas class=\"lb-cv\" data-c=\"pes\" role=\"img\" aria-label=\""+((TT("The element’s photoelectron spectrum: one peak per subshell")))+"\">"+"</canvas>"+"</div>"+"<div class=\"lb-pguess\" aria-live=\"polite\">"+"</div>"+"<p class=\"lb-say lb-psay\" aria-live=\"polite\">"+"</p>"+"<p class=\"lb-note\">"+((TT("The energies are Slater’s estimates, the same rule of thumb the rest of Atom uses, so they are only roughly right: closest for the outermost s electrons, a fifth to a half too high for the 1s shell, and two to five times too high for the other inner shells and for outer p electrons (Trends, under Explore, shows that gap). His rules also give the s and p electrons of one shell the same energy, so their two bars stand side by side here; in a measured spectrum they are two separate peaks, with the s peak to the left. Read the pattern: how many peaks, how tall, in what order.")))+"</p>"+"</div>";
+      P.innerHTML=(((elDatalist())))+"<div class=\"lb-pes\">"+"<p class=\"lb-note\">"+((TT("Photoelectron spectroscopy: X-rays knock electrons out of the atoms, and each one leaves with the X-ray’s energy minus the energy that held it. Count the electrons by that energy and the shells appear as peaks: one per subshell, as tall as the number of electrons in it, farther left the more tightly they are held. It is how the shell structure of the table was confirmed, and a core skill in AP Chemistry (Topic 1.6).")))+"</p>"+"<div class=\"lb-row\">"+"<label class=\"lb-field\">"+(((TT("Element"))+"<input class=\"lb-input\" data-pz list=\""+((dlId))+"\" autocomplete=\"off\" spellcheck=\"false\">"))+"</label>"+"<button type=\"button\" class=\"lb-btn\" data-pp=\"guess\">"+((TT("Mystery element")))+"</button>"+"<button type=\"button\" class=\"lb-btn\" data-pp=\"run\">"+((TT("Run the experiment")))+"</button>"+"<button type=\"button\" class=\"lb-btn ghost\" data-pp=\"follow\" hidden>"+((TT("Follow the table")))+"</button>"+"</div>"+"<div class=\"lb-stagewrap pes\">"+"<canvas class=\"lb-cv\" data-c=\"pes\" role=\"img\" aria-label=\""+((TT("The element’s photoelectron spectrum: one peak per subshell")))+"\">"+"</canvas>"+"</div>"+"<div class=\"lb-pguess\" aria-live=\"polite\">"+"</div>"+"<p class=\"lb-say lb-psay\" aria-live=\"polite\">"+"</p>"+"<p class=\"lb-note\">"+((TT("The energies are Slater’s estimates, the same rule of thumb the rest of Atom uses, so they are only roughly right: closest for the outermost s electrons, a fifth to a half too high for the 1s shell, and two to five times too high for the other inner shells and for outer p electrons (Trends, under Explore, shows that gap). His rules also give the s and p electrons of one shell the same energy, so their two bars stand side by side here; in a measured spectrum they are two separate peaks, with the s peak to the left. Read the pattern: how many peaks, how tall, in what order.")))+"</p>"+"</div>";
       var zi=P.querySelector("[data-pz]");
       function setZ(){ var z=zOf(zi.value); if(!z){ if(zi.value.trim()) zi.setAttribute("aria-invalid","true"); return; } PE.follow=false; PE.guess=null; pesRenderGuess(); PE.z=z; REFRESH.pes(); ev("pes:z:"+z); }
       zi.addEventListener("change",setZ); zi.addEventListener("keydown",function(e){ zi.removeAttribute("aria-invalid"); if(e.key==="Enter"){ e.preventDefault(); setZ(); } });
@@ -7313,6 +7431,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
             TT("It was {el}, not {other}. Its peaks, from the left, hold {peaks}: {n} electrons in all.",{z:G.z,other:AtomI18N.theEl(pick),peaks:held,n:G.z});
           if(ok){ var got=Progress.mark("seen",G.z); celebrate(got); } ev("pes:guess:"+(ok?"right":"wrong")); dirty=true; return; }
         if(!p) return; var k=p.getAttribute("data-pp");
+        if(k==="run"){ PE.run=performance.now(); dirty=true; ev("pes:run"); if(opt.calm) toast(TT("With reduced motion on, the finished spectrum is shown at once.")); return; }
         if(k==="guess") pesGuessNew();
         if(k==="follow"){ PE.follow=true; PE.z=Z; REFRESH.pes(); } });
       REFRESH.pes();
@@ -7382,6 +7501,160 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       sunSay();
     };
     REFRESH.sun=function(){ dirty=true; };
+
+    /* ======================================================== Particles (the Standard Model)
+       The seventeen particles on the usual chart, a card for the one you pick,
+       and four of the model's rules drawn as they happen: a photon traded
+       between two electrons, a W turning a neutron into a proton, gluons
+       swapping the colors of quarks, and a particle meeting its antiparticle.
+       The data is SMP in labs-data.js (PDG, 2026 edition). The drawings are
+       diagrams in time, left to right; they are not simulations. */
+    var SM={pick:"e", scene:"repel", t0:0};
+    function smName(id){ return ({u:TT("up quark"),c:TT("charm quark"),t:TT("top quark"),d:TT("down quark"),s:TT("strange quark"),b:TT("bottom quark"),
+      e:TT("electron",{}),mu:TT("muon",{}),tau:TT("tau",{}),ne:TT("electron neutrino"),nm:TT("muon neutrino"),nt:TT("tau neutrino"),
+      g:TT("gluon",{}),ph:TT("photon",{}),Z:TT("Z boson"),W:TT("W boson"),H:TT("Higgs boson")})[id]; }
+    function smSay(id){ return ({
+      u:TT("Two of the three quarks in every proton, and one of the three in every neutron."),
+      d:TT("One of the three quarks in every proton, and two of the three in every neutron."),
+      c:TT("A heavy copy of the up quark, found in 1974 inside a particle called the J/ψ."),
+      s:TT("A heavy copy of the down quark. It turns up in the kaons that cosmic rays make in the air."),
+      t:TT("The heaviest particle known, about as heavy as an atom of tungsten. It decays before it can join anything."),
+      b:TT("A heavier copy of the down quark. Its slow decays let experiments compare matter with antimatter."),
+      e:TT("The particle of chemistry: every bond in every molecule is electrons shared or handed over."),
+      mu:TT("A heavy copy of the electron, 207 times its mass. Cosmic rays send about one a minute through each square centimeter of you."),
+      tau:TT("A heavier copy still, 3,477 times the electron's mass. It lasts 0.29 trillionths of a second."),
+      ne:TT("Made in the Sun's core and in every beta decay. Almost nothing stops it."),
+      nm:TT("Made when cosmic rays strike the air, and in accelerator beams. It can arrive as another kind."),
+      nt:TT("The last of the matter particles to be seen, in 2000 at Fermilab."),
+      g:TT("Carries the strong force between quarks. It feels that force itself, which is why a quark can never be pulled free."),
+      ph:TT("Light. It carries the electromagnetic force and has no mass, so that force reaches any distance."),
+      W:TT("Carries the weak force, and carries charge, so it can turn one kind of particle into another."),
+      Z:TT("Carries the weak force without changing what a particle is. Counting its decays showed there are three kinds of neutrino."),
+      H:TT("A ripple in the Higgs field, the field that gives the other particles their rest mass.")})[id]; }
+    function smFound(id){ return ({u:TT("1968, at SLAC"),d:TT("1968, at SLAC"),s:TT("1947, inside the kaon; understood as a quark in 1964"),c:"1974",b:"1977",t:"1995",
+      e:"1897",mu:"1936",tau:"1975",ne:"1956",nm:"1962",nt:"2000",g:"1979",ph:TT("proposed in 1905, confirmed in 1922"),W:"1983",Z:"1983",H:"2012"})[id]; }
+    function smAnti(p){ if(p.fam==="q") return TT("Its antiparticle has the opposite charge, {q}, and the opposite color.",{q:smCharge({q3:-p.q3})});
+      if(p.fam==="l"&&p.q3) return TT("Its antiparticle has the opposite charge, {q}.",{q:smCharge({q3:-p.q3})});
+      if(p.fam==="l") return TT("Its antiparticle is an antineutrino. Whether the two are really one particle is not known.");
+      if(p.id==="W") return TT("The W⁺ and the W⁻ are each other's antiparticles.");
+      if(p.id==="g") return TT("It comes in eight combinations of color. The antiparticle of a gluon is another gluon.");
+      return TT("It is its own antiparticle."); }
+    function smFeels(p){ var a=[]; if(p.f.indexOf("s")>=0) a.push(TT("the strong force")); if(p.f.indexOf("e")>=0) a.push(TT("electromagnetism",{})); if(p.f.indexOf("w")>=0) a.push(TT("the weak force"));
+      return a.length?TT("Feels {forces}, and gravity.",{forces:AtomI18N.list(a)}):TT("Feels gravity, and none of the three forces of the Standard Model itself."); }
+    function smCard(){ var P=pane("particles"); if(!P) return; var p=SMP.filter(function(x){ return x.id===SM.pick; })[0], box=P.querySelector(".lb-smcard");
+      box.innerHTML="<h3>"+"<span class=\"lb-smsym\" data-fam=\""+(p.fam)+"\" aria-hidden=\"true\">"+(smSym(p))+"</span>"+(esc(AtomI18N.cap(smName(p.id))))+"</h3>"+"<p>"+(esc(smSay(p.id)))+"</p>"+"<dl class=\"lb-smfacts\">"+"<div>"+"<dt>"+(TT("Mass",{}))+"</dt>"+"<dd>"+(esc(smMass(p)))+"</dd>"+"</div>"+"<div>"+"<dt>"+(TT("Charge",{}))+"</dt>"+"<dd>"+(esc(smCharge(p)))+"</dd>"+"</div>"+"<div>"+"<dt>"+(TT("Spin",{}))+"</dt>"+"<dd>"+(p.spin)+"</dd>"+"</div>"+"<div>"+"<dt>"+(TT("Found",{}))+"</dt>"+"<dd>"+(esc(smFound(p.id)))+"</dd>"+"</div>"+"</dl>"+"<p>"+(esc(smFeels(p)))+" "+(esc(smAnti(p)))+"</p>";
+      [].forEach.call(P.querySelectorAll("[data-smp]"),function(b){ b.setAttribute("aria-pressed",b.getAttribute("data-smp")===SM.pick?"true":"false"); }); }
+    var SM_SCENES=["repel","decay","color","annihilate"];
+    function smSceneName(k){ return ({repel:TT("Electrons repel"),decay:TT("A neutron decays"),color:TT("Quarks trade color"),annihilate:TT("Matter meets antimatter")})[k]; }
+    function smSceneSay(k){ return ({
+      repel:TT("Two electrons never touch. One gives off a photon, the other takes it in, and both change course. Every push and pull of electricity and magnetism is photons traded this way."),
+      decay:TT("A down quark in the neutron turns into an up quark by giving off a W⁻, which becomes an electron and an antineutrino. The neutron is now a proton. This is beta decay."),
+      color:TT("Quarks carry a kind of charge called color, drawn here as red, green, and blue. They hold together by trading gluons, and each trade swaps the colors of the two quarks. The three colors always add up to none."),
+      annihilate:TT("An electron and its antiparticle, the positron, meet and are gone. Their mass leaves as two photons of 511 keV each. A PET scan is made from pairs of photons like these.")})[k]; }
+    function smScene(k){ var P=pane("particles"); SM.scene=k; SM.t0=performance.now(); if(!P) return;
+      [].forEach.call(P.querySelectorAll("[data-sms]"),function(b){ b.setAttribute("aria-pressed",b.getAttribute("data-sms")===k?"true":"false"); });
+      P.querySelector(".lb-smsay").textContent=smSceneSay(k);
+      P.querySelector('[data-c="sm"]').setAttribute("aria-label",smSceneName(k)+". "+smSceneSay(k)); dirty=true; }
+    function smWavy(g,x0,y0,x1,y1,amp,waves,ph){ var n=Math.max(12,Math.round(Math.hypot(x1-x0,y1-y0)/3)), dx=x1-x0, dy=y1-y0, L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L;
+      g.beginPath(); for(var i=0;i<=n;i++){ var s=i/n, a=amp*Math.sin(s*waves*6.2832+ph); if(i) g.lineTo(x0+dx*s+nx*a,y0+dy*s+ny*a); else g.moveTo(x0+dx*s+nx*a,y0+dy*s+ny*a); } g.stroke(); }
+    function smCurly(g,x0,y0,x1,y1,r,loops){ var n=loops*14, dx=x1-x0, dy=y1-y0, L=Math.hypot(dx,dy)||1, ux=dx/L, uy=dy/L, nx=-uy, ny=ux;
+      g.beginPath(); for(var i=0;i<=n;i++){ var s=i/n, a=s*loops*6.2832, along=s*L+r*0.9*Math.sin(a)-0, side=r*(Math.cos(a)-1)*-0.5; if(i) g.lineTo(x0+ux*along+nx*side,y0+uy*along+ny*side); else g.moveTo(x0,y0); } g.stroke(); }
+    function smDot(g,x,y,r,c,s,T){ g.fillStyle=c; g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill(); if(s){ g.fillStyle=T.plate; g.font="700 13px Archivo, sans-serif"; g.textAlign="center"; g.textBaseline="middle"; g.fillText(s,x,y+1); g.textBaseline="alphabetic"; } }
+    function drawSM(now){
+      var c=host.querySelector('[data-c="sm"]'); if(!c||!c.offsetParent) return false;
+      var f=fit(c), g=f.g, w=f.w, h=f.h, T=th(); g.clearRect(0,0,w,h); g.font="600 14px Archivo, sans-serif"; g.lineCap="round";
+      var E=col("sub-s"), PH=col("sub-p"), NU=col("sub-d"), POS=col("hear"), QC=[col("qr"),col("qg"),col("qb")], t=(now-SM.t0)/1000, k=SM.scene;
+      var sm=function(a,b,x){ x=Math.min(1,Math.max(0,(x-a)/(b-a))); return x*x*(3-2*x); };
+      if(opt.calm) t=({repel:3.4,decay:6.5,color:1.2,annihilate:4.6})[k];
+      if(k==="repel"){ var u=t%7, p=sm(0.3,4.6,u), vx=w*0.5, A=[[w*0.08,h*0.84],[vx,h*0.64],[w*0.92,h*0.9]], B=[[w*0.08,h*0.16],[vx,h*0.36],[w*0.92,h*0.1]];
+        [A,B].forEach(function(Q){ var q=p<0.5?p*2:1, x=Q[0][0]+(Q[1][0]-Q[0][0])*q, y=Q[0][1]+(Q[1][1]-Q[0][1])*q; g.strokeStyle=E; g.lineWidth=2.5; g.beginPath(); g.moveTo(Q[0][0],Q[0][1]); g.lineTo(x,y);
+          if(p>=0.5){ var q2=(p-0.5)*2; x=Q[1][0]+(Q[2][0]-Q[1][0])*q2; y=Q[1][1]+(Q[2][1]-Q[1][1])*q2; g.lineTo(x,y); } g.stroke(); smDot(g,x,y,7,E); g.fillStyle=T.ink; label(g,"e⁻",x,y+(Q===A?-16:26),T); });
+        var ex=sm(0.42,0.52,p); if(ex>0){ g.globalAlpha=ex*(0.45+0.55*(1-sm(0.6,1,p))); g.strokeStyle=PH; g.lineWidth=2.5; smWavy(g,vx,A[1][1],vx,A[1][1]+(B[1][1]-A[1][1])*ex,6,4,-t*8); g.globalAlpha=1; g.fillStyle=T.ink; label(g,"γ",vx+22,h*0.5+5,T); }
+      } else if(k==="decay"){ var u2=t%9, cx=w*0.18, cy=h*0.5, R=Math.max(26,Math.min(48,h*0.19)), turned=sm(1.4,2.0,u2), vx2=w*0.56, wx=cx+R+4+(vx2-cx-R-4)*sm(1.9,3.2,u2), out=sm(3.2,5.6,u2);
+        g.strokeStyle=T.ink3; g.lineWidth=1.5; g.beginPath(); g.arc(cx,cy,R,0,6.2832); g.stroke();
+        [["u",0],["d",1],[turned>0.5?"u":"d",2]].forEach(function(q,i){ var a=i*2.0944+(opt.calm?0:now/2000); smDot(g,cx+Math.cos(a)*R*0.5,cy+Math.sin(a)*R*0.5,i===2?10*(1+0.5*Math.sin(3.1416*turned)):10,QC[q[1]],q[0],T); });
+        g.fillStyle=T.ink; label(g,turned>0.5?TT("proton",{}):TT("neutron",{}),cx,Math.min(h-8,cy+R+22),T);
+        if(u2>1.9){ g.strokeStyle=PH; g.lineWidth=2.5; g.globalAlpha=1-0.6*sm(5.6,8.4,u2); smWavy(g,cx+R+4,cy,wx,cy,6,Math.max(1,(wx-cx-R)/26),-t*8); g.globalAlpha=1; if(wx-cx>R+50){ g.fillStyle=T.ink; label(g,"W⁻",(cx+R+wx)/2,cy-16,T); } }
+        if(out>0){ var ex2=vx2+(w-vx2-30)*out, ey=cy-h*0.3*out, ny2=cy+h*0.3*out; g.strokeStyle=E; g.lineWidth=2.5; g.beginPath(); g.moveTo(vx2,cy); g.lineTo(ex2,ey); g.stroke(); smDot(g,ex2,ey,6,E);
+          g.strokeStyle=NU; g.setLineDash([6,5]); g.beginPath(); g.moveTo(vx2,cy); g.lineTo(ex2,ny2); g.stroke(); g.setLineDash([]); smDot(g,ex2,ny2,5,NU);
+          if(out>0.5){ g.fillStyle=T.ink; label(g,"e⁻",ex2-18,ey-12,T); label(g,"ν̄",ex2-18,ny2+22,T); } }
+      } else if(k==="color"){ var cx3=w/2, cy3=h/2, R3=Math.min(w,h)*0.3, step=Math.floor(t/1.7), fr=(t/1.7)%1, order=[0,1,2], i3;
+        for(i3=0;i3<step;i3++){ var a3=i3%3, b3=(i3+1)%3, tmp=order[a3]; order[a3]=order[b3]; order[b3]=tmp; }
+        var from=step%3, to=(step+1)%3, pos=[0,1,2].map(function(q){ var a=q*2.0944-1.5708+(opt.calm?0:t*0.25); return [cx3+Math.cos(a)*R3,cy3+Math.sin(a)*R3]; });
+        g.strokeStyle=T.ink3; g.lineWidth=1; g.setLineDash([3,6]); g.beginPath(); g.arc(cx3,cy3,R3+34,0,6.2832); g.stroke(); g.setLineDash([]);
+        var gx=pos[from][0]+(pos[to][0]-pos[from][0])*sm(0.1,0.9,fr), gy=pos[from][1]+(pos[to][1]-pos[from][1])*sm(0.1,0.9,fr);
+        g.strokeStyle=QC[order[from]]; g.lineWidth=2.5; smCurly(g,pos[from][0],pos[from][1],gx,gy,7,Math.max(1,Math.round(Math.hypot(gx-pos[from][0],gy-pos[from][1])/16)));
+        [0,1,2].forEach(function(q){ var ci=order[q]; if(fr>0.9&&(q===from||q===to)) ci=order[q===from?to:from]; smDot(g,pos[q][0],pos[q][1],16,QC[ci],q===2?"d":"u",T); });
+        g.fillStyle=T.ink; label(g,"g",(pos[from][0]+pos[to][0])/2+ (cx3-(pos[from][0]+pos[to][0])/2)*0.35,(pos[from][1]+pos[to][1])/2+(cy3-(pos[from][1]+pos[to][1])/2)*0.35+5,T);
+      } else { var u4=t%8, p4=sm(0.3,3.6,u4), cy4=h*0.5, xl=w*0.08+(w*0.42)*p4, xr=w*0.92-(w*0.42)*p4, gone=sm(3.6,3.9,u4), fly=sm(3.8,7,u4);
+        if(gone<1){ g.globalAlpha=1-gone; g.strokeStyle=E; g.lineWidth=2.5; g.beginPath(); g.moveTo(w*0.08,cy4); g.lineTo(xl,cy4); g.stroke(); smDot(g,xl,cy4,7,E); g.strokeStyle=POS; g.beginPath(); g.moveTo(w*0.92,cy4); g.lineTo(xr,cy4); g.stroke(); smDot(g,xr,cy4,7,POS);
+          g.fillStyle=T.ink; label(g,"e⁻",xl,cy4-16,T); label(g,"e⁺",xr,cy4-16,T); g.globalAlpha=1; }
+        if(u4>3.6){ if(u4<4.6){ g.globalAlpha=1-(u4-3.6); g.strokeStyle=PH; g.lineWidth=2; g.beginPath(); g.arc(w/2,cy4,6+(u4-3.6)*70,0,6.2832); g.stroke(); g.globalAlpha=1; }
+          var dx4=w*0.4*fly, dy4=h*0.34*fly; g.strokeStyle=PH; g.lineWidth=2.5; smWavy(g,w/2,cy4,w/2-dx4,cy4-dy4,6,Math.max(1,dx4/22),-t*10); smWavy(g,w/2,cy4,w/2+dx4,cy4+dy4,6,Math.max(1,dx4/22),-t*10);
+          if(fly>0.35){ g.fillStyle=T.ink; label(g,"γ",w/2-dx4+8,cy4-dy4+26,T); label(g,"γ",w/2+dx4-8,cy4+dy4-14,T); } } }
+      return !opt.calm;
+    }
+    BUILD.particles=function(P){
+      var tiles=SMP.map(function(p){ return "<button type=\"button\" class=\"lb-smt\" data-smp=\""+(p.id)+"\" data-fam=\""+(p.fam)+"\" aria-pressed=\"false\" data-gr=\""+((p.row+1))+"\" data-gc=\""+((p.col+1))+"\"><b>"+(smSym(p))+"</b><span>"+(esc(smName(p.id)))+"</span>"+"</button>"; }).join("");
+      P.innerHTML="<div class=\"lb-sm\">"+"<p class=\"lb-note\">"+TT("Everything on the periodic table is made of three of these: the up quark, the down quark, and the electron. The Standard Model is the whole list, seventeen particles, and the rules for how they push, pull, and change one another. It has passed every test since the 1970s, and it leaves out gravity and dark matter. Pick a particle, then watch four of the rules at work.")+"</p>"+
+        "<div class=\"lb-smtop\">"+"<div>"+"<div class=\"lb-smgrid\" role=\"group\" aria-label=\""+esc(TT("The seventeen particles"))+"\">"+tiles+"</div>"+
+        "<p class=\"lb-smkey\">"+"<span data-fam=\"q\">"+TT("Quarks",{})+"</span>"+"<span data-fam=\"l\">"+TT("Leptons",{})+"</span>"+"<span data-fam=\"b\">"+TT("Force carriers")+"</span>"+"<span data-fam=\"h\">"+TT("Higgs",{})+"</span>"+"</p>"+"</div>"+
+        "<div class=\"lb-smcard\" role=\"status\"></div>"+"</div>"+
+        "<div class=\"lb-subtabs\" role=\"group\" aria-label=\""+esc(TT("A rule to watch"))+"\">"+SM_SCENES.map(function(k){ return "<button type=\"button\" data-sms=\""+(k)+"\" aria-pressed=\"false\">"+(esc(smSceneName(k)))+"</button>"; }).join("")+"</div>"+
+        "<div class=\"lb-stagewrap sm\">"+"<canvas class=\"lb-cv\" data-c=\"sm\" role=\"img\" aria-label=\"\"></canvas>"+"</div>"+
+        "<p class=\"lb-note lb-smsay\" role=\"status\"></p>"+
+        "<p class=\"lb-note\">"+TT("Masses and charges are the Particle Data Group's 2026 values. Each drawing runs in time from left to right and shows what happens, not how often or how fast.")+"</p>"+"</div>";
+      P.addEventListener("click",function(e){ var b=e.target.closest("[data-smp]"), s=e.target.closest("[data-sms]");
+        if(b){ SM.pick=b.getAttribute("data-smp"); smCard(); ev("particle:"+SM.pick); }
+        if(s){ smScene(s.getAttribute("data-sms")); ev("rule:"+SM.scene); } });
+      smCard(); smScene(SM.scene);
+    };
+    REFRESH.particles=function(){ SM.t0=performance.now(); dirty=true; };
+
+    /* ======================================================== motion in the labs that were already here
+       Nuclides: one of the four natural decay series, played across the chart
+       (main branch; half-lives from the IAEA Live Chart of Nuclides). Electron
+       energies: the spectrum built the way a detector builds it, one electron
+       at a time. Both are whole at once in calm mode. */
+    var CHAINS=[
+      [[92,238,4.468,"Gy","a"],[90,234,24.10,"d","b"],[91,234,1.16,"min","b","m"],[92,234,245.5,"ky","a"],[90,230,75.4,"ky","a"],[88,226,1600,"y","a"],[86,222,3.82,"d","a"],[84,218,3.10,"min","a"],
+       [82,214,27.1,"min","b"],[83,214,19.7,"min","b"],[84,214,163.5,"us","a"],[82,210,22.2,"y","b"],[83,210,5.01,"d","b"],[84,210,138.4,"d","a"],[82,206]],
+      [[90,232,14.0,"Gy","a"],[88,228,5.75,"y","b"],[89,228,6.15,"h","b"],[90,228,1.912,"y","a"],[88,224,3.63,"d","a"],[86,220,55.6,"s","a"],[84,216,145,"ms","a"],[82,212,10.62,"h","b"],
+       [83,212,60.55,"min","b"],[84,212,0.294,"us","a"],[82,208]],
+      [[92,235,704,"My","a"],[90,231,25.57,"h","b"],[91,231,32.57,"ky","a"],[89,227,21.77,"y","b"],[90,227,18.7,"d","a"],[88,223,11.43,"d","a"],[86,219,3.96,"s","a"],[84,215,1.78,"ms","a"],
+       [82,211,36.1,"min","b"],[83,211,2.14,"min","a"],[81,207,4.77,"min","b"],[82,207]],
+      [[93,237,2.144,"My","a"],[91,233,26.98,"d","b"],[92,233,159.2,"ky","a"],[90,229,7880,"y","a"],[88,225,14.9,"d","b"],[89,225,9.92,"d","a"],[87,221,4.9,"min","a"],[85,217,32.6,"ms","a"],
+       [83,213,45.6,"min","b"],[84,213,3.71,"us","a"],[82,209,3.23,"h","b"],[83,209,20.1,"EEy","a"],[81,205]]];
+    function chainHL(s){ var d=String(s[2]).indexOf(".")<0?0:String(s[2]).split(".")[1].length, n=AtomI18N.N(s[2],d), u=s[3];
+      return u==="ms"?TT("{n, plural, one {# millisecond} other {# milliseconds}}",{n:n}):u==="us"?TT("{n, plural, one {# microsecond} other {# microseconds}}",{n:n}):
+        u==="EEy"?TT("{n} billion billion years",{n:n}):amount(n,u); }
+    function chainSay(){ var P=pane("nuclides"), C=NU.chain, p=P&&P.querySelector(".lb-nchain"); if(!p||!C) return; var S=CHAINS[C.i], s=S[C.k], last=C.k===S.length-1;
+      if(last){ var na=0, nb=0; S.forEach(function(x){ if(x[4]==="a") na++; if(x[4]==="b") nb++; });
+        p.textContent=TT("The chain ends at {iso}, which is stable. It took {a, plural, one {# alpha decay} other {# alpha decays}} and {b, plural, one {# beta decay} other {# beta decays}} to get here from {start}.",{iso:isoName(s[0],s[1]),a:na,b:nb,start:isoName(S[0][0],S[0][1])}); }
+      else p.textContent=TT("Step {k} of {n}: {iso}, half-life {hl}. It goes by {mode} to {next}.",{k:C.k+1,n:S.length-1,iso:isoName(s[0],s[1])+(s[5]||""),hl:chainHL(s),mode:modeWords(s[4]==="a"?"alpha":"beta-"),next:isoName(S[C.k+1][0],S[C.k+1][1])+(S[C.k+1][5]||"")}); }
+    function chainStart(i){ var S=CHAINS[i]; NU.chain={i:i,k:opt.calm?S.length-1:0,t0:performance.now()}; var s=S[NU.chain.k]; NU.chainStep=true; nuSet(s[0],s[1]-s[0]); NU.chainStep=false; chainSay(); dirty=true; ev("chain:"+i); }
+    /* called by drawNuc after the map: the path so far, alpha steps in one color and beta steps in another; true while it is still moving */
+    function drawNucChain(g,G,T,now){ var C=NU.chain; if(!C) return false; var S=CHAINS[C.i], cs=G.cs, moving=C.k<S.length-1;
+      if(moving&&now-C.t0>950){ C.k++; C.t0=now; var s=S[C.k]; NU.z=s[0]; NU.n=s[1]-s[0]; renderNuc(); chainSay(); moving=C.k<S.length-1; }
+      var pt=function(s){ return [G.x0+(s[1]-s[0])*cs+cs/2, G.y0-s[0]*cs-cs/2]; }, fr=moving?Math.min(1,(now-C.t0)/700):0;
+      g.lineWidth=2.5; g.lineCap="round";
+      for(var k=0;k<=C.k&&k<S.length-1;k++){ var a=pt(S[k]), b=pt(S[k+1]), part=k<C.k?1:fr; if(part<=0) continue;
+        g.strokeStyle=S[k][4]==="a"?col("build"):col("explore"); g.beginPath(); g.moveTo(a[0],a[1]); g.lineTo(a[0]+(b[0]-a[0])*part,a[1]+(b[1]-a[1])*part); g.stroke(); }
+      for(var q=0;q<=C.k;q++){ var c=pt(S[q]); g.fillStyle=T.plate; g.beginPath(); g.arc(c[0],c[1],4,0,6.2832); g.fill(); g.strokeStyle=T.ink; g.lineWidth=1.5; g.stroke(); g.lineWidth=2.5; }
+      return moving; }
+    function nucChainUI(P){ var side=P.querySelector(".lb-side"); if(!side) return;
+      side.insertAdjacentHTML("beforeend","<div class=\"lb-nchainbox\">"+"<p class=\"lb-nchainhead\">"+TT("Follow a decay chain")+"</p>"+"<div class=\"lb-chips\">"+
+        CHAINS.map(function(S,i){ return "<button type=\"button\" data-nc=\""+i+"\">"+esc(AtomI18N.cap(isoName(S[0][0],S[0][1])))+"</button>"; }).join("")+"</div>"+
+        "<p class=\"lb-note\">"+"<span class=\"lb-nckey a\" aria-hidden=\"true\"></span>"+TT("alpha decay: two protons and two neutrons leave")+" "+"<span class=\"lb-nckey b\" aria-hidden=\"true\"></span>"+TT("beta decay: a neutron becomes a proton")+"</p>"+
+        "<p class=\"lb-say lb-nchain\" role=\"status\"></p>"+"</div>");
+      P.addEventListener("click",function(e){ var b=e.target.closest("[data-nc]"); if(b) chainStart(+b.getAttribute("data-nc")); }); }
+
+    /* Electron energies, run: each bar grows as its electrons are counted, a little unevenly, the way counts come in */
+    function peGrow(now,p){ if(!PE.run||opt.calm) return 1; var u=(now-PE.run)/4200; if(u>=1){ PE.run=0; return 1; }
+      return Math.max(0.02,Math.min(1,u*(0.86+0.28*Math.sin(p.mj*9.7+p.l*2.1))+0.05*Math.sin(now*0.011+p.mj*31)*(1-u))); }
+    function peRain(g,peaks,y0,now,T){ if(!PE.run||opt.calm) return; var u=(now-PE.run)/4200;
+      peaks.forEach(function(p,i){ for(var k=0;k<3;k++){ var ph=((now*0.0011*(1+0.13*k)+i*0.37+k*0.31)%1), y=y0+6+(p.y-y0-10)*ph; if(y>=p.y-3) continue;
+        g.globalAlpha=(1-u)*0.9; g.fillStyle=col("e"); g.beginPath(); g.arc(p.x+(k-1)*2,y,2.2,0,6.2832); g.fill(); } }); g.globalAlpha=1; }
 
     /* ======================================================== The math */
     /* Ten steps through the atom you pick, from the outside in, each with the
@@ -8392,7 +8665,7 @@ function subNum(n){ return String(n).split("").map(function(c){ return "₀₁�
       if(!dirty&&!anim) return;
       dirty=false;
       anim=cur==="build"?(bmode==="atom"?drawBuild(now):(bmode==="molecule"?drawMol(now):false)):(cur==="calc"?drawCalc(now):(cur==="hear"?drawHear(now):
-        (cur==="trends"?drawTrend(now):(cur==="nuclides"?drawNuc(now):(cur==="math"?drawMath(now):(cur==="pes"?drawPes(now):(cur==="sun"?drawSun(now):false)))))));
+        (cur==="trends"?drawTrend(now):(cur==="nuclides"?drawNuc(now):(cur==="math"?drawMath(now):(cur==="pes"?drawPes(now):(cur==="sun"?drawSun(now):(cur==="particles"?drawSM(now):false))))))));
     };
     api.show=function(t,z){ if(z) api.setElement(z); if(t==="compare"&&z){ CMP.a=z; if(!CMP.b||CMP.b===z) CMP.b=partner(z); CMP.follow=true; } show(t||cur); };
     /* the table picked an element: the labs follow it, except where you chose
@@ -8504,7 +8777,11 @@ function selfTest(){
     t("labs: an ion loses its outermost electrons first (Fe²⁺ is [Ar] 3d⁶, Cu⁺ is [Ar] 3d¹⁰)", fe2==="[Ar] 3d⁶"&&cu1==="[Ar] 3d¹⁰", fe2+" / "+cu1);
     var ch=challengeParse(challengeMake([1,6,8,26],10,["n","q","c","b"],12345)), k1=challengeKeys(ch).join("|"), k2=challengeKeys(challengeParse(ch.code)).join("|");
     t("labs: a challenge code rebuilds the same questions", !!ch&&k1===k2&&challengeKeys(ch).length===10&&challengeKeys(ch).every(function(x){ return !!makeQ(x); }), k1);
-    t("labs: half-lives in the presets parse (5700 y, 1.248 Gy, 24 110 y)", Math.abs(halfLifeSeconds("5700 y")/31557600-5700)<1e-6&&Math.abs(halfLifeSeconds("1.248 Gy")/31557600e9-1.248)<1e-9&&Math.abs(halfLifeSeconds("24 110 y")/31557600-24110)<1e-6, "half-life text misread");
+    (function(){ var q=function(id){ return SMP.filter(function(p){ return p.id===id; })[0].q3; }, n=function(f){ return SMP.filter(function(p){ return p.fam===f; }).length; };
+    t("particles: seventeen in all (6 quarks, 6 leptons, 4 force carriers, the Higgs); two ups and a down add up to +1, an up and two downs to 0, and beta decay keeps the charge (d = u + W⁻)",
+      SMP.length===17&&n("q")===6&&n("l")===6&&n("b")===4&&n("h")===1&&2*q("u")+q("d")===3&&q("u")+2*q("d")===0&&q("d")===q("u")-q("W")&&
+      SMP.every(function(p){ return p.mev===null||p.mev>=0; })&&smCharge({q3:2})==="+2/3"&&smCharge({q3:-1})==="−1/3"&&smCharge({q3:-3})==="−1"); })();
+  t("labs: half-lives in the presets parse (5700 y, 1.248 Gy, 24 110 y)", Math.abs(halfLifeSeconds("5700 y")/31557600-5700)<1e-6&&Math.abs(halfLifeSeconds("1.248 Gy")/31557600e9-1.248)<1e-9&&Math.abs(halfLifeSeconds("24 110 y")/31557600-24110)<1e-6, "half-life text misread");
     /* Explore and the molecule builder */
     var mis=[];
     for(var z=1;z<=118;z++) for(var a=z;a<=z+200;a++){ var nk=nclass(z,a).k, kind=nuclide(z,a).kind; if((nk===0)!==(kind==="unbound")||(nk===1)!==(kind==="stable")) mis.push(z+"-"+a); }
@@ -10032,6 +10309,7 @@ var ATOM_SOURCES = [
   TT("Aliberti, R., et al. (2025). The anomalous magnetic moment of the muon in the Standard Model: An update. <i>Physics Reports, 1143</i>, 1–158. https://doi.org/10.1016/j.physrep.2025.08.002"),
   TT("Allred, A. L. (1961). Electronegativity values from thermochemical data. <i>Journal of Inorganic and Nuclear Chemistry, 17</i>(3–4), 215–221. https://doi.org/10.1016/0022-1902(61)80142-5"),
   TT("Anderson, E. K., et al. (ALPHA Collaboration). (2023). Observation of the effect of gravity on the motion of antimatter. <i>Nature, 621</i>, 716–722. https://doi.org/10.1038/s41586-023-06527-1"),
+  TT("ATLAS Collaboration. (2012). Observation of a new particle in the search for the Standard Model Higgs boson with the ATLAS detector at the LHC. <i>Physics Letters B, 716</i>(1), 1–29. https://doi.org/10.1016/j.physletb.2012.08.020"),
   TT("Bali, G. S., Neff, H., Düssel, T., Lippert, T., &amp; Schilling, K. (2005). Observation of string breaking in QCD. <i>Physical Review D, 71</i>(11), 114513. https://doi.org/10.1103/PhysRevD.71.114513"),
   TT("Ball, R. D., et al. (NNPDF Collaboration). (2022). Evidence for intrinsic charm quarks in the proton. <i>Nature, 608</i>, 483–487. https://doi.org/10.1038/s41586-022-04998-2"),
   TT("BESIII Collaboration. (2024). Determination of spin-parity quantum numbers of X(2370) as 0⁻⁺ from J/ψ → γK⁰<sub>S</sub>K⁰<sub>S</sub>η′. <i>Physical Review Letters, 132</i>(18), 181901. https://doi.org/10.1103/PhysRevLett.132.181901"),
@@ -10039,6 +10317,7 @@ var ATOM_SOURCES = [
   TT("Bohr, N. (1913). On the constitution of atoms and molecules. <i>Philosophical Magazine, 26</i>(151), 1–25. https://doi.org/10.1080/14786441308634955"),
   TT("Bullis, R. G., et al. (2026). Precision spectroscopy of 2S–nS transitions in atomic hydrogen: A determination of the proton charge radius. <i>Physical Review Letters</i>. https://doi.org/10.1103/lgl2-6cb8"),
   TT("Burkert, V. D., Elouadrhiri, L., &amp; Girod, F. X. (2018). The pressure distribution inside the proton. <i>Nature, 557</i>, 396–399. https://doi.org/10.1038/s41586-018-0060-z"),
+  TT("CMS Collaboration. (2012). Observation of a new boson at a mass of 125 GeV with the CMS experiment at the LHC. <i>Physics Letters B, 716</i>(1), 30–61. https://doi.org/10.1016/j.physletb.2012.08.021"),
   TT("Cochran, T. A., et al. (2025). Visualizing dynamics of charges and strings in (2 + 1)D lattice gauge theories. <i>Nature, 642</i>, 315–320. https://doi.org/10.1038/s41586-025-08999-9"),
   TT("Cordero, B., Gómez, V., Platero-Prats, A. E., Revés, M., Echeverría, J., Cremades, E., Barragán, F., &amp; Alvarez, S. (2008). Covalent radii revisited. <i>Dalton Transactions</i>, (21), 2832–2838. https://doi.org/10.1039/b801115j"),
   TT("de Broglie, L. (1925). Recherches sur la théorie des quanta. <i>Annales de Physique, 10</i>(3), 22–128. https://doi.org/10.1051/anphys/192510030022"),
@@ -10050,10 +10329,13 @@ var ATOM_SOURCES = [
   TT("González-Cuadra, D., et al. (2025). Observation of string breaking on a (2 + 1)D Rydberg quantum simulator. <i>Nature, 642</i>, 321–326. https://doi.org/10.1038/s41586-025-09051-6"),
   TT("Greiner, W., Müller, B., &amp; Rafelski, J. (1985). <i>Quantum electrodynamics of strong fields</i>. Springer. https://doi.org/10.1007/978-3-642-82272-8"),
   TT("Huang, B., Yan, G., Xiao, Q., et al. (2026). A nuclear clock synchronized to ²²⁹Th. <i>Nature</i>. https://doi.org/10.1038/s41586-026-11122-1"),
+  TT("International Atomic Energy Agency. (n.d.). Live chart of nuclides: Nuclear structure and decay data. Retrieved November 13, 2026, from https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html"),
   TT("Jaffe, A., &amp; Witten, E. (n.d.). <i>Quantum Yang–Mills theory</i> [Millennium Prize problem description]. Clay Mathematics Institute. https://www.claymath.org/millennium/yang-mills-the-maths-gap/"),
+  TT("Jarlskog, G., &amp; Jarlskog, C. (1990). <i>The Nobel Prize in Physics 1990: Illustrated presentation</i>. The Royal Swedish Academy of Sciences. https://www.nobelprize.org/prizes/physics/1990/9592-the-nobel-prize-in-physics-1990/"),
   TT("Ji, X., Yuan, F., &amp; Zhao, Y. (2021). What we know and what we don't know about the proton spin after 30 years. <i>Nature Reviews Physics, 3</i>, 27–38. https://doi.org/10.1038/s42254-020-00248-4"),
   TT("Jimenez, J. (2014). <i>Next generation post processing in Call of Duty: Advanced Warfare</i> [Conference talk]. SIGGRAPH 2014 Advances in Real-Time Rendering in Games course, Vancouver, BC, Canada. https://advances.realtimerendering.com/s2014/"),
   TT("Johnson, R. D., III (Ed.). (2022). <i>NIST computational chemistry comparison and benchmark database</i> (NIST Standard Reference Database 101, Release 22) [Data set]. National Institute of Standards and Technology. https://doi.org/10.18434/T47C7Z"),
+  TT("KATRIN Collaboration. (2025). Direct neutrino-mass measurement based on 259 days of KATRIN data. <i>Science, 388</i>(6743), 180–185. https://arxiv.org/abs/2406.13516"),
   TT("Kramida, A., Ralchenko, Yu., Reader, J., &amp; NIST ASD Team. (2024). <i>NIST Atomic Spectra Database</i> (Version 5.12) [Data set]. National Institute of Standards and Technology. https://doi.org/10.18434/T4W30F"),
   TT("Larmor, J. (1897). A dynamical theory of the electric and luminiferous medium. Part III. <i>Philosophical Transactions of the Royal Society of London. Series A, 190</i>, 205–300. https://doi.org/10.1098/rsta.1897.0020"),
   TT("Maisenbacher, L., et al. (2026). Sub-part-per-trillion test of the Standard Model with atomic hydrogen. <i>Nature</i>. https://doi.org/10.1038/s41586-026-10124-3"),
@@ -10080,6 +10362,7 @@ var ATOM_SOURCES = [
   TT("Yang, Y.-B., et al. (2018). Proton mass decomposition from the QCD energy momentum tensor. <i>Physical Review Letters, 121</i>(21), 212001. https://doi.org/10.1103/PhysRevLett.121.212001"),
   TT("Yue, A. T., et al. (2013). Improved determination of the neutron lifetime. <i>Physical Review Letters, 111</i>(22), 222501. https://doi.org/10.1103/PhysRevLett.111.222501"),
   TT("Yukawa, H. (1935). On the interaction of elementary particles. I. <i>Proceedings of the Physico-Mathematical Society of Japan, 17</i>, 48–57. https://doi.org/10.11429/ppmsj1919.17.0_48"),
+  TT("ZEUS Collaboration. (2016). Limits on the effective quark radius from inclusive ep scattering at HERA. <i>Physics Letters B, 757</i>, 468–472. https://arxiv.org/abs/1604.01280"),
   TT("Zhang, C., et al. (2024). Frequency ratio of the ²²⁹ᵐTh nuclear isomeric transition and the ⁸⁷Sr atomic clock. <i>Nature, 633</i>, 63–70. https://doi.org/10.1038/s41586-024-07839-6")
 ];
 

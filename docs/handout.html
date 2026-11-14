@@ -37,7 +37,7 @@
   .lang-note{margin:0;padding:8px 12px;max-width:16em;color:var(--ink2);font:500 13px/1.35 "Archivo",sans-serif;white-space:normal}
   /* the page's own words wait, unseen, until they are in the reader's language */
   html.i18n-wait [data-i]{visibility:hidden}
-  .tools{max-width:52rem;margin:18px auto 0;padding:0 24px;display:flex;gap:12px;align-items:center;color:var(--ink3);font-size:14px}
+  .tools{flex:1 1 100%;margin:4px 0 0;color:var(--ink3);font-size:14px}   /* inside the header, so it sits in a landmark */
   .btn{display:inline-block;background:var(--acc);color:var(--onacc);font-weight:700;text-decoration:none;padding:10px 16px;border:0;font:inherit;font-weight:700;cursor:pointer}
   .sheet{max-width:52rem;margin:16px auto 60px;padding:28px 32px;background:var(--bg2);border:1px solid var(--line)}
   .top{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px}
@@ -71,8 +71,8 @@
   <a data-i class="wordmark" href="./">Atom</a>
   <nav data-i-attr="aria-label" aria-label="Atom"><a data-i href="./">The table</a><a data-i href="./#labs">Labs</a><a data-i href="teachers.html">Teachers</a><a data-i href="app/">The app</a></nav>
   <span id="langHost"></span>
+  <p data-i class="tools">One page. Print it as it is, or switch the language in the top bar first.</p>
 </header>
-<p data-i class="tools">One page. Print it as it is, or switch the language in the top bar first.</p>
 <main class="sheet" id="main">
   <div class="top">
     <div>
