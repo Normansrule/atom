@@ -75,8 +75,8 @@ const fail = (where, what) => { failures.push(`${where}: ${what}`); console.log(
 const until = (page, fn, arg, ms = 15000) => page.waitForFunction(fn, arg, { timeout: ms }).then(() => true, () => false);
 // the worker is told which language files this reader uses and fetches them itself: offline is fair to ask for once they are kept
 // a 2D canvas has been drawn on: more than one color among a few hundred sampled pixels
-const drawn = (page, sel) => until(page, (q) => { const c = document.querySelector(q); if (!c || !c.width) return false; const g = c.getContext("2d"), d = g.getImageData(0, 0, c.width, c.height).data, seen = new Set();
-  for (let i = 0; i < d.length; i += 4 * Math.max(1, Math.floor(d.length / 4 / 600))) seen.add(d[i] + "," + d[i + 1] + "," + d[i + 2] + "," + d[i + 3]); return seen.size > 1; }, sel);
+const drawn = (page, sel, ms) => until(page, (q) => { const c = document.querySelector(q); if (!c || !c.width) return false; const g = c.getContext("2d"), d = g.getImageData(0, 0, c.width, c.height).data, seen = new Set();
+  for (let i = 0; i < d.length; i += 4 * Math.max(1, Math.floor(d.length / 4 / 600))) seen.add(d[i] + "," + d[i + 1] + "," + d[i + 2] + "," + d[i + 3]); return seen.size > 1; }, sel, ms);
 const packsKept = (page) => until(page, async () => { const f = AtomI18N.packFiles(); if (!f.length) return true;
   for (const k of await caches.keys()) { const c = await caches.open(k); if ((await Promise.all(f.map((u) => c.match(u)))).every(Boolean)) return true; } return false; });
 const ok = (where, what) => console.log(`  ok   ${where}: ${what}`);
@@ -345,9 +345,15 @@ await visit("a decay chain", `${BASE}#lab=nuclides`, async (page, n) => {
 for (const code of ["en", "es"]) {
   await visit(`below the quarks in ${code}`, `${BASE}?lang=${code}#weak`, async (page, n) => {
     (await until(page, () => !!window.AtomDeep, null, 30000)) ? ok(n, "the deep scenes load when the address points at them") : fail(n, "assets/deep.js did not load");
-    let figs = 0;
-    for (const id of ["deepFields", "deepMass", "deepWeak", "deepOsc", "deepLadder"]) { await page.evaluate((q) => document.getElementById(q).scrollIntoView({ block: "center" }), id); if (await drawn(page, "#" + id)) figs++; }
-    figs === 5 ? ok(n, "five figures draw") : fail(n, `${figs} of 5 figures drew`);
+    // A figure draws only while it is on screen. The page scrolls smoothly and its scenes are pinned, so a request to scroll made
+    // while an earlier scroll is still under way can stop far short of the figure, which then never draws: about one run in ten
+    // here, and the one failure of 2.3.0's first run on CI. So the test goes to each figure at once, asks again if it has not
+    // drawn, and names the one that did not. Each figure is now on screen when it is judged, not drawn earlier in passing.
+    const missed = [];
+    for (const id of ["deepFields", "deepMass", "deepWeak", "deepOsc", "deepLadder"]) { let got = false;
+      for (let k = 0; k < 6 && !got; k++) { await page.evaluate((q) => document.getElementById(q).scrollIntoView({ block: "center", behavior: "instant" }), id); got = await drawn(page, "#" + id, 2500); }
+      if (!got) missed.push(await page.evaluate((q) => { const c = document.getElementById(q), r = c.getBoundingClientRect(); return `${q} (its top is at ${Math.round(r.top)} px of a ${innerHeight} px window; canvas ${c.width} by ${c.height})`; }, id)); }
+    !missed.length ? ok(n, "five figures draw") : fail(n, `${5 - missed.length} of 5 figures drew; not ${missed.join(", ")}`);
     const osc = await page.evaluate(() => { const a = AtomDeep.oscillate(0), b = AtomDeep.oscillate(500), sum = b[0] + b[1] + b[2]; return { start: a.map((x) => +x.toFixed(6)), sum: +sum.toFixed(9), tau: +b[2].toFixed(3) }; });
     osc.start.join() === "0,1,0" && osc.sum === 1 && osc.tau > 0.9 ? ok(n, `neutrino mixing: a muon beam is all muon at the start, the three shares add to one, and it is ${Math.round(osc.tau * 100)} percent tau at 500 km per GeV`) : fail(n, "oscillation: " + JSON.stringify(osc));
     await page.evaluate(() => document.getElementById("weak").scrollIntoView());
