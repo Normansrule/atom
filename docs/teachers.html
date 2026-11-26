@@ -4,22 +4,39 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title data-i>Atom for teachers: assign any lab in one link</title>
-<meta name="description" data-i-attr="content" content="How to use Atom in a chemistry or physics class: a link for every lab, step, and element; worksheets with answer keys; turn-in codes; five lesson paths with exit checks; Spanish and reading supports; and a map to NGSS and AP Chemistry.">
+<meta name="description" data-i-attr="content" content="How to use Atom in a chemistry or physics class: a link for every lab, step, and element; worksheets with answer keys; turn-in codes; five lesson paths with exit checks; eleven languages and reading supports; and a map to NGSS and AP Chemistry.">
 <link rel="canonical" href="https://normansrule.github.io/atom/teachers.html">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-g37sXJHiSQfTwgVYRhIeYrKkxyvKxtzneVtLvTS4uDs='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <link rel="icon" href="assets/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+<!-- The theme a reader chose on the table holds here too. This is the same inline script as index.html, byte for
+     byte, so the one hash in the policy above covers it: change one and you must change both. -->
+<script>
+  /* theme before first paint, so a light-table visitor never sees the chamber flash */
+  (function(){ var t=null; try{ t=localStorage.getItem("atom.site.theme"); }catch(e){}
+    if(!t) t=(window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark";
+    document.documentElement.setAttribute("data-theme", t);
+    if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("calm");
+  })();
+</script>
 <script src="assets/atom-i18n.js" data-pack="site"></script>
 <style>
   @font-face{font-family:"Archivo";src:url(assets/fonts/archivo-var.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
-  :root{color-scheme:dark light;--bg:#0b0c0d;--bg2:#141618;--line:#2b3034;--ink:#f2f3f1;--ink2:#c9ced2;--ink3:#8d959b;--acc:#ffb020;--onacc:#141005;--link:#8fd3ff}
-  @media (prefers-color-scheme:light){:root{--bg:#f3f1ec;--bg2:#ffffff;--line:#d9d4c9;--ink:#101312;--ink2:#2f3633;--ink3:#5c655f;--acc:#643c00;--onacc:#ffffff;--link:#0b4f8a}}
+  :root{color-scheme:dark;--bg:#0b0c0d;--bg2:#141618;--line:#2b3034;--ink:#f2f3f1;--ink2:#c9ced2;--ink3:#8d959b;--acc:#ffb020;--onacc:#141005;--link:#8fd3ff}
+  /* the theme chosen on the table (data-theme, set by the script above); without it, the system's */
+  :root[data-theme="light"]{color-scheme:light;--bg:#f3f1ec;--bg2:#ffffff;--line:#d9d4c9;--ink:#101312;--ink2:#2f3633;--ink3:#5c655f;--acc:#643c00;--onacc:#ffffff;--link:#0b4f8a}
+  @media (prefers-color-scheme:light){:root:not([data-theme]){color-scheme:light;--bg:#f3f1ec;--bg2:#ffffff;--line:#d9d4c9;--ink:#101312;--ink2:#2f3633;--ink3:#5c655f;--acc:#643c00;--onacc:#ffffff;--link:#0b4f8a}}
+  .skip{position:absolute;left:24px;top:-80px;z-index:100;background:var(--acc);color:var(--onacc);padding:12px 16px;font-weight:650;text-decoration:none}
+  .skip:focus{top:12px}
   html{background:var(--bg)}
   body{margin:0;color:var(--ink);font:17px/1.55 "Archivo",system-ui,-apple-system,sans-serif}
-  header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:14px 24px;border-bottom:1px solid var(--line)}
-  header nav{display:flex;flex-wrap:wrap;gap:4px 16px;min-width:0}
+  header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;box-sizing:border-box;min-height:64px;padding:12px clamp(20px,5vw,80px)}   /* the table's own bar: the same height, the wordmark at the same place, no rule under it */
+  header nav{display:flex;flex-wrap:wrap;gap:0 16px;min-width:0}
+  header nav a{display:inline-flex;align-items:center;min-height:40px}
+  @media (pointer:coarse){ header nav a,.lang-sum{min-height:44px} }
   .wordmark{font-weight:300;font-stretch:125%;font-size:22px;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
   header nav a{color:var(--ink2);text-decoration:none}
   header nav a:hover,header nav a:focus-visible{color:var(--ink)}
@@ -65,11 +82,61 @@
   .btn{display:inline-block;background:var(--acc);color:var(--onacc);font-weight:700;text-decoration:none;padding:12px 20px;margin:8px 8px 0 0}
   .fine{font-size:14.5px;color:var(--ink3)}
   @media print{ header{display:none} body{font-size:12pt} .act{break-inside:avoid} a{color:inherit} }
+  /* display options: the Aa menu beside the language. More contrast and wider text spacing are attributes on <html>. */
+  .disp-menu{position:relative;display:inline-block;margin-inline-start:6px}
+  .disp-list{padding:4px;min-width:min(19em,80vw);white-space:normal}
+  .disp-li{display:none;border-bottom:1px solid var(--line)}
+  @media (max-width:640px){.disp-menu{display:none}.disp-li{display:block}.lang-menu .lang-sum::after{content:"Aa";margin-inline-start:7px;padding-inline-start:7px;border-inline-start:1px solid var(--line);letter-spacing:0}}
+  .disp-list button{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:center;width:100%;min-height:44px;padding:8px;border:0;background:none;color:var(--ink);font:500 15px/1.25 "Archivo",sans-serif;letter-spacing:0;text-align:start;cursor:pointer}
+  .disp-list button::before{content:"";grid-row:1/3;width:36px;height:20px;border:2px solid var(--ink2);border-radius:12px;background:radial-gradient(circle at 10px 50%,var(--ink2) 6px,transparent 6.5px)}
+  .disp-list button[aria-checked="true"]::before{border-color:var(--acc);background:radial-gradient(circle at 26px 50%,var(--onacc,#141005) 6px,transparent 6.5px) var(--acc)}
+  .disp-list button b{font-weight:600}
+  .disp-list button small{grid-column:2;color:var(--ink2);font:400 13px/1.35 "Archivo",sans-serif}
+  .disp-list button:hover{background:rgba(127,127,127,.2)}
+  .disp-list button:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+  :root[data-contrast="more"]{--ink:#fff;--ink2:#f1f3f2;--ink3:#dfe3e1;--line:#98a1a8;--line2:#c8cfd4;--veil:var(--bg)}
+  :root[data-theme="light"][data-contrast="more"]{--ink:#000;--ink2:#0e1110;--ink3:#1f2422;--line:#59625d;--line2:#2c3330;--veil:var(--bg)}
+  :root[data-contrast="more"] p a,:root[data-contrast="more"] li a,:root[data-contrast="more"] dd a,:root[data-contrast="more"] td a{text-decoration:underline;text-underline-offset:.15em}
+  :root[data-contrast="more"] :focus-visible{outline-width:3px}
+  :root[data-contrast="more"] #world{opacity:.4}
+  :root[data-spacing="wide"] p,:root[data-spacing="wide"] li,:root[data-spacing="wide"] dd,:root[data-spacing="wide"] td,:root[data-spacing="wide"] blockquote,:root[data-spacing="wide"] figcaption{letter-spacing:.05em;word-spacing:.14em;line-height:1.75}
+  @media (prefers-reduced-transparency:reduce){:root{--veil:var(--bg)}}
+  @media (forced-colors:active){
+    .lang-sum,.disp-list button::before,.pt-el,.lb-btn,.toggle{border:1px solid ButtonText}
+    .disp-list button[aria-checked="true"]::before{background:Highlight;border-color:Highlight}
+    [aria-pressed="true"],[aria-selected="true"],[aria-current]{outline:3px solid Highlight!important;outline-offset:-3px!important}
+    canvas{forced-color-adjust:none}
+  }
+/* reading direction and scripts: START (one source, rtl.css in the work folder; install_rtl.py copies it into each page's styles) */
+/* Right to left. The page mirrors by itself. A table of elements, a chart, and anything read along an axis keep their left-to-right order. */
+[dir="rtl"] .ptstage{direction:ltr}          /* on a phone the table scrolls sideways, and starts at hydrogen */
+[dir="rtl"] .ptstage > *,[dir="rtl"] .pt-slot,[dir="rtl"] #frontSlot{direction:rtl}
+[dir="rtl"] .pt-grid,[dir="rtl"] .lb-smgrid,[dir="rtl"] .lb-oboxes,[dir="rtl"] .pd-cells,[dir="rtl"] .lb-nht,[dir="rtl"] .pd-ibars,[dir="rtl"] .lb-heat,[dir="rtl"] .lb-mini,[dir="rtl"] .pt{direction:ltr}
+[dir="rtl"] .loader,[dir="rtl"] .pull-hint{left:var(--sx,34%)}
+[dir="rtl"] .pd-ab i::after{left:auto;right:0}
+/* what a reader types takes its direction from its first letter: a symbol or a configuration from the left, a name from the right */
+[dir="rtl"] input[type="search"],[dir="rtl"] input[type="text"],[dir="rtl"] textarea{unicode-bidi:plaintext;text-align:start}
+[dir="rtl"] input[type="number"]{direction:ltr;text-align:end}
+/* Scripts that join their letters or stack marks above and below the line: no tracking, more room between lines, no slanted type the script does not have. */
+html:is(.script-arabic,.script-nastaliq,.script-devanagari,.script-bengali) *{letter-spacing:0 !important}
+html:is(.script-arabic,.script-nastaliq,.script-devanagari,.script-bengali){--fs-micro:14px}
+html:is(.script-arabic,.script-nastaliq,.script-devanagari,.script-bengali) :is(h2,h3){line-height:1.35}          /* a heading set tight for Latin cuts the marks of a second line */
+html:is(.script-arabic,.script-nastaliq,.script-devanagari,.script-bengali,.script-cjk) :is(i,em,cite,dfn){font-style:normal}
+html:is(.script-arabic,.script-nastaliq,.script-devanagari,.script-bengali,.script-cjk) em{font-weight:600}
+/* Urdu is read in Nastaliq, a sloping hand that needs twice the room. Running text uses it where the device has such
+   a font; tiles, tabs, buttons, tables, and drawings stay in the plainer hand, which fits them. Both are named here
+   because the page's own font has no Arabic letters and a phone left to choose would use the tall hand everywhere. */
+html.script-nastaliq *:not(code,kbd,pre,samp,.lb-code,.lb-chcode){font-family:"Archivo","Geeza Pro","Noto Naskh Arabic","Noto Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif !important}
+html.script-nastaliq :is(p,dd,blockquote,figcaption,li):not(.numeral,.equation,.foot-mark,.front-title,.statement,.ptr-name,.pd-name,.el-name):not(:is(.bar,.gauge,.pt-grid,.pt-intro,#frontSlot,nav,button,[role="tablist"],table,.lang-list,.lb-tabs,.lb-rail,.lb-subtabs) *),
+html.script-nastaliq :is(p,dd,blockquote,figcaption,li):not(.numeral,.equation,.foot-mark,.front-title,.statement,.ptr-name,.pd-name,.el-name):not(:is(.bar,.gauge,.pt-grid,.pt-intro,#frontSlot,nav,button,[role="tablist"],table,.lang-list,.lb-tabs,.lb-rail,.lb-subtabs) *) :is(span,b,i,em,strong,a,small,sub,sup,cite,q,mark,abbr,dfn,u):not(:is(button,.btn,[role="tab"],label,summary,select,.num,code,kbd) *,.btn,.num){font-family:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq","Urdu Typesetting","Alvi Nastaleeq","Archivo","Geeza Pro","Noto Naskh Arabic",sans-serif !important}
+html.script-nastaliq :is(p,dd,blockquote,figcaption,li):not(.numeral,.equation,.foot-mark,.front-title,.statement,.ptr-name,.pd-name,.el-name):not(:is(.bar,.gauge,.pt-grid,.pt-intro,#frontSlot,nav,button,[role="tablist"],table,.lang-list,.lb-tabs,.lb-rail,.lb-subtabs) *){line-height:2.1}
+/* reading direction and scripts: END */
 </style>
 </head>
 <body>
+<a data-i class="skip" href="#main">Skip to the content</a>
 <header>
-  <a data-i class="wordmark" href="./">Atom</a>
+  <a data-i data-i-ctx="product name" class="wordmark" href="./">Atom</a>
   <nav data-i-attr="aria-label" aria-label="Atom"><a data-i href="./">The table</a><a data-i href="./#labs">Labs</a><a data-i href="app/">The app</a></nav>
   <span id="langHost"></span>
 </header>
@@ -84,6 +151,7 @@
     <tbody>
       <tr><td><a href="./#lab=math&amp;z=79&amp;step=8">#lab=math&amp;z=79&amp;step=8</a></td><td data-i>The math: gold at step 8 (relativity). Any element, steps 1 to 10.</td></tr>
       <tr><td><a href="./#lab=build&amp;z=6&amp;a=14">#lab=build&amp;z=6&amp;a=14</a></td><td data-i>Build: carbon-14, ready to change.</td></tr>
+      <tr><td><a href="./#lab=build&amp;z=26&amp;a=56&amp;goal=1">#lab=build&amp;z=26&amp;a=56&amp;goal=1</a></td><td data-i>Build: an empty stage, with iron-56 as the goal to build.</td></tr>
       <tr><td><a href="./#lab=compare&amp;pair=79-47">#lab=compare&amp;pair=79-47</a></td><td data-i>Compare: gold and silver, side by side.</td></tr>
       <tr><td><a href="./#lab=trends&amp;prop=ie">#lab=trends&amp;prop=ie</a></td><td data-i>Trends: the energy to remove an electron, with Slater's estimate drawn against the measured values.</td></tr>
       <tr><td><a href="./#lab=nuclides&amp;z=6&amp;a=14">#lab=nuclides&amp;z=6&amp;a=14</a></td><td data-i>The chart of the nuclides, on carbon-14.</td></tr>
@@ -153,23 +221,32 @@
   <table>
     <thead><tr><th data-i>Lesson</th><th data-i>Minutes</th><th data-i>Standards</th><th data-i>What students do</th></tr></thead>
     <tbody>
-      <tr><td data-i>Atoms are mostly empty</td><td>45</td><td>HS-PS1-1 (PS1.A) · HS-PS1-8 · AP 1.5</td><td data-i>Build an atom, measure how empty it is, and meet the questions people get wrong.</td></tr>
-      <tr><td data-i>Where the electrons live</td><td>45</td><td>HS-PS1-1 · AP 1.5, 1.6</td><td data-i>Orbital boxes, the photoelectron spectrum, and reading a configuration off the peaks.</td></tr>
-      <tr><td data-i>Light from atoms</td><td>40</td><td>HS-PS4-3 · HS-ESS1-3 (ESS1.A) · AP 3.11, 3.12</td><td data-i>Hear hydrogen's lines, compute one, and find five elements in the Sun's light.</td></tr>
-      <tr><td data-i>The nucleus and the mass that disappears</td><td>45</td><td>HS-PS1-8</td><td data-i>Carbon-14 on the chart of the nuclides, binding energy in iron, radioactive decay, and fusion.</td></tr>
-      <tr><td data-i>The table predicts</td><td>40</td><td>HS-PS1-1 · AP 1.7, 1.8</td><td data-i>Size, ions, and reactivity, read off the table before you look them up.</td></tr>
+      <tr><td><a data-i href="./#lab=lessons&amp;id=empty">Atoms are mostly empty</a></td><td>45</td><td>HS-PS1-1 (PS1.A) · HS-PS1-8 · AP 1.5</td><td data-i>Build an atom, measure how empty it is, and meet the questions people get wrong.</td></tr>
+      <tr><td><a data-i href="./#lab=lessons&amp;id=shells">Where the electrons live</a></td><td>45</td><td>HS-PS1-1 · AP 1.5, 1.6</td><td data-i>Orbital boxes, the photoelectron spectrum, and reading a configuration off the peaks.</td></tr>
+      <tr><td><a data-i href="./#lab=lessons&amp;id=light">Light from atoms</a></td><td>40</td><td>HS-PS4-3 · HS-ESS1-3 (ESS1.A) · AP 3.11, 3.12</td><td data-i>Hear hydrogen's lines, compute one, and find five elements in the Sun's light.</td></tr>
+      <tr><td><a data-i href="./#lab=lessons&amp;id=nucleus">The nucleus and the mass that disappears</a></td><td>45</td><td>HS-PS1-8</td><td data-i>Carbon-14 on the chart of the nuclides, binding energy in iron, radioactive decay, and fusion.</td></tr>
+      <tr><td><a data-i href="./#lab=lessons&amp;id=table">The table predicts</a></td><td>40</td><td>HS-PS1-1 · AP 1.7, 1.8</td><td data-i>Size, ions, and reactivity, read off the table before you look them up.</td></tr>
     </tbody>
   </table>
 
   <h2 data-i>Languages and reading support</h2>
-  <p data-i>Atom is in English and Spanish, with more languages on the way. The language menu is in the top bar of every page, and a link can carry the choice: <a href="./?lang=es">?lang=es</a> opens the site in Spanish, <a href="./?lang=es#lab=build&amp;z=26">?lang=es#lab=build&amp;z=26</a> opens a lab in Spanish. Element names, every lab, every question, and The math are translated; the measured data and the references stay as they are.</p>
+  <p data-i>Atom is in eleven languages: English, Spanish, Simplified Chinese, Hindi, Arabic, French, Bengali, Brazilian Portuguese, Russian, Urdu, and Indonesian. Nine of them are marked <b>Beta</b> in the menu: they are complete, and no fluent reader has reviewed them yet. The language menu is in the top bar of every page, and a link can carry the choice: <a href="./?lang=es">?lang=es</a> opens the site in Spanish, <a href="./?lang=es#lab=build&amp;z=26">?lang=es#lab=build&amp;z=26</a> opens a lab in Spanish. Element names, every lab, every question, and The math are translated; the measured data and the references stay as they are.</p>
   <p data-i>Under <b>Learning settings</b> in the labs, three helps can be turned on for a student or a class, and each one stays on in that browser:</p>
   <ul>
     <li data-i><b>Simpler</b> rewrites the explanations in shorter sentences and plainer words, with the same facts and the same numbers. Good for younger readers and for students reading in their second language.</li>
-    <li data-i><b>Term help</b> underlines the science words. Tapping one shows a one-line meaning; in Spanish, it shows the English word too, so a bilingual class builds vocabulary in both languages at once. <b>Vocabulary</b> prints the words on the current page in both languages for a word wall or a glossary sheet.</li>
+    <li data-i><b>Term help</b> underlines the science words. Tapping one shows a one-line meaning; in every language but English, it shows the English word too, so a bilingual class builds vocabulary in both languages at once. <b>Vocabulary</b> prints the words on the current page in both languages for a word wall or a glossary sheet.</li>
     <li data-i><b>Listen</b> buttons read the explanations aloud with the device's own voice, in the page's language. Sound is off until a button is pressed.</li>
   </ul>
-  <p data-i class="fine">Found a translation that reads wrong? Every string lives in <code>app/i18n/es.js</code> on GitHub, and a corrected line is a one-line pull request.</p>
+  <p data-i class="fine">Found a translation that reads wrong? The <a href="https://github.com/Normansrule/atom/issues/new?template=translation-correction.yml">translation correction form</a> on GitHub takes one sentence at a time. Each language is one file in the <code>i18n</code> folder there, so a corrected line can also be a one-line pull request.</p>
+
+  <h2 data-i>Accessibility</h2>
+  <p data-i>Atom is built to the WCAG 2.2 AA guidelines, and an automated scan checks every page and lab in both themes before each release. Everything works from the keyboard: Tab moves between controls, the arrow keys move across the table and along a row of tabs, Enter opens, and Escape closes. Every drawing has a description in words that changes when the drawing does, and results are announced to a screen reader.</p>
+  <ul>
+    <li data-i><b>Display options</b> are under the <b>Aa</b> button beside the language menu (on a phone, at the top of the language menu). <b>More contrast</b> strengthens lines, puts solid backgrounds behind text, and underlines links. <b>Wider text spacing</b> adds room between letters, words, and lines. Both stay on in that browser, and a link can carry them: <a href="./?contrast=more&amp;spacing=wide">?contrast=more&amp;spacing=wide</a>.</li>
+    <li data-i><b>Pause motion</b>, in the top bar, stops everything that moves. Atom also follows the device’s own settings for reduced motion, increased contrast, and high-contrast colors without being asked.</li>
+    <li data-i>Sound is off until a button is pressed, and nothing is told by sound alone or by color alone. The page reflows down to a screen 320 pixels wide and up to 200 percent zoom.</li>
+  </ul>
+  <p data-i class="fine">Known limits: the moving three-dimensional pictures (the electron cloud, a molecule) are described in words but cannot be explored further by touch or screen reader, and two small 18-column tables have targets under 44 pixels. If something blocks a student, the <a href="https://github.com/Normansrule/atom/issues/new?template=bug-report.yml">problem report form</a> reaches the author.</p>
 
   <h2 data-i>Piloting Atom in your class</h2>
   <p data-i>If you try Atom with a class, a short report helps the next teacher. The <a href="handout.html">one-page handout</a> prints what students and families need to know. After a lesson, the <a href="https://github.com/Normansrule/atom/issues/new?template=classroom-report.yml">classroom report form</a> on GitHub asks six questions: grade and subject, class size and devices, which labs or lesson you used, what worked, what did not, and anything that confused students. Nothing about students goes in it; it is about the software. Reports are read, and they shape what gets built next.</p>
@@ -186,15 +263,15 @@
   <h2 data-i>Standards</h2>
   <p data-i>Where each lab lands. NGSS performance expectations are quoted from the standards; AP Chemistry topic numbers follow the College Board's course and exam description.</p>
   <table>
-    <thead><tr><th data-i>Lab</th><th>NGSS</th><th data-i>AP Chemistry</th></tr></thead>
+    <thead><tr><th data-i>Lab</th><th>NGSS</th><th data-i>AP Chemistry</th><th data-i>Lessons</th></tr></thead>
     <tbody>
-      <tr><td data-i>Build; Predict; Trends; the table's lenses</td><td data-i><b>HS-PS1-1</b> Use the periodic table as a model to predict the relative properties of elements based on the patterns of electrons in the outermost energy level of atoms.</td><td data-i>1.5 Atomic structure and electron configuration; 1.7 Periodic trends; 1.8 Valence electrons and ionic compounds</td></tr>
-      <tr><td data-i>Electron energies (PES); The math, step 7</td><td>HS-PS1-1</td><td data-i><b>1.6 Photoelectron spectroscopy</b>; 1.5</td></tr>
-      <tr><td data-i>Nuclides; Calculate (decay); Workbench (fusion); The math, step 9; the nucleus scene</td><td data-i><b>HS-PS1-8</b> Develop models to illustrate the changes in the composition of the nucleus of the atom and the energy released during the processes of fission, fusion, and radioactive decay.</td><td data-i>(binding energy, fission, and fusion are outside the AP Chemistry framework; half-life appears in 5.3 as first-order kinetics; AP Physics 2 covers nuclear physics)</td></tr>
-      <tr><td data-i>Hear; The Sun; Calculate (light); The math, steps 4 and 5; the light scene</td><td data-i><b>HS-PS4-3</b> Evaluate the claims, evidence, and reasoning behind the idea that electromagnetic radiation can be described either by a wave model or a particle model, and that for some situations one model is more useful than the other.</td><td data-i>3.11 Spectroscopy and the electromagnetic spectrum; 3.12 Photoelectric effect (photon energy and electronic transitions)</td></tr>
-      <tr><td data-i>The Sun; the Origins lens; the Missions "Light a star" and "Forge gold"</td><td data-i><b>HS-ESS1-3</b> Communicate scientific ideas about the way stars, over their life cycle, produce elements.</td><td></td></tr>
-      <tr><td data-i>Build: a molecule</td><td data-i>HS-PS1-1; HS-PS1-3 (bulk properties from the forces between particles)</td><td data-i>2.1 Types of chemical bonds; 2.5 Lewis diagrams; 2.7 VSEPR and bond hybridization</td></tr>
-      <tr><td data-i>The math, steps 1 to 3 and 8 (Coulomb's law, orbits, relativity)</td><td data-i>HS-PS2-4 (Coulomb's law) and HS-PS4-3</td><td data-i>1.5 and 1.7, with the reasoning behind them</td></tr>
+      <tr><td data-i><a href="./#lab=build">Build</a>; <a href="./#lab=predict">Predict</a>; <a href="./#lab=trends">Trends</a>; the table's lenses</td><td data-i><b>HS-PS1-1</b> Use the periodic table as a model to predict the relative properties of elements based on the patterns of electrons in the outermost energy level of atoms.</td><td data-i>1.5 Atomic structure and electron configuration; 1.7 Periodic trends; 1.8 Valence electrons and ionic compounds</td><td><a data-i href="./#lab=lessons&amp;id=empty">Atoms are mostly empty</a><br><a data-i href="./#lab=lessons&amp;id=shells">Where the electrons live</a><br><a data-i href="./#lab=lessons&amp;id=table">The table predicts</a></td></tr>
+      <tr><td data-i><a href="./#lab=pes">Electron energies (PES)</a>; <a href="./#lab=math&amp;step=7">The math, step 7</a></td><td>HS-PS1-1</td><td data-i><b>1.6 Photoelectron spectroscopy</b>; 1.5</td><td><a data-i href="./#lab=lessons&amp;id=shells">Where the electrons live</a></td></tr>
+      <tr><td data-i><a href="./#lab=nuclides">Nuclides</a>; <a href="./#lab=calc&amp;calc=decay">Calculate (decay)</a>; <a href="./#lab=bench">Workbench (fusion)</a>; <a href="./#lab=math&amp;step=9">The math, step 9</a>; <a href="./#nucleus">the nucleus scene</a></td><td data-i><b>HS-PS1-8</b> Develop models to illustrate the changes in the composition of the nucleus of the atom and the energy released during the processes of fission, fusion, and radioactive decay.</td><td data-i>(binding energy, fission, and fusion are outside the AP Chemistry framework; half-life appears in 5.3 as first-order kinetics; AP Physics 2 covers nuclear physics)</td><td><a data-i href="./#lab=lessons&amp;id=empty">Atoms are mostly empty</a><br><a data-i href="./#lab=lessons&amp;id=nucleus">The nucleus and the mass that disappears</a></td></tr>
+      <tr><td data-i><a href="./#lab=hear">Hear</a>; <a href="./#lab=sun">The Sun</a>; <a href="./#lab=calc&amp;calc=light">Calculate (light)</a>; <a href="./#lab=math&amp;step=4">The math, steps 4 and 5</a>; <a href="./#light">the light scene</a></td><td data-i><b>HS-PS4-3</b> Evaluate the claims, evidence, and reasoning behind the idea that electromagnetic radiation can be described either by a wave model or a particle model, and that for some situations one model is more useful than the other.</td><td data-i>3.11 Spectroscopy and the electromagnetic spectrum; 3.12 Properties of photons (photon energy and electronic transitions)</td><td><a data-i href="./#lab=lessons&amp;id=light">Light from atoms</a></td></tr>
+      <tr><td data-i><a href="./#lab=sun">The Sun</a>; the Origins lens; the Missions "Light a star" and "Forge gold"</td><td data-i><b>HS-ESS1-3</b> Communicate scientific ideas about the way stars, over their life cycle, produce elements.</td><td></td><td><a data-i href="./#lab=lessons&amp;id=light">Light from atoms</a></td></tr>
+      <tr><td data-i><a href="./#lab=molecule">Build: a molecule</a></td><td data-i>HS-PS1-1; HS-PS1-3 (bulk properties from the forces between particles)</td><td data-i>2.1 Types of chemical bonds; 2.5 Lewis diagrams; 2.7 VSEPR and hybridization</td><td></td></tr>
+      <tr><td data-i><a href="./#lab=math&amp;step=1">The math, steps 1 to 3 and 8</a> (Coulomb's law, orbits, relativity)</td><td data-i>HS-PS2-4 (Coulomb's law) and HS-PS4-3</td><td data-i>1.5 and 1.7, with the reasoning behind them</td><td></td></tr>
     </tbody>
   </table>
 

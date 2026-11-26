@@ -1,0 +1,47 @@
+name: Translation correction
+description: A sentence in one of Atom's languages reads wrong, or uses the wrong term for your country's classrooms. One sentence per report is easiest to fix.
+title: "Translation: [language] [a few words of the sentence]"
+labels: ["translation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Nine of Atom's languages are marked Beta because no fluent reader has reviewed them yet, and reports like this one are how that mark comes off. Everything here is public.
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - Español
+        - 中文（简体）
+        - हिन्दी
+        - العربية
+        - Français
+        - বাংলা
+        - Português (Brasil)
+        - Русский
+        - اردو
+        - Bahasa Indonesia
+    validations:
+      required: true
+  - type: textarea
+    id: shown
+    attributes:
+      label: What Atom shows now
+      description: Copy the sentence or label as it appears. If you can, say where it is (which lab, which step, or the link in the address bar).
+    validations:
+      required: true
+  - type: textarea
+    id: better
+    attributes:
+      label: What it should say
+      description: Your correction, and one line on why if it is a matter of school usage (for example, the term your textbooks use).
+    validations:
+      required: true
+  - type: input
+    id: who
+    attributes:
+      label: Your background (optional)
+      description: 'For example "chemistry teacher in Lyon" or "native speaker, studied physics". It helps weigh two corrections that disagree.'
+    validations:
+      required: false

@@ -1,14 +1,76 @@
 {
   "about": "Limits that fail the build when a change crosses them. bytes: gzip -9 of the files, in KB (scripts/check_budget.py). time: milliseconds on a page loaded with the CPU slowed four times (scripts/smoke.mjs, Chromium only); CI machines have no graphics card, so the frame time only warns. Raise a limit on purpose, in the same commit as the change that needs it, and say why.",
-  "bytes": {
-    "first screen (index.html, site.css, and the five scripts it starts with)": {"kb": 215, "files": ["docs/index.html", "docs/assets/site.css", "docs/assets/atom-i18n.js", "docs/assets/atom-data.js", "docs/assets/atom-engines.js", "docs/assets/atom-ptable.js", "docs/assets/site.js"]},
-    "the labs, fetched on approach": {"kb": 145, "files": ["docs/assets/atom-labs.js", "docs/assets/atom-labs.css"]},
-    "the scenes below the quarks, fetched on approach": {"kb": 10, "files": ["docs/assets/deep.js"]},
-    "the font": {"kb": 90, "raw": true, "files": ["docs/assets/fonts/archivo-var.woff2"]},
-    "the teacher guide": {"kb": 10, "files": ["docs/teachers.html"]},
-    "the handout": {"kb": 6, "files": ["docs/handout.html"]},
-    "the whole app in one file": {"kb": 485, "files": ["app/atom.html"]}
+  "why": {
+    "2.2.0": "Raised on purpose: the first screen from 215 to 224 KB, the labs from 145 to 185 KB, and the whole app from 485 to 510 KB. 2.2.0 added a fifth table lens (families, blocks, states), isotope bars and origin sketches on the element card, bond electrons and Lewis structures in the molecule builder, a decay-chain close-up, a drawn row of atoms under the trends, a hadron builder and force buttons in Particles, and energy bookkeeping in Electron energies, with their self-tests.",
+    "2.3.0": "Raised on purpose: the first screen from 224 to 232 KB, the teacher guide from 10 to 13 KB, the handout from 6 to 8 KB, the whole app from 510 to 526 KB, and a language's two slices from 110 and 60 KB to 128 and 74 KB. 2.3.0 added nine languages. The engine learned the forms of names a language bends, the display options (more contrast, wider spacing), and, for Arabic and Urdu, how to keep a formula or a number with its unit in its own order inside a sentence read from the right. The style sheets gained the rules for reading direction and for scripts that join or stack their letters, and the teacher guide an Accessibility section. The slices grew because Cyrillic, Devanagari, Bengali, and Arabic letters take two or three bytes where a Latin letter takes one; the number of sentences is the same in every language. The labs gained measured electron energies and stayed inside their limit."
   },
-  "packs": {"site slice (before the first screen in that language)": {"kb": 110, "suffix": ".site.js"}, "labs slice": {"kb": 60, "suffix": ".labs.js"}},
-  "time": {"cpuSlowdown": 4, "firstPictureMs": 2500, "tableReadyMs": 4000, "blockedMs": 5000, "frameWarnMs": 120}
+  "bytes": {
+    "first screen (index.html, site.css, and the five scripts it starts with)": {
+      "kb": 232,
+      "files": [
+        "docs/index.html",
+        "docs/assets/site.css",
+        "docs/assets/atom-i18n.js",
+        "docs/assets/atom-data.js",
+        "docs/assets/atom-engines.js",
+        "docs/assets/atom-ptable.js",
+        "docs/assets/site.js"
+      ]
+    },
+    "the labs, fetched on approach": {
+      "kb": 185,
+      "files": [
+        "docs/assets/atom-labs.js",
+        "docs/assets/atom-labs.css"
+      ]
+    },
+    "the scenes below the quarks, fetched on approach": {
+      "kb": 10,
+      "files": [
+        "docs/assets/deep.js"
+      ]
+    },
+    "the font": {
+      "kb": 90,
+      "raw": true,
+      "files": [
+        "docs/assets/fonts/archivo-var.woff2"
+      ]
+    },
+    "the teacher guide": {
+      "kb": 13,
+      "files": [
+        "docs/teachers.html"
+      ]
+    },
+    "the handout": {
+      "kb": 8,
+      "files": [
+        "docs/handout.html"
+      ]
+    },
+    "the whole app in one file": {
+      "kb": 526,
+      "files": [
+        "app/atom.html"
+      ]
+    }
+  },
+  "packs": {
+    "site slice (before the first screen in that language)": {
+      "kb": 128,
+      "suffix": ".site.js"
+    },
+    "labs slice": {
+      "kb": 74,
+      "suffix": ".labs.js"
+    }
+  },
+  "time": {
+    "cpuSlowdown": 4,
+    "firstPictureMs": 2500,
+    "tableReadyMs": 4000,
+    "blockedMs": 5000,
+    "frameWarnMs": 120
+  }
 }

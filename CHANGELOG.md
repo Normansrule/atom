@@ -2,6 +2,76 @@
 
 Atom follows [semantic versioning](https://semver.org). The newest release is at the top.
 
+## [2.3.0] - 2026-11-25
+
+Atom in eleven languages, with display options for readers who need them, a security pass over the site, the apps, and the release pipeline, and measured electron energies beside the estimates. Version 2.2.0 was prepared and never published; this release carries all of it, and its entry follows this one.
+
+### Nine more languages, marked Beta
+- **French, Portuguese (Brazil), Indonesian, Russian, Chinese (Simplified), Hindi, Bengali, Arabic, and Urdu** join English and Spanish. Each has all 3,879 sentences, the 135 simpler variants, and the 109 glossary terms. Each was translated and then read again in a second, separate pass. Both passes were done by AI: **no fluent reader has reviewed these nine yet.** The language menu marks each one Beta and says so, and a new issue form, Translation correction, takes fixes.
+- **A name takes the form its sentence needs.** Russian cases, French and Portuguese articles and their contractions, Arabic definite forms, Hindi and Urdu oblique forms, and Bengali endings, for all 118 elements and for isotopes (*du carbone 14*, *углерода-14*, *কার্বন-14-এর*).
+- **Arabic and Urdu read from the right.** The page mirrors. The table of elements, the Standard Model chart, the orbital boxes, and every plot keep their left-to-right order, as they do in Arabic and Urdu textbooks. A configuration, a formula, or a number with its unit keeps its own order inside a sentence. On a row of tabs the left arrow key is the one that goes on. Urdu's running text is set in Nastaliq where the device has such a font; tiles, tabs, buttons, and drawings stay in the plainer hand that fits them.
+- **Numbers and dates.** Outside English a typed answer is read in the reader's notation (3,5 is three and a half in French; Arabic-Indic, Devanagari, and Bengali digits are digits), and the two printed sheets carry the date in the reader's language.
+
+### Accessibility
+- **Display options**, the **Aa** button beside the language: **More contrast** (solid ground behind text, stronger lines, underlined links, a thicker focus ring) and **Wider spacing** (more room between lines, words, and letters). Both are remembered, both work in the desktop apps, and More contrast turns itself on when the device asks for it. Forced colors and reduced transparency are honored.
+- **An Accessibility section in the teacher guide** says what Atom does for keyboard, screen reader, low vision, and reduced motion, and names its limits.
+- Every page and lab was scanned against WCAG 2.2 AA: 26 views, in English in dark and in light, and again in each new language. No findings.
+
+### Measured electron energies
+- **Electron energies** (Explore) gains **Measured values**: the X-ray absorption edges of Elam, Ravel, and Sieber (2002), hydrogen through californium, marked on the spectrum beside Atom's estimates, with a table of estimate, measurement, and their ratio. Iron's 1s electron: 867 MJ/mol estimated, 686 measured. The lab says where the estimate is good and where it is not.
+
+### Security
+- The app's own inline scripts are now named in its policy by SHA-256 hash; no page allows any other inline script. `scripts/check_csp.py` fails the build if a page's policy loosens or a hash drifts. No page sends a referrer.
+- The test suite feeds markup and prototype keys to everything that takes text from outside (the address, saved data, a pasted progress file, turn-in codes) on the site and in the app, and fails if anything runs or anything is added to the page.
+- Every GitHub Action is pinned to an exact commit, Dependabot proposes updates monthly, CodeQL scans the scripts and the workflows, and a release carries a signed build attestation where GitHub can make one. Electron moves from 44.9.3 to 44.11.5. `SECURITY.md` is rewritten to say what holds each promise in place and what is known and accepted.
+
+### Fixed
+- Spanish: the product's name stays *Atom* on the wordmark and the title; the noun is still *átomo*.
+- The strip under the table no longer leaves faded text where a screen reader or a contrast check can find it.
+- 161 style declarations that named a physical side (left, right) now name the reading side (start, end). On a left-to-right page nothing changes.
+
+### Not in this release
+- More molecules for the molecule builder. No source for bond lengths and angles could be opened while this release was made, and Atom does not print a value from memory.
+- Review by fluent readers, and a look at the new scripts on real phones. Hindi, Bengali, Arabic, and Urdu were rendered here with Noto fonts in Chrome's engine only.
+
+### Under the hood
+- The language engine is tested alone in Node (`scripts/i18n/test_engine.js`, 58 checks). The smoke test has four groups and visits a Latin-script language, one that bends its nouns, one written without spaces, and one read from the right.
+- Weight limits were raised on purpose and say why in `scripts/budgets.json`: first screen 232 KB, teacher guide 13 KB, handout 8 KB, app 526 KB, and a language's two slices 128 and 74 KB.
+
+## [2.2.0] - 2026-11-22
+
+An audit of 2.1.0 by fresh reviewers, then the fixes. Seven independent passes (two on the science, one each on teaching and use, design, accessibility beyond the scanner, speed and robustness, and the Spanish) reported about 240 findings; this release fixes them and adds nine drawings and tools where the reviewers found Atom thin.
+
+### New
+- **A fifth lens, Families.** Color the table by family, by block (s, p, d, f), or by state at room temperature. The key's entries light their group and say how many it holds. Bromine and mercury are the two liquids; twenty-one elements are marked not known, because nobody has made enough of them to see.
+- **Isotope bars on every card** (Nucleus tab): the element's natural isotopes with their shares and the weighted average marked, from the NIST table. Chlorine reads 75.76% and 24.24%, average 35.45.
+- **Origin sketches that say what is happening.** Each of the seven sources plays in three captioned stages, with labels, a pause, and a still when motion is reduced. One set of names for the sources everywhere.
+- **A bond's electrons, and Lewis structures** (Build, A molecule). Shading toward the atom that pulls harder, δ+ and δ−, and a net pull that cancels in CO₂ and not in H₂O. Salt plays the hand-over of sodium's electron with both ions to scale. A Lewis structure for all ten molecules counts the electrons around each atom; boron in BF₃ is labeled as the exception.
+- **A close-up of the decay chain** (Nuclides): a window that follows the nucleus, alpha and beta steps as arrows, back, forward, play, and pause, and every half-life as a bar on one logarithmic axis.
+- **The cause of the trends, drawn** (Trends): the row or column as atoms to scale, with rings for shells, the protons, and the pull on the outer electron.
+- **Build a particle from three quarks, and light the chart by force** (Particles). Up, up, down adds to +1, a proton; ten baryons are named from the Particle Data Group's table.
+- **Energy bookkeeping in Electron energies:** pick a peak to see its shell lit and the photon's energy split into the energy to remove the electron and what is left as motion.
+- **The empty atom, to scale:** a marble on the center spot of a football field, with the atom's edge a ring far outside it.
+- **Pause motion,** one switch in the bar, remembered. The address now follows the open lab, view, element, and step, so a reload or Back returns to the same place.
+
+### Fixed: science
+- 46 findings from two reviewers who read every English sentence; 44 are corrected. Among them: gold's color (relativity pulls 6s down and pushes 5d up, not the reverse), iron at the top of the binding-energy curve, the neptunium series ending at thallium-205, the proton's momentum shares (gluons 42%, valence quarks 40%, sea 18%, from the JAM fit), fission against burning carbon (about 5 × 10⁷ times), hydrogen production, and the half-life note under each decay series, which was true only for thorium. Two findings were left for lack of a source that could be opened.
+
+### Fixed: use, design, accessibility, speed
+- **Credit needs the student's own action.** Opening a lab no longer awards badges, "Show me" teaches but does not score, and a lesson is complete only when its exit check is passed; the score now travels in the turn-in code.
+- **One bad frame no longer stops the page.** A press on "Quarks trade color" could throw and end every animation until reload; the frame loop now survives any one drawing failing, and that drawing is fixed.
+- **Keyboard and screen reader:** no invisible stops in the tab order, focus stays inside an open card on a phone, the cloud and the molecule turn from buttons, an unknown element name gets a message in words, status changes are announced once, and every meaningful canvas says what it shows.
+- **Phone:** all five card tabs fit, the decay chain plays where you are looking, controls are at least 44 px for a finger, and nothing scrolls sideways at 320 px.
+- **Less work when nothing moves:** the front canvas is no longer cleared 15 times a second while empty, finished animations stop their loops, a card closed leaves nothing behind, and a first visit no longer downloads the site twice.
+- **Saved progress that cannot be read** no longer stops the labs; the page offers to clear it.
+- 111 findings in these four areas: 108 fixed. Three are partial on purpose: the molecule builder still draws ten molecules (it now names real ones it cannot draw), and two small 18-column tables stay under 44 px (above the 24 px minimum) so they keep their shape.
+
+### Spanish
+- An independent review of the 128 sentences added in 2.1.0, a sample of 300 older ones, and all 135 simpler variants: 111 corrections, including one simple variant that called a whole element radioactive. 3,850 sentences, all in Spanish.
+
+### Under the hood
+- The smoke test has 240 checks in three groups and covers every new feature. `scripts/check_css.py` requires a plain fallback before every `color-mix()`. Weight limits were raised on purpose and say why in `scripts/budgets.json`: first screen 224 KB, labs 185 KB, app 510 KB.
+
 ## [2.1.0] - 2026-11-13
 
 Atom goes below the quarks. The website's fall continues through three new drawn scenes (fields, mass, and the weak force) to a ladder that reaches the Planck length; the labs gain the Standard Model; and several places that stood still now move. Underneath, the bar for a release is higher: all three browser engines must pass, the site's weight and loading time have budgets, every page and lab is checked against WCAG 2.2 AA, and Windows signing is ready for a certificate. Version 2.0.0 reached the website but never had a desktop release; this release carries all of it.

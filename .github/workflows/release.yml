@@ -26,7 +26,9 @@ jobs:
     name: The tag matches VERSION
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - run: test "v$(cat VERSION)" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME but VERSION says $(cat VERSION)"; exit 1; }
 
   site:
@@ -36,15 +38,22 @@ jobs:
     # three engines one after another: about five minutes each on these machines, so leave room
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
       - run: npm install --no-save --no-audit --no-fund playwright@1.64.1 axe-core@4.14.0 html-validate@11.17.0
       - run: npx playwright install --with-deps chromium webkit firefox
+      - name: Fonts for the scripts the pages are read in (Devanagari, Bengali, Arabic, Han)
+        continue-on-error: true
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends fonts-noto-core fonts-noto-cjk
       - run: npx html-validate docs/index.html docs/404.html docs/teachers.html docs/handout.html app/atom.html
       - run: python3 scripts/check_css.py
       - run: python3 scripts/check_budget.py
+      - run: python3 scripts/check_csp.py
+      - run: node scripts/i18n/test_engine.js docs/assets/atom-i18n.js
       - run: node scripts/smoke.mjs
       - run: ATOM_BROWSER=webkit node scripts/smoke.mjs
       - run: ATOM_BROWSER=firefox node scripts/smoke.mjs
@@ -58,8 +67,9 @@ jobs:
     env:
       HAS_CERT: ${{ secrets.MACOS_CERT_P12 != '' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Load the signing certificate (only if the secrets exist)
         if: env.HAS_CERT == 'true'
@@ -87,7 +97,7 @@ jobs:
           echo "NOTARY_KEYCHAIN=$KC" >> "$GITHUB_ENV"
       - name: Build
         run: sh mac/build-mac-app.sh
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mac
           path: dist/Atom-mac.zip
@@ -101,8 +111,10 @@ jobs:
     env:
       HAS_WIN_CERT: ${{ secrets.WINDOWS_CERT_PFX != '' }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -136,7 +148,7 @@ jobs:
         run: |
           npm install --no-save --no-audit --no-fund playwright-core@1.64.1
           node desktop/smoke-desktop.mjs
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows
           path: |
@@ -150,8 +162,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -178,7 +192,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ./desktop/dist/Atom-Linux.deb
           dpkg -L atom-periodic-table | grep -E "atom-periodic-table$|\.desktop$"
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: linux
           path: |
@@ -192,12 +206,16 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      id-token: write        # these two let GitHub sign a statement of where the files were built
+      attestations: write
     env:
       MAC_SIGNED: ${{ secrets.MACOS_CERT_P12 != '' }}
       WIN_SIGNED: ${{ secrets.WINDOWS_CERT_PFX != '' }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v8
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: out
           merge-multiple: true
@@ -206,6 +224,19 @@ jobs:
           cd out
           sha256sum Atom-mac.zip Atom-Windows-Setup.exe Atom-Windows-portable.zip Atom-Linux.AppImage Atom-Linux.deb > SHA256SUMS.txt
           cat SHA256SUMS.txt
+      # A signed statement that these exact files came out of this workflow run in this repository. Anyone can check
+      # a download against it:  gh attestation verify Atom-mac.zip --repo Normansrule/atom
+      # It must never hold a release back, so a failure here is reported and passed over.
+      - name: Attest where the downloads were built
+        continue-on-error: true
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            out/Atom-mac.zip
+            out/Atom-Windows-Setup.exe
+            out/Atom-Windows-portable.zip
+            out/Atom-Linux.AppImage
+            out/Atom-Linux.deb
       - name: Release notes from CHANGELOG.md
         run: |
           V="$(cat VERSION)"

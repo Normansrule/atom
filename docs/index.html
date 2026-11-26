@@ -23,6 +23,7 @@
      script below: change that script and the hash must change with it
      (scripts/smoke.mjs fails on the console error if they disagree). -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-g37sXJHiSQfTwgVYRhIeYrKkxyvKxtzneVtLvTS4uDs='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <link rel="icon" href="assets/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -53,7 +54,7 @@
 </div>
 
 <header class="bar">
-  <a data-i data-i-attr="aria-label" class="wordmark" href="#top" aria-label="Atom, back to the top">Atom</a>
+  <a data-i data-i-ctx="product name" data-i-attr="aria-label" class="wordmark" href="#top" aria-label="Atom, back to the top">Atom</a>
   <nav data-i-attr="aria-label" aria-label="Sections">
     <a data-i href="#top">Elements</a>
     <a data-i href="#labs">Labs</a>
@@ -63,7 +64,8 @@
   </nav>
   <div class="bar-actions">
     <div class="find"><input data-i-attr="aria-label,placeholder" id="ptFind" type="search" placeholder="Find an element" aria-label="Find an element by name, symbol, or atomic number" autocomplete="off" spellcheck="false" enterkeyhint="go"></div>
-    <button data-i type="button" class="toggle" id="soundBtn" aria-pressed="false">Sound off</button>
+    <button data-i-attr="aria-label,title" type="button" class="toggle motion" id="motionBtn" aria-pressed="false" aria-label="Pause motion" title="Pause motion"></button>
+    <button data-i type="button" class="toggle" id="soundBtn" aria-pressed="false">Sound</button>
     <button data-i type="button" class="toggle" id="themeBtn" aria-pressed="false">Light table</button>
     <span id="langHost"></span>
     <a data-i class="btn btn-primary btn-small" href="#get">Get Atom</a>
@@ -74,16 +76,16 @@
 <nav data-i-attr="aria-label" class="gauge" aria-label="Depth">
   <ol>
     <li><a href="#top" data-depth="top"><b>118</b><span data-i>Elements</span></a></li>
-    <li><a href="#cloud" data-depth="cloud"><b>10⁻¹⁰ m</b><span data-i data-i-ctx="depth gauge">Atom</span></a></li>
-    <li><a href="#light" data-depth="light"><b>10⁻¹⁰ m</b><span data-i>Light</span></a></li>
-    <li><a href="#empty" data-depth="empty"><b>10⁻¹² m</b><span data-i>Empty</span></a></li>
-    <li><a href="#nucleus" data-depth="nucleus"><b>10⁻¹⁴ m</b><span data-i>Nucleus</span></a></li>
-    <li><a href="#proton" data-depth="proton"><b>10⁻¹⁵ m</b><span data-i>Proton</span></a></li>
-    <li><a href="#pull" data-depth="pull"><b>10⁻¹⁵ m</b><span data-i>Quarks</span></a></li>
-    <li><a href="#fields" data-depth="fields"><b>10⁻¹⁸ m</b><span data-i>Fields</span></a></li>
-    <li><a href="#mass" data-depth="mass"><b>10⁻¹⁸ m</b><span data-i>Mass</span></a></li>
-    <li><a href="#weak" data-depth="weak"><b>10⁻¹⁸ m</b><span data-i>Weak force</span></a></li>
-    <li><a href="#edge" data-depth="edge"><b>&lt;10⁻¹⁸ m</b><span data-i>Edge</span></a></li>
+    <li><a href="#cloud" data-depth="cloud"><b>10<sup>−10</sup> m</b><span data-i data-i-ctx="depth gauge">Atom</span></a></li>
+    <li><a href="#light" data-depth="light"><b>10<sup>−10</sup> m</b><span data-i>Light</span></a></li>
+    <li><a href="#empty" data-depth="empty"><b>10<sup>−12</sup> m</b><span data-i>Empty</span></a></li>
+    <li><a href="#nucleus" data-depth="nucleus"><b>10<sup>−14</sup> m</b><span data-i>Nucleus</span></a></li>
+    <li><a href="#proton" data-depth="proton"><b>10<sup>−15</sup> m</b><span data-i>Proton</span></a></li>
+    <li><a href="#pull" data-depth="pull"><b>10<sup>−15</sup> m</b><span data-i>Quarks</span></a></li>
+    <li><a href="#fields" data-depth="fields"><b>10<sup>−18</sup> m</b><span data-i>Fields</span></a></li>
+    <li><a href="#mass" data-depth="mass"><b>10<sup>−18</sup> m</b><span data-i>Mass</span></a></li>
+    <li><a href="#weak" data-depth="weak"><b>10<sup>−18</sup> m</b><span data-i>Weak force</span></a></li>
+    <li><a href="#edge" data-depth="edge"><b>&lt;10<sup>−18</sup> m</b><span data-i>Edge</span></a></li>
   </ol>
 </nav>
 
@@ -95,8 +97,8 @@
     <div class="ptstage" id="ptStage">
       <div id="ptSlot">
         <div class="pt-intro">
-          <h1 data-i id="t-hero">Atom</h1>
-          <p data-i class="statement">Every element, computed from the equations. Each square is a live picture of the electron that gives the element its place in the table.</p>
+          <h1 data-i data-i-ctx="product name" id="t-hero">Atom</h1>
+          <p data-i class="statement">Every element, computed from the equations. Each square is a live picture of the electron that gives the element its place in the table. Pick one.</p>
           <div data-i-attr="aria-label" class="lens" role="group" aria-label="Read the table by">
             <button data-i type="button" data-lens="shapes" aria-pressed="true">Shapes</button>
             <button data-i type="button" data-lens="origin" aria-pressed="false">Origins</button>
@@ -105,11 +107,12 @@
           </div>
         </div>
         <div class="ptread" id="ptRead"></div>
+        <p data-i class="pt-hint">Each square is one element&rsquo;s outer electron, computed live. Pick one.</p>
+        <p data-i class="pt-swipe">Swipe the table sideways for all 18 columns.</p>
       </div>
     </div>
     <div class="lens-legend" id="lensLegend" aria-live="polite"></div>
     <div class="pt-foot" id="ptFoot">
-      <p data-i class="pt-swipe">Swipe the table sideways for all 18 columns.</p>
       <div class="actions">
         <a data-i class="btn btn-primary btn-small labs-go" href="#labs">Open the labs</a>
         <button data-i type="button" class="btn btn-small today" id="todayBtn" hidden><span>Today&rsquo;s element</span> <b id="todayEl">H</b> <i id="todayN">0 of 3</i></button>
@@ -166,7 +169,13 @@
       </div>
       <canvas class="radial" id="radial" aria-hidden="true"></canvas>
       <div data-i-attr="aria-label" class="picker" id="orbPicker" role="group" aria-label="Its occupied orbitals"></div>
-      <p data-i class="fine" id="orbReadout">Drag the stage to turn it.</p>
+      <div data-i-attr="aria-label" class="turn" role="group" aria-label="Turn the cloud">
+        <button data-i-attr="aria-label,title" type="button" data-turn="left" aria-label="Turn left" title="Turn left"></button>
+        <button data-i-attr="aria-label,title" type="button" data-turn="right" aria-label="Turn right" title="Turn right"></button>
+        <button data-i-attr="aria-label,title" type="button" data-turn="up" aria-label="Tilt up" title="Tilt up"></button>
+        <button data-i-attr="aria-label,title" type="button" data-turn="down" aria-label="Tilt down" title="Tilt down"></button>
+      </div>
+      <p data-i class="fine" id="orbReadout" role="status">Drag the stage to turn it.</p>
     </div>
   </div>
 </section>
@@ -176,6 +185,7 @@
   <div class="sticky">
     <div class="plate wide">
       <h2 data-i id="t-light"><span data-el="poss">Iron&rsquo;s</span> light is a fingerprint</h2>
+      <h2 data-i id="t-lightRef" hidden>Every element&rsquo;s light is a fingerprint. Here is hydrogen&rsquo;s.</h2>
       <p id="lightIntro"></p>
       <p class="equation" id="lightEq"></p>
       <div class="spectrograph" id="spectrograph">
@@ -198,7 +208,15 @@
   <div class="sticky">
     <div class="plate">
       <h2 data-i id="t-empty">Almost nothing is there</h2>
-      <p class="numeral" id="depthNumeral" aria-hidden="true">10⁻¹⁰ m</p>
+      <div class="scale" id="scaleWrap">
+        <p class="numeral" id="depthNumeral" aria-hidden="true">10<sup>&minus;10</sup> m</p>
+        <figure class="scale-fig" id="scaleFig" hidden>
+          <canvas class="scale-c" id="scaleCanvas" role="img" aria-label=""></canvas>
+          <button type="button" class="btn btn-small" id="scaleBtn"><span data-i class="l">Zoom in to the marble</span><span class="s" aria-hidden="true">+</span></button>
+          <figcaption data-i>The same atom with its nucleus the size of a marble, seen from above. The ring is the edge of the atom.</figcaption>
+        </figure>
+        <p class="vh" id="scaleSay" role="status"></p>
+      </div>
       <p id="emptyText"></p>
       <p data-i class="stat"><span id="emptyStat">99.999 999 999 99 %</span> of the volume of <span data-el="atom">an iron atom</span> is empty space.</p>
     </div>
@@ -244,12 +262,13 @@
       <div><dt data-i>Pull on the quark</dt><dd data-i id="pF">14.7 metric tons</dd></div>
       <div><dt data-i>Left before it breaks</dt><dd id="pLeft">0.85 fm</dd></div>
     </dl>
-    <p class="reaction" id="pReact" aria-live="polite"></p>
-    <p data-i id="pNote">Keep pulling. Near 1.25 fm the string holds about 1.1 GeV, more than it costs to make a quark and an antiquark out of the vacuum, so it snaps instead of stretching.</p>
     <div class="actions">
       <button data-i type="button" class="btn btn-primary" id="pullOut">Pull 0.1 fm further</button>
       <button data-i type="button" class="btn" id="pullBack">Let go</button>
     </div>
+    <p class="vh" id="pSay" role="status"></p>
+    <p class="reaction" id="pReact" aria-live="polite"></p>
+    <p data-i id="pNote">Keep pulling. Near 1.25 fm the string holds about 1.1 GeV, more than it costs to make a quark and an antiquark out of the vacuum, so it snaps instead of stretching.</p>
     <details class="math">
       <summary data-i>The math</summary>
       <p data-i class="equation">V<sub>3Q</sub> = −A ħc Σ 1/r<sub>ij</sub> + σ L<sub>min</sub></p>
@@ -268,9 +287,9 @@
     <p data-i>Keep falling and you do not find smaller pieces. Experiments that could have seen a size as small as <b>4 × 10⁻¹⁹ m</b> find the electron and the quarks still behaving as points.</p>
     <p data-i>What physics finds instead is fields. Every kind of particle is a ripple in a field that fills all of space. Every electron is a ripple in the one electron field, which is why all electrons are exactly alike. A force is one field tugging on another, and the tug travels as a ripple too: the photon, the gluon.</p>
     <figure class="deep-fig"><canvas data-i-attr="aria-label" class="deep-c" id="deepFields" role="img" aria-label="A sheet of rippling lines. Two bright ripples, two electrons, approach each other; a wavy line, a photon, passes between them, and they turn away. A faint shimmer covers the whole sheet."></canvas>
+    <p class="deep-act"><button data-i type="button" class="btn btn-small" id="deepPair">Add energy</button> <span class="deep-say" id="deepPairSay" role="status"></span></p>
     <figcaption data-i>A field, drawn as rows of a rippling sheet. The two bright ripples are electrons. When they come close, a ripple in the electromagnetic field, a photon, passes between them and they turn away. The faint shimmer everywhere is the vacuum. A drawing of the idea, not a simulation.</figcaption></figure>
     <p data-i>Even empty space is not still. The fields jitter at their lowest energy, and the jitter is measured: it shifts hydrogen&rsquo;s energy levels by about a part in a million, the Lamb shift, found in 1947.</p>
-    <p class="deep-act"><button data-i type="button" class="btn btn-small" id="deepPair">Add energy</button> <span class="deep-say" id="deepPairSay" role="status"></span></p>
   </div>
 </section>
 
@@ -279,20 +298,20 @@
     <h2 data-i id="t-mass">Where mass comes from</h2>
     <p data-i>One field is different. The Higgs field is not zero anywhere, even in empty space, and a particle that feels it is harder to speed up or slow down. That resistance is its rest mass. The electron feels the field faintly, the top quark about 340,000 times more, and the photon not at all.</p>
     <figure class="deep-fig"><canvas data-i-attr="aria-label" class="deep-c" id="deepMass" role="img" aria-label="Three lanes across a field of dots. A photon crosses at a steady speed. An electron and a top quark get the same push again and again: the electron jumps ahead each time, and the top quark, carrying a crowd of dots, barely moves."></canvas>
+    <p class="deep-act"><button data-i type="button" class="btn btn-small" id="deepRing">Ring the field</button> <span class="deep-say" id="deepRingSay" role="status"></span></p>
     <figcaption data-i>The same push, again and again. The photon has no rest mass and never stops. The electron jumps ahead; the top quark barely moves. Between pushes nothing slows down: the field resists a change in motion, not motion. The lanes are not to scale. At true scale the electron would cross the page 340,000 times before the top quark crossed it once.</figcaption></figure>
     <p data-i>Hit the field hard enough and it rings. The ring is the Higgs boson, found at CERN on July 4, 2012, at <b>125.13 GeV</b>, 133 times the mass of a proton.</p>
-    <p class="deep-act"><button data-i type="button" class="btn btn-small" id="deepRing">Ring the field</button> <span class="deep-say" id="deepRingSay" role="status"></span></p>
-    <p data-i class="note">It is not where most of your mass comes from. The Higgs field gives the three quarks in a proton about 9 MeV. The other 99 percent of the proton, and of you, is the energy of the gluon field.</p>
+    <p data-i class="note">It is not where most of your mass comes from. The Higgs field gives the three quarks in a proton about 9 MeV. The other 99 percent of the proton, and of you, is the energy of the gluon field and of the quarks moving inside it.</p>
   </div>
 </section>
 
 <section class="chapter deep" id="weak" data-scene="weak" aria-labelledby="t-weak">
   <div class="plate">
     <h2 data-i id="t-weak">The force that changes what a thing is</h2>
-    <p data-i>Three forces push and pull. The fourth, the weak force, turns one particle into another. Inside a neutron a down quark becomes an up quark, so the neutron becomes a proton. The charge that was lost leaves as a W boson, which lasts about 3 × 10⁻²⁵ seconds and becomes an electron and an antineutrino. That is beta decay, the decay carbon dating counts.</p>
+    <p data-i>Three forces push and pull. The fourth, the weak force, turns one particle into another. Inside a neutron a down quark becomes an up quark, so the neutron becomes a proton. The charge that was lost leaves as a W boson, which is so heavy that it can last less than 10⁻²⁵ seconds before it becomes an electron and an antineutrino. That is beta decay, the decay carbon dating counts.</p>
     <figure class="deep-fig"><canvas data-i-attr="aria-label" class="deep-c" id="deepWeak" role="img" aria-label="Beta decay drawn in time from left to right. A neutron holds an up quark and two down quarks. One down quark turns into an up quark and gives off a W boson, drawn as a wavy line. The W ends, and an electron and an antineutrino fly away from that point."></canvas>
-    <figcaption data-i>Beta decay, in time from left to right. A free neutron lasts 878 seconds on average before this happens.</figcaption></figure>
     <p class="deep-act"><button data-i type="button" class="btn btn-small" id="deepDecay">Play the decay</button> <span class="deep-say" id="deepDecaySay" role="status"></span></p>
+    <figcaption data-i>Beta decay, in time from left to right. A free neutron lasts 878 seconds on average before this happens.</figcaption></figure>
     <p data-i>The W weighs as much as 86 protons, so the weak force reaches only about 10⁻¹⁸ m and almost never acts. That slowness is why the Sun lasts ten billion years: its first step, two protons becoming deuterium, has to wait for the weak force.</p>
     <p data-i>Neutrinos feel only this force and gravity. About 60 billion of them from the Sun pass through each square centimeter of you every second, and nearly all go on through the whole Earth. They come in three kinds and change from one kind to another as they fly, which can happen only if they have mass: less than 0.45 eV, under a millionth of an electron&rsquo;s. Nobody knows why so little.</p>
     <figure class="deep-fig"><canvas data-i-attr="aria-label" class="deep-c deep-short" id="deepOsc" role="img" aria-label="A chart of three colored bands that swap widths along the horizontal axis: the chance that a neutrino that started as a muon neutrino is found as an electron, a muon, or a tau neutrino, against distance divided by energy."></canvas>
@@ -317,8 +336,16 @@
     <li><span data-i class="status">Open</span><h3 data-i>Why does the strong force respect mirrors?</h3><p data-i>The theory allows the neutron&rsquo;s charge to be lopsided, yet none is seen: the knob that would tilt it must be set below one part in ten billion. That is the strong CP problem; a particle called the axion is one proposed answer.</p></li>
     <li><span data-i class="status">Open</span><h3 data-i>Why is there matter at all?</h3><p data-i>The Big Bang should have made equal amounts of matter and antimatter. Antihydrogen falls down, not up (2023, measured to about 20%), and the missing asymmetry is still missing.</p></li>
     <li><span data-i class="status">New</span><h3 data-i>A clock inside a nucleus</h3><p data-i>Thorium-229&rsquo;s nuclear transition was laser-excited in 2024, and the first working nuclear clocks were reported in October 2026 (Toscani De Col et al.; Huang et al.), still less stable than the best atomic clocks.</p></li>
-    <li><span data-i class="status">Settled</span><h3 data-i>Two famous anomalies, closed</h3><p data-i>The muon&rsquo;s magnetism now agrees with theory (2025), and hydrogen settled the proton&rsquo;s radius at 0.84 fm (2026).</p></li>
+    <li><span data-i class="status">Settled</span><h3 data-i>Two famous anomalies, closed</h3><p data-i>The muon&rsquo;s magnetism now agrees with theory once lattice QCD is used for the hardest piece (2025), and hydrogen settled the proton&rsquo;s radius at 0.84 fm (2026).</p></li>
   </ul>
+  <div class="edge-next">
+    <p data-i>That is as far down as anyone has looked. Where to next?</p>
+    <div class="actions">
+      <a data-i class="btn btn-primary" href="#top">Pick another element</a>
+      <a data-i class="btn" href="#labs">Open the labs on <span data-el="lname">iron</span></a>
+      <a data-i class="btn" href="#tour">Take the tour of <span data-el="lname">iron</span></a>
+    </div>
+  </div>
 </section>
 
 <!-- =============================================================== get -->
@@ -344,7 +371,8 @@
 <div class="ms-dock" id="missions"></div>
 
 <footer class="foot">
-  <p data-i class="foot-mark">Atom</p>
+  <a data-i class="btn btn-small to-top" href="#top">Top</a>
+  <p data-i data-i-ctx="product name" class="foot-mark">Atom</p>
   <details class="sources">
     <summary data-i>Sources</summary>
     <ol id="sourceList">

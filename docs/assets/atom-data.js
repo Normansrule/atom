@@ -221,7 +221,7 @@ var CAT = {
 var ELEMENTS = [
 [1,"H","Hydrogen",1.008,0,"nm",1,1,"gas",0.00008988,13.99,20.27,1766,"Henry Cavendish",1400,750000,1,
  TT("Almost never free on Earth — it is locked into water and into every hydrocarbon and organic molecule. Free H2 leaks straight out of the atmosphere. Deep-crustal 'natural hydrogen' seeps (Mali, Australia, France) are a live exploration frontier."),
- TT("Made, not mined: ~95% by steam methane reforming (China, USA, Russia, EU). Green H2 from electrolysis is a few per cent and growing."),
+ TT("Made, not mined: nearly all from fossil fuels, mostly natural gas and coal (China, USA, Russia, EU). Green H2 from electrolysis is still under 1% and growing."),
  TT("Ammonia synthesis for fertilizer (the single largest use), petroleum refining and hydrocracking, methanol, rocket propellant, fuel cells, semiconductor and glass processing."),
  TT("Three quarters of all ordinary matter by mass. The proton is the only nucleus with no neutron, and the only atom for which the Schrödinger equation can be solved exactly — which is why every orbital in this app is hydrogenic.")],
 [2,"He","Helium",4.002602,0,"ng",18,1,"gas",0.0001785,0.95,4.22,1868,TT("Janssen and Lockyer (Sun), Ramsay (Earth)"),0.008,230000,4,
@@ -231,7 +231,7 @@ var ELEMENTS = [
  TT("The only element that will not solidify at any temperature at ordinary pressure — it needs about 25 atmospheres. Below 2.17 K liquid He-4 becomes a superfluid with zero viscosity.")],
 [3,"Li","Lithium",6.94,0,"ak",1,2,"solid",0.534,453.7,1603,1817,"Johan August Arfwedson",20,0.0006,7,
  TT("Spodumene and petalite pegmatites (hard rock), and brines under salt flats — the 'lithium triangle' of Chile, Argentina, and Bolivia. Also in clays (Nevada) and geothermal brines."),
- TT("Australia (hard rock, ~half of supply), Chile (brine), China (both, plus most refining), Argentina, Zimbabwe."),
+ TT("Australia (hard rock, about a third of supply), China (both, plus most refining), Chile (brine), Zimbabwe, Argentina."),
  TT("Lithium-ion batteries dominate demand. Also lithium grease, glass and ceramic fluxes, aluminum smelting, and lithium carbonate as a mood stabilizer in bipolar disorder."),
  TT("One of only three elements made in the Big Bang. Stars destroy lithium rather than make it, so cosmic lithium is a puzzle: Big Bang nucleosynthesis predicts about three times more Li-7 than old stars actually show.")],
 [4,"Be","Beryllium",9.0121831,0,"ae",2,2,"solid",1.85,1560,2742,1798,"Louis-Nicolas Vauquelin",2.8,0.0000001,9,
@@ -248,7 +248,7 @@ var ELEMENTS = [
  TT("Everywhere: carbonate rock (limestone, dolomite) holds most crustal carbon, then coal, oil, gas, and all living things. Diamond comes from the mantle via kimberlite pipes."),
  TT("Graphite: China, Mozambique, Madagascar, Brazil. Diamond: Russia, Botswana, DR Congo, Australia, Canada. Coal: China, India, Indonesia, USA."),
  TT("Steel (carbon is what makes iron into steel), all plastics and fuels, graphite electrodes and anodes for lithium batteries, carbon fiber, activated carbon, abrasives, and cutting tools."),
- TT("Carbon-12 was the definition of the atomic mass unit — its mass is exactly 12 u by construction. Carbon exists as diamond, graphite, graphene, nanotubes, and fullerenes, more allotropes than any other element.")],
+ TT("Carbon-12 defines the atomic mass unit: its mass is exactly 12 u by construction. Carbon exists as diamond, graphite, graphene, nanotubes, and fullerenes, more allotropes than any other element.")],
 [7,"N","Nitrogen",14.007,0,"nm",15,2,"gas",0.0012506,63.15,77.36,1772,"Daniel Rutherford",19,1000,14,
  TT("78% of the atmosphere by volume, and essentially nowhere else in bulk — nitrate minerals are rare because they are so soluble. The Atacama caliche beds are the famous exception."),
  TT("Extracted from air by cryogenic distillation, everywhere. Fixed nitrogen is made by Haber-Bosch — China, India, Russia, USA."),
@@ -262,7 +262,7 @@ var ELEMENTS = [
 [9,"F","Fluorine",18.998403163,0,"hl",17,2,"gas",0.001696,53.53,85.03,1886,TT("Henri Moissan (isolation)"),585,0.4,19,
  TT("Fluorite (CaF2) veins, plus fluorapatite in phosphate rock and cryolite (now mostly synthetic; the Greenland deposit is worked out)."),
  TT("China (over half of fluorspar), Mexico, Mongolia, South Africa, Vietnam."),
- TT("Hydrofluoric acid, aluminum smelting flux, refrigerants and blowing agents, PTFE and fluoropolymers, uranium hexafluoride for enrichment, fluoridated pharmaceuticals (about 20% of drugs contain F)."),
+ TT("Hydrofluoric acid, aluminum smelting flux, refrigerants and blowing agents, PTFE and fluoropolymers, uranium hexafluoride for enrichment, fluorinated pharmaceuticals (about 20% of drugs contain F)."),
  TT("The most electronegative element and the strongest common oxidizer. Moissan won the 1906 Nobel Prize for isolating it; several earlier chemists were poisoned or killed trying.")],
 [10,"Ne","Neon",20.1797,0,"ng",18,2,"gas",0.0008999,24.56,27.07,1898,TT("Ramsay and Travers"),0.005,1300,20,
  TT("18 ppm of the atmosphere by volume, and nothing else. Cosmically abundant (it is an alpha-process product of stellar burning) but it never bonded to anything so Earth lost most of its share."),
@@ -348,7 +348,7 @@ var ELEMENTS = [
  TT("Banded iron formations — chemical sediments laid down 2.5 billion years ago when the first free oxygen precipitated dissolved iron out of the oceans. Also magnetite skarns and laterites."),
  TT("Australia (Pilbara), Brazil (Carajas), China, India, Russia. Steel production is dominated by China."),
  TT("Steel — about 95% of all metal used by humanity by mass. Structural, automotive, machinery, everything."),
- TT("The Earth's core is mostly iron, and its convection generates the magnetic field that shields the atmosphere. Iron sits at the bottom of the nuclear binding-energy curve alongside nickel, which is why stellar fusion stops there and why supernovae happen.")],
+ TT("The Earth's core is mostly iron, and its convection generates the magnetic field that shields the atmosphere. Iron sits near the top of the nuclear binding-energy curve alongside nickel, which is why stellar fusion stops there and why supernovae happen.")],
 [27,"Co","Cobalt",58.933194,0,"tm",9,4,"solid",8.90,1768,3200,1735,"Georg Brandt",25,3,59,
  TT("Almost always a by-product: in the sediment-hosted copper belt of Katanga (DR Congo) and Zambia, in nickel laterites and magmatic sulfides, and in deep-sea crusts."),
  TT("DR Congo produces roughly 70% of world cobalt; Indonesia is rising fast as a nickel by-product; Russia, Australia, Canada. Refining is dominated by China."),
@@ -420,15 +420,15 @@ var ELEMENTS = [
  TT("Ceramics and refractories, foundry sand, and — critically — zircaloy cladding tubes that hold the fuel pellets in nearly every water-cooled reactor."),
  TT("Zirconium's thermal neutron absorption cross section is only 0.18 barns, which is why it clads reactor fuel; hafnium, chemically almost identical and always found with it, absorbs 104 barns and must be removed. The oldest known terrestrial material is a 4.4-billion-year-old zircon from Jack Hills, Australia.")],
 [41,"Nb","Niobium",92.90637,0,"tm",5,5,"solid",8.57,2750,5017,1801,"Charles Hatchett",20,0.002,93,
- TT("Pyrochlore in carbonatite intrusions — weathered carbonatite at Araá in Brazil is by far the largest deposit — and columbite-tantalite pegmatites."),
- TT("Brazil produces about 90% of world niobium (CBMM at Araá), with Canada (Niobec) most of the rest."),
+ TT("Pyrochlore in carbonatite intrusions (weathered carbonatite at Araxá in Brazil is by far the largest deposit) and columbite-tantalite pegmatites."),
+ TT("Brazil produces about 90% of world niobium (CBMM at Araxá), with Canada (Niobec) most of the rest."),
  TT("Micro-alloyed high-strength steel for pipelines and car bodies (a hundred grams per metric ton makes a real difference), superconducting magnets (NbTi and Nb3Sn in MRI machines and the LHC), and superalloys."),
  TT("Every superconducting magnet in the Large Hadron Collider is niobium-titanium, and the ITER fusion magnets are Nb3Sn. Niobium was called columbium in the USA until 1949 and the name still appears in the steel industry.")],
 [42,"Mo","Molybdenum",95.95,0,"tm",6,5,"solid",10.28,2896,4912,1778,"Carl Wilhelm Scheele",1.2,0.05,98,
  TT("Molybdenite (MoS2), mostly as a by-product of porphyry copper deposits, plus a few primary molybdenum porphyries in Colorado."),
  TT("China, Chile, USA, Peru, Mexico."),
  TT("High-strength and high-temperature steels and superalloys, catalysts for removing sulfur from fuel, molybdenum filaments and furnace parts, and MoS2 as a dry lubricant."),
- TT("Nitrogenase, the enzyme that lets bacteria fix atmospheric nitrogen, has a molybdenum-iron cofactor. Life solved the N2 triple bond with molybdenum a billion years before Haber and Bosch solved it with iron at 200 atmospheres.")],
+ TT("Nitrogenase, the enzyme that lets bacteria fix atmospheric nitrogen, has a molybdenum-iron cofactor. Life solved the N2 triple bond with molybdenum billions of years before Haber and Bosch solved it with iron at 200 atmospheres.")],
 [43,"Tc","Technetium",98,1,"tm",7,5,"solid",11,2430,4538,1937,TT("Perrier and Segrè"),null,null,98,
  TT("Effectively absent from Earth. Trace amounts occur in uranium ore from spontaneous fission, at parts per 10^12 level. It is found in the spectra of some red giant stars, which proves those stars are making elements right now."),
  TT("Made in reactors and generators, not mined. Mo-99 for medical use comes from a handful of research reactors: Netherlands, Belgium, Australia, South Africa."),
@@ -488,7 +488,7 @@ var ELEMENTS = [
  TT("0.087 ppm of the atmosphere — rarer than any other stable atmospheric gas. Earth is depleted in xenon relative to the other noble gases by a factor of about 20, a genuinely unsolved problem called the missing xenon paradox."),
  TT("Air separation, as a tiny by-product of oxygen plants."),
  TT("Ion thrusters for satellites and deep-space probes, high-intensity discharge lamps and camera flashes, general anaesthesia, and as the target medium in dark-matter and neutrinoless-double-beta-decay detectors."),
- TT("Xenon forms real compounds — XePtF6 in 1962 destroyed the idea that noble gases are inert. Xe-135 is the strongest neutron absorber known, 2.6 million barns, and 'xenon poisoning' after a reactor scram is what caught out the Chernobyl operators.")],
+ TT("Xenon forms real compounds: XePtF6 in 1962 destroyed the idea that noble gases are inert. Xe-135 is the strongest neutron absorber known, 2.6 million barns, and 'xenon poisoning' after hours at reduced power is what caught out the Chernobyl operators.")],
 [55,"Cs","Cesium",132.90545196,0,"ak",1,6,"solid",1.873,301.7,944,1860,TT("Bunsen and Kirchhoff"),3,0.0008,133,
  TT("Pollucite in a handful of lithium-cesium-tantalum pegmatites. World supply comes from perhaps three or four deposits."),
  TT("Canada (Tanco, Manitoba — now largely depleted), Zimbabwe (Bikita), Namibia."),
@@ -553,7 +553,7 @@ var ELEMENTS = [
  TT("Ion-adsorption clays and xenotime with the other heavy rare earths."),
  TT("China, Myanmar, Australia."),
  TT("Ho:YAG surgical lasers (the standard tool for kidney stones and prostate surgery), the pole pieces of the strongest static magnets, and neutron-flux control in reactors."),
- TT("Holmium has the highest magnetic moment of any naturally occurring element, 10.6 Bohr magnetons, which is why it concentrates flux in record-setting magnets.")],
+ TT("Holmium shares with dysprosium the highest magnetic moment of any naturally occurring element, about 10.6 Bohr magnetons, which is why it concentrates flux in record-setting magnets.")],
 [68,"Er","Erbium",167.259,0,"ln",0,6,"solid",9.066,1802,3141,1843,"Carl Gustaf Mosander",3.5,0.0002,166,
  TT("Xenotime and ion-adsorption clays."),
  TT("China, Malaysia, Australia, Myanmar."),
@@ -613,7 +613,7 @@ var ELEMENTS = [
  TT("Native gold in quartz veins, in Witwatersrand palaeoplacer conglomerates (by far the largest single source in history), in Carlin-type disseminated deposits, and in placers."),
  TT("China, Australia, Russia, Canada, USA, Ghana, Peru."),
  TT("Jewelry and investment take most of it; industrially, bonding wire and contacts in electronics, dentistry, infrared-reflective coatings on spacecraft and visors, and gold nanoparticles in diagnostics."),
- TT("Gold's color comes from relativity: the 6s electrons move fast enough that relativistic contraction pulls the 6s level up toward 5d, shifting absorption into the blue. A non-relativistic gold would look like silver. It is also an aufbau exception, [Xe] 4f14 5d10 6s1.")],
+ TT("Gold's color comes from relativity: its 6s electrons move so fast that relativity pulls the 6s level down and pushes the 5d level up, so the gap between them shrinks and gold absorbs blue light. A non-relativistic gold would look like silver. It is also an aufbau exception, [Xe] 4f14 5d10 6s1.")],
 [80,"Hg","Mercury",200.592,0,"tm",12,6,"liquid",13.534,234.32,629.88,-1500,TT("known since antiquity"),0.085,0.001,202,
  TT("Cinnabar (HgS) in low-temperature hot-spring and volcanic settings. Almadén in Spain supplied a third of all mercury ever mined over two thousand years."),
  TT("China, Kyrgyzstan, Mexico, Peru. Production is falling under the Minamata Convention."),
@@ -633,7 +633,7 @@ var ELEMENTS = [
  TT("Bismuthinite and native bismuth, mostly as a by-product of lead, tungsten, and copper smelting."),
  TT("China (dominant), Laos, Vietnam, Mexico, Japan, Korea."),
  TT("Non-toxic replacement for lead in solders, plumbing brass, fishing weights, and ammunition; bismuth subsalicylate (Pepto-Bismol); low-melting fusible alloys for sprinklers and safety plugs; and cosmetics."),
- TT("Bismuth-209 was thought to be the heaviest stable nuclide until 2003, when a French team measured it alpha-decaying with a half-life of 2.01 x 10^19 years — a billion times the age of the universe. It is also the most diamagnetic metal.")],
+ TT("Bismuth-209 was thought to be the heaviest stable nuclide until 2003, when a French team caught it alpha-decaying; its half-life is 2.01 x 10^19 years, a billion times the age of the universe. It is also the most diamagnetic metal.")],
 [84,"Po","Polonium",209,1,"pt",16,6,"solid",9.196,527,1235,1898,TT("Marie and Pierre Curie"),2e-10,null,209,
  TT("A transient member of the uranium-238 decay chain. About 100 micrograms of Po-210 exist in a metric ton of uranium ore. Tobacco leaves concentrate it from phosphate fertilizer and soil."),
  TT("Made by neutron irradiation of bismuth-209 in reactors; Russia has been the main supplier."),
@@ -685,10 +685,10 @@ var ELEMENTS = [
  TT("Neutron detection instruments, and as the target for making Pu-238 for radioisotope thermoelectric generators."),
  TT("Np-237 has a bare-sphere critical mass of roughly 60 kg and is in principle weapons-usable, which is why it is tracked under safeguards. Its half-life of 2.14 million years makes it one of the dominant long-term hazards in spent fuel.")],
 [94,"Pu","Plutonium",244,1,"an",0,7,"solid",19.82,912.5,3505,1940,TT("Seaborg, McMillan, Kennedy, and Wahl"),null,null,239,
- TT("Essentially absent naturally, though trace Pu-239 from natural neutron capture exists in uranium ore, and Pu-244 from the early solar system has been reported in deep-sea crusts."),
+ TT("Essentially absent naturally, though trace Pu-239 from natural neutron capture exists in uranium ore, and atoms of Pu-244 that fell to Earth from interstellar space have been found in deep-sea crusts."),
  TT("Made in reactors by neutron capture on U-238. Roughly 500 metric tons of separated plutonium exist worldwide, civil and military."),
  TT("Reactor fuel as MOX, nuclear weapons, and Pu-238 (a different isotope, not fissile) as the heat source in radioisotope thermoelectric generators for Voyager, Cassini, New Horizons, and the Mars rovers."),
- TT("Plutonium has six allotropes at ordinary pressure and expands by 25% between them, which makes it a metallurgical nightmare; alloying with gallium stabilizes the workable delta phase. A gram of Pu-238 puts out about half a watt of heat, forever, by human standards.")],
+ TT("Plutonium has six allotropes at ordinary pressure and expands by 25% between them, which makes it a metallurgical nightmare; alloying with gallium stabilizes the workable delta phase. A gram of Pu-238 puts out about half a watt of heat for decades, fading by half only every 88 years.")],
 [95,"Am","Americium",243,1,"an",0,7,"solid",13.69,1449,2880,1944,TT("Seaborg, James, Morgan, and Ghiorso"),null,null,241,
  TT("Entirely artificial, made by successive neutron capture on plutonium in reactors."),
  TT("Recovered from aged plutonium and reprocessing waste. The USA, Russia, and the EU hold the stocks."),
@@ -705,7 +705,7 @@ var ELEMENTS = [
  TT("Purely a target material for making superheavy elements."),
  TT("Twenty-two milligrams of Bk-249 made at Oak Ridge were shipped to Dubna and bombarded with calcium-48 to create element 117, tennessine, in 2010. The berkelium had a 330-day half-life, so the experiment was a race against decay.")],
 [98,"Cf","Californium",251,1,"an",0,7,"solid",15.1,1173,1743,1950,TT("Thompson, Street, Ghiorso, and Seaborg"),null,null,252,
- TT("Entirely artificial, although californium is produced in supernovae and its decay was once proposed to power supernova light curves."),
+ TT("Entirely artificial on Earth, although californium is thought to form when neutron stars collide, and its decay was once proposed to power supernova light curves."),
  TT("Oak Ridge and Dimitrovgrad; world production is a few tens of milligrams a year."),
  TT("Cf-252 is a portable neutron source — 2.3 million neutrons per second per microgram — used to start up reactors, scan for explosives and landmines, log oil wells and treat cervical cancer."),
  TT("At roughly $27 million per gram, californium-252 is one of the most expensive substances ever produced. A single microgram is a usable neutron source.")],
@@ -723,7 +723,7 @@ var ELEMENTS = [
  TT("Entirely artificial."),
  TT("Made an atom at a time in accelerators."),
  TT("Research only."),
- TT("Mendelevium was discovered seventeen atoms at a time — the original 1955 experiment identified precisely seventeen atoms, and the technique of one-atom-at-a-time chemistry was invented to do it.")],
+ TT("Mendelevium was discovered one atom at a time: the original 1955 experiments identified just seventeen atoms in all, and the technique of one-atom-at-a-time chemistry was invented to do it.")],
 [102,"No","Nobelium",259,1,"an",0,7,"solid",9.9,1100,null,1966,TT("Dubna (disputed with Berkeley and Stockholm)"),null,null,259,
  TT("Entirely artificial."),
  TT("Accelerators only."),
@@ -748,10 +748,10 @@ var ELEMENTS = [
  TT("In 2000 chemists made six atoms of bohrium, converted them to the oxychloride and measured its volatility, confirming that bohrium behaves like rhenium. Six atoms was enough to do chemistry.")],
 [108,"Hs","Hassium",269,1,"tm",8,7,"solid",27.4,null,null,1984,"GSI Darmstadt",null,null,269,
  TT("Entirely artificial."),TT("Accelerators only."),TT("Research only."),
- TT("Hassium is predicted to be the densest element of all, around 41 g/cm3 — nearly twice osmium — though no one has ever had enough of it to weigh. Its tetroxide has been made and found to behave like osmium's.")],
+ TT("Hassium is predicted to be one of the densest elements of all, around 27 g/cm3 against osmium's 22.6, though no one has ever had enough of it to weigh. Its tetroxide has been made and found to behave like osmium's.")],
 [109,"Mt","Meitnerium",278,1,"un",9,7,"solid",27.5,null,null,1982,"GSI Darmstadt",null,null,278,
  TT("Entirely artificial."),TT("Accelerators only."),TT("Research only."),
- TT("Named for Lise Meitner, who explained nuclear fission and was passed over for the Nobel Prize that went to Otto Hahn. Fewer than a hundred atoms of meitnerium have ever existed.")],
+ TT("Named for Lise Meitner, who explained nuclear fission and was passed over for the Nobel Prize that went to Otto Hahn. Only a few hundred atoms of meitnerium have ever been detected.")],
 [110,"Ds","Darmstadtium",281,1,"un",10,7,"solid",26.5,null,null,1994,"GSI Darmstadt",null,null,281,
  TT("Entirely artificial."),TT("Accelerators only."),TT("Research only."),
  TT("Its ground-state configuration is genuinely uncertain: relativistic calculations disagree over whether it is 6d8 7s2, 6d9 7s1, or 6d10, and no measurement exists. This app shows the aufbau result and says so.")],
@@ -760,7 +760,7 @@ var ELEMENTS = [
  TT("Roentgenium is predicted to be chemically quite unlike gold despite sitting under it, and possibly to favor the +3 state. Like darmstadtium, its configuration is calculated rather than measured.")],
 [112,"Cn","Copernicium",285,1,"un",12,7,"gas",14,283,340,1996,"GSI Darmstadt",null,null,285,
  TT("Entirely artificial."),TT("Accelerators only."),TT("Research only."),
- TT("Copernicium may be a gas at room temperature — relativistic effects are predicted to make it behave more like a noble gas than like mercury. Experiments on single atoms adsorbing onto gold surfaces are consistent with an extremely volatile metal.")],
+ TT("Copernicium may be a volatile liquid at room temperature: relativistic effects are predicted to make it behave more like a noble gas than like mercury. Experiments on single atoms adsorbing onto gold surfaces are consistent with an extremely volatile metal.")],
 [113,"Nh","Nihonium",286,1,"un",13,7,"solid",16,700,1430,2004,TT("RIKEN (Morita and co-workers)"),null,null,286,
  TT("Entirely artificial."),TT("Accelerators only."),TT("Research only."),
  TT("The first element discovered in Asia. RIKEN fired zinc at bismuth for nine years and got three atoms; the name honors Japan.")],
@@ -1104,7 +1104,7 @@ var DECAY_SERIES = {
     ["Np",93,237,"a","2.14 Myr"],["Pa",91,233,"b","27.0 d"],["U",92,233,"a","159 kyr"],
     ["Th",90,229,"a","7.34 kyr"],["Ra",88,225,"b","14.9 d"],["Ac",89,225,"a","10.0 d"],
     ["Fr",87,221,"a","4.79 min"],["At",85,217,"a","32 ms"],["Bi",83,213,"b","45.6 min"],
-    ["Po",84,213,"a","3.7 µs"],["Pb",82,209,"b","3.25 h"],["Bi",83,209,"a","20.1 Eyr"]]}
+    ["Po",84,213,"a","3.7 µs"],["Pb",82,209,"b","3.25 h"],["Bi",83,209,"a","20.1 Eyr"],["Tl",81,205,"stable","stable"]]}
 };
 function seriesKey(A){ return "4n"+(A%4); }
 function bindingSEMF(Z,A){
@@ -1428,6 +1428,20 @@ var LINES = {
  80:[[404.656,.6],[407.783,.2],[435.833,1],[546.074,1],[576.960,.5],[579.066,.5]],
  81:[[535.046,1]]
 };
+/* ------------------------------------------------------------ the natural mix of isotopes
+   ISO_NAT[Z-1] lists the isotopes an element is found as on Earth, each as "A,d,p":
+   the mass number, the isotope's mass minus A in units of 0.0001 u, and its share
+   of the atoms in percent. From NIST, Atomic Weights and Isotopic Compositions,
+   version 4.1 (Coursey, Schwab, Tsai, and Dragoset, 2015), made by script from the
+   table's listing of all elements; no figure here was typed by hand. An empty entry
+   (technetium, promethium, polonium to actinium, and everything past uranium) is an
+   element with no stable isotope and no fixed mix in nature.                        */
+var ISO_NAT="1,78,99.9885 2,141,.0115;3,160,.000134 4,26,99.999866;6,151,7.59 7,160,92.41;9,122,100;10,129,19.9 11,93,80.1;12,0,98.93 13,34,1.07;14,31,99.636 15,1,.364;16,-51,99.757 17,-9,.038 18,-8,.205;19,-16,100;20,-76,90.48 21,-62,.27 22,-86,9.25;23,-102,100;24,-150,78.99 25,-142,10 26,-174,11.01;27,-185,100;28,-231,92.223 29,-235,4.685 30,-262,3.092;31,-262,100;32,-279,94.99 33,-285,.75 34,-321,4.25 36,-329,.01;35,-311,75.76 37,-341,24.24;36,-325,.3336 38,-373,.0629 40,-376,99.6035;39,-363,93.2581 40,-360,.0117 41,-382,6.7302;40,-374,96.941 42,-414,.647 43,-412,.135 44,-445,2.086 46,-463,.004 48,-475,.187;45,-441,100;46,-474,8.25 47,-482,7.44 48,-521,73.72 49,-521,5.41 50,-552,5.18;50,-528,.25 51,-560,99.75;50,-540,4.345 52,-595,83.789 53,-594,9.501 54,-611,2.365;55,-620,100;54,-604,5.845 56,-651,91.754 57,-646,2.119 58,-667,.282;59,-668,100;58,-647,68.077 60,-692,26.223 61,-689,1.1399 62,-717,3.6346 64,-720,.9255;63,-704,69.15 65,-722,30.85;64,-709,49.17 66,-740,27.73 67,-729,4.04 68,-752,18.45 70,-747,.61;69,-744,60.108 71,-753,39.892;70,-758,20.57 72,-779,27.45 73,-765,7.75 74,-788,36.5 76,-786,7.73;75,-784,100;74,-775,.89 76,-808,9.37 77,-801,7.63 78,-827,23.77 80,-835,49.61 82,-833,8.73;79,-817,50.69 81,-837,49.31;78,-796,.355 80,-836,2.286 82,-865,11.593 83,-859,11.5 84,-885,56.987 86,-894,17.279;85,-882,72.17 87,-908,27.83;84,-866,.56 86,-907,9.86 87,-911,7 88,-944,82.58;89,-942,100;90,-953,51.45 91,-944,11.22 92,-950,17.15 94,-937,17.38 96,-917,2.8;93,-936,100;92,-932,14.53 94,-949,9.15 95,-942,15.84 96,-953,16.67 97,-940,9.6 98,-946,24.39 100,-925,9.82;;96,-924,5.54 98,-947,1.87 99,-941,12.76 100,-958,12.6 101,-944,17.06 102,-957,31.55 104,-946,18.62;103,-945,100;102,-944,1.02 104,-960,11.14 105,-949,22.33 106,-965,27.33 108,-961,26.46 110,-948,11.72;107,-949,51.839 109,-952,48.161;106,-935,1.25 108,-958,.89 110,-970,12.49 111,-958,12.8 112,-972,24.13 113,-956,12.22 114,-966,28.73 116,-952,7.49;113,-959,4.29 115,-961,95.71;112,-952,.97 114,-972,.66 115,-967,.34 116,-983,14.54 117,-970,7.68 118,-984,24.22 119,-967,8.59 120,-978,32.58 122,-966,4.63 124,-947,5.79;121,-962,57.21 123,-958,42.79;120,-959,.09 122,-970,2.55 123,-957,.89 124,-972,4.74 125,-956,7.07 126,-967,18.84 128,-955,31.74 130,-938,34.08;127,-955,100;124,-941,.0952 126,-957,.089 128,-965,1.9102 129,-952,26.4006 130,-965,4.071 131,-949,21.2324 132,-958,26.9086 134,-946,10.4357 136,-928,8.8573;133,-945,100;130,-937,.106 132,-949,.101 134,-955,2.417 135,-943,6.592 136,-954,7.854 137,-942,11.232 138,-948,71.698;138,-929,.08881 139,-936,99.91119;136,-929,.185 138,-940,.251 140,-946,88.45 142,-907,11.114;141,-923,100;142,-923,27.152 143,-902,12.174 144,-899,23.798 145,-874,8.293 146,-869,17.189 148,-831,5.756 150,-791,5.638;;144,-880,3.07 147,-851,14.99 148,-852,11.24 149,-828,13.82 150,-827,7.38 152,-803,26.75 154,-778,22.75;151,-801,47.81 153,-788,52.19;152,-802,.2 154,-791,2.18 155,-774,14.8 156,-779,20.47 157,-760,15.65 158,-759,24.84 160,-729,21.86;159,-746,100;156,-757,.056 158,-756,.095 160,-748,2.329 161,-731,18.889 162,-732,25.475 163,-713,24.896 164,-708,28.26;165,-697,100;162,-712,.139 164,-708,1.601 166,-697,33.503 167,-679,22.869 168,-676,26.978 170,-645,14.91;169,-658,100;168,-661,.123 170,-652,2.982 171,-637,14.09 172,-636,21.68 173,-618,16.103 174,-611,32.026 176,-574,12.996;175,-592,97.401 176,-573,2.599;174,-600,.16 176,-586,5.26 177,-568,18.6 178,-563,27.28 179,-542,13.62 180,-534,35.08;180,-525,.01201 181,-520,99.98799;180,-533,.12 182,-518,26.5 183,-498,14.31 184,-491,30.64 186,-456,28.43;185,-470,37.4 187,-442,62.6;184,-475,.02 186,-462,1.59 187,-443,1.96 188,-442,13.24 189,-419,16.15 190,-416,26.26 192,-385,40.78;191,-394,37.3 193,-371,62.7;190,-401,.012 192,-390,.782 194,-373,32.86 195,-352,33.78 196,-350,25.21 198,-321,7.356;197,-334,100;196,-342,.15 198,-332,9.97 199,-317,16.87 200,-317,23.1 201,-297,13.18 202,-294,29.86 204,-265,6.87;203,-277,29.52 205,-256,70.48;204,-270,1.4 206,-255,24.1 207,-241,22.1 208,-233,52.4;209,-196,100;;;;;;;232,381,100;231,359,100;234,410,.0054 235,439,.7204 238,508,99.2742".split(";");
+/* isotopesOf(Z) = [[A, mass in u, percent], ...] in order of mass, or [] */
+function isotopesOf(Z){
+  var s=ISO_NAT[Z-1]; if(!s) return [];
+  return s.split(" ").map(function(t){ var p=t.split(","); return [+p[0], +p[0]+p[1]/1e4, +p[2]]; });
+}
 /* air to vacuum (Edlén 1966, the form NIST uses); every wavelength the site
    draws is in vacuum, so hydrogen's computed lines and these measured ones
    sit on one scale */
@@ -1510,15 +1524,17 @@ var ICONS = {
      b Big Bang fusion           c cosmic rays splitting nuclei
      n merging neutron stars     m exploding massive stars
      l dying low-mass stars      w exploding white dwarfs
-     h made by people: nothing older survives (it is all radioactive)        */
+     h made by people: nothing older survives (it is all radioactive)
+   Each kind has one name, used by the table's key, the readout, the card, and
+   the card's drawing; a sentence lowers its first letter (AtomI18N.low).     */
 var ORIGIN_KINDS = {
-  b:{name:TT("The Big Bang"),              short:TT("Big Bang"),            col:"#a493ff", ink:"#4a3aa8"},
-  c:{name:TT("Cosmic rays"),               short:TT("cosmic rays"),         col:"#ff7fd6", ink:"#93166f"},
-  n:{name:TT("Merging neutron stars"),     short:TT("neutron-star mergers"),col:"#ffc24d", ink:"#7a4b00"},
-  m:{name:TT("Exploding massive stars"),   short:"supernovae",          col:"#56b8ff", ink:"#0b4f86"},
-  l:{name:TT("Dying low-mass stars"),      short:TT("dying stars"),         col:"#ff7d5c", ink:"#8f2a10"},
-  w:{name:TT("Exploding white dwarfs"),    short:TT("white-dwarf blasts"),  col:"#8ff0ff", ink:"#0e5a66"},
-  h:{name:TT("Made by people"),            short:"laboratories",        col:"#b8f56b", ink:"#3d5e0c"}
+  b:{name:TT("The Big Bang"),              col:"#a493ff", ink:"#4a3aa8"},
+  c:{name:TT("Cosmic-ray collisions"),     col:"#ff7fd6", ink:"#93166f"},
+  n:{name:TT("Merging neutron stars"),     col:"#ffc24d", ink:"#7a4b00"},
+  m:{name:TT("Exploding massive stars"),   col:"#56b8ff", ink:"#0b4f86"},
+  l:{name:TT("Dying low-mass stars"),      col:"#ff7d5c", ink:"#8f2a10"},
+  w:{name:TT("Exploding white dwarfs"),    col:"#8ff0ff", ink:"#0e5a66"},
+  h:{name:TT("Made by people"),            col:"#b8f56b", ink:"#3d5e0c"}
 };
 var ORIGIN = [
 {b:1},{b:.9,l:.05,m:.05},{b:.2,c:.15,l:.65},{c:1},{c:.8,m:.2},{l:.5,m:.5},{l:.7,m:.3},{m:1},{l:.5,m:.5},{m:1},
@@ -1597,7 +1613,7 @@ var FRONTIER = [
 [["chips","superconductors"],TT("Copper still carries the signals in chips, but its resistance climbs in the narrowest wires, so makers add ruthenium and cobalt liners; copper oxides also form tapes for superconducting fusion magnets."),TT("What makes copper-oxide cuprate superconductors work above 77 kelvin? The mechanism has been debated since their discovery in 1986."),""],
 [["batteries"],TT("Zinc batteries with water-based electrolytes are nonflammable and use a cheap, abundant metal, so companies are testing them for grid energy storage."),TT("Zinc grows sharp dendrites and corrodes during charging; can rechargeable zinc anodes last thousands of cycles?"),""],
 [["chips","solar","space"],TT("Gallium nitride chips power fast chargers and 5G radios; China makes about 99 percent of the world's raw gallium and has restricted its export since 2023."),TT("Can gallium oxide, whose very wide bandgap suits high-voltage power chips, overcome its poor ability to carry heat away?"),"https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-gallium.pdf"],
-[["chips","quantum","space"],TT("Germanium goes into fast silicon-germanium transistors, satellite solar cells, and infrared optics; China banned its export to the US in December 2024, then suspended the ban in November 2025."),TT("Can holes in germanium quantum wells be made into large two-dimensional arrays of high-quality spin qubits?"),"https://fastmarkets.com/insights/china-suspends-export-prohibition-on-superhard-materials-us"],
+[["chips","quantum","space"],TT("Germanium goes into fast silicon-germanium transistors, satellite solar cells, and infrared optics; China banned its export to the US in December 2024, then announced in November 2025 that the ban would be suspended until November 27, 2026."),TT("Can holes in germanium quantum wells be made into large two-dimensional arrays of high-quality spin qubits?"),"https://fastmarkets.com/insights/china-suspends-export-prohibition-on-superhard-materials-us"],
 [["solar","space"],TT("Gallium arsenide forms the lasers that send data through fiber-optic links and the high-efficiency multi-junction solar cells on most traditional satellites, though huge constellations are switching to cheaper silicon cells."),TT("How can arsenic be removed cheaply from well water in Bangladesh and India, where tens of millions of people drink unsafe levels?"),"https://space-economy.esa.int/article/336/esa-technology-market-assessments-understanding-the-foreseen-demand-for-solar-generators-and-solar-cells"],
 [["solar"],TT("Selenium is a key ingredient of flexible CIGS thin-film solar cells and of antimony selenide cells, researched as a cheap, stable alternative."),TT("Can antimony selenide solar cells, built from cheap and stable elements, overcome the defects that keep their efficiency far below silicon's?"),""],
 [["solar","batteries"],TT("Bromine tunes the bandgap of the perovskite layers stacked on silicon in tandem solar cells, and it is the active material in zinc-bromine flow batteries."),TT("Under light, mixed iodide-bromide perovskites separate into iodide-rich and bromide-rich patches; how can this halide segregation be stopped?"),""],
@@ -1616,7 +1632,7 @@ var FRONTIER = [
 [["solar"],TT("Cadmium telluride thin-film panels, made in the US by First Solar, are the main alternative to silicon panels, and cadmium selenide quantum dots were part of the 2023 Chemistry Nobel story."),TT("Can cadmium-free quantum dots match the brightness and color purity of cadmium-based ones in displays?"),""],
 [["solar","quantum","chips"],TT("Indium tin oxide forms the clear electrodes on screens and many solar cells; Microsoft's 2025 Majorana 1 chip uses indium arsenide, though other physicists dispute its topological qubit claim."),TT("Can indium-free transparent conductors replace scarce indium tin oxide in solar cells and touchscreens?"),"https://www.sciencenews.org/article/microsoft-topological-quantum-majorana"],
 [["chips","superconductors"],TT("Chipmaking EUV machines hit about 50,000 tin droplets a second with lasers to make 13.5-nanometer light, and niobium-tin wire forms ITER's main superconducting magnets."),TT("ASML has run a 1,000-watt tin light source in tests; can EUV sources be pushed toward 2,000 watts while keeping tin debris off the mirrors?"),"https://www.asml.com/en/company/about-asml/locations/san-diego"],
-[["batteries"],TT("Antimony hardens lead in batteries and goes into flame retardants; China, the top producer, banned exports to the US in December 2024 and suspended the ban in November 2025."),TT("Liquid-metal batteries using antimony promised cheap grid storage; can their high operating temperature and corrosion problems be solved?"),"https://fastmarkets.com/insights/china-suspends-export-prohibition-on-superhard-materials-us"],
+[["batteries"],TT("Antimony hardens lead in batteries and goes into flame retardants; China, the top producer, banned exports to the US in December 2024, then announced in November 2025 that the ban would be suspended until November 27, 2026."),TT("Liquid-metal batteries using antimony promised cheap grid storage; can their high operating temperature and corrosion problems be solved?"),"https://fastmarkets.com/insights/china-suspends-export-prohibition-on-superhard-materials-us"],
 [["solar"],TT("Tellurium is half of cadmium telluride solar cells, and in 2023 the James Webb Space Telescope spotted tellurium made in a neutron-star merger after the gamma-ray burst GRB 230307A."),TT("Tellurium is about as rare as platinum in Earth's crust; is there enough, mostly from copper refining, for cadmium telluride solar to grow to terawatt scale?"),"https://doi.org/10.1038/s41586-023-06759-1"],
 [["solar","medicine","space"],TT("Iodine is a main ingredient of perovskite solar layers, iodine-131 treats thyroid cancer, and in 2021 ThrustMe reported the first iodine-fueled electric thruster operated in orbit."),TT("Iodide ions drift inside perovskite solar cells under light and heat, degrading them; how can they be pinned in place?"),"https://doi.org/10.1038/s41586-021-04015-y"],
 [["space","medicine"],TT("Xenon fuels the electric thrusters of NASA's Psyche spacecraft, and the LZ detector, holding metric tons of liquid xenon, reported no sign of light dark-matter particles in December 2025."),TT("LZ has already reached the neutrino fog for light dark matter; can bigger xenon detectors like XLZD find heavier dark matter before neutrinos cloud that search too?"),"https://newscenter.lbl.gov/2025/12/08/lz-sets-a-worlds-best-in-the-hunt-for-galactic-dark-matter/"],

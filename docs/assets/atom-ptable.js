@@ -56,6 +56,29 @@ var PTable=(function(){
   }
   function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 
+  /* ------------------------------------------------------------------ the fifth lens: families, blocks, states
+     By family (the category each element carries, in its own color), by block, or by state at 25 °C: the phase
+     the data gives, except where too little has ever been made to see one (astatine, francium, and fermium
+     on; Royal Society of Chemistry and PubChem periodic tables, read November 2026). */
+  function stateOf(Z){ return (Z===85||Z===87||Z>=100)?"unknown":ELEMENTS[Z-1][8]; }
+  function stateName(k){ return {solid:TT("solid",{}),liquid:TT("liquid",{}),gas:TT("gas",{}),unknown:TT("not known")}[k]||k; }
+  var GROUPS={
+    family:{keys:["ak","ae","tm","pt","ml","nm","hl","ng","ln","an","un"], of:function(Z){ return ELEMENTS[Z-1][5]; }, cat:function(k){ return k; }, name:function(k){ return CAT[k][0]; }},
+    block:{keys:["s","p","d","f"], of:function(Z){ return blockOf(Z); }, cat:function(k){ return {s:"ak",p:"nm",d:"tm",f:"ln"}[k]; }, name:function(k){ return TT("{b} block",{b:k}); }},
+    state:{keys:["solid","liquid","gas","unknown"], of:stateOf, cat:function(k){ return {solid:"pt",liquid:"nm",gas:"ae",unknown:"un"}[k]; }, name:function(k){ return AtomI18N.cap(stateName(k)); }}
+  }, GKEY={};
+  function groupOf(m,Z){ var c=GKEY[m]||(GKEY[m]=[]); return c[Z]||(c[Z]=GROUPS[m].of(Z)); }
+  function groupWhy(m){
+    return m==="block"?TT("Each block is named for the kind of orbital its elements are filling, and it is as wide as that kind has room for electrons: 2 columns for s, 6 for p, 10 for d, and 14 for f. The two f rows show 15 squares because one square in each could just as well be counted in the d block."):
+      (m==="state"?TT("This is each element at 25 °C. Where the key says not known, too few atoms have ever been made to see what the element is like."):
+      TT("Elements in one family have their outer electrons arranged alike, which is why they behave alike."));
+  }
+  /* what kind of element it is, in one line: the card's heading and the readout under this lens */
+  function kindLine(Z){
+    var e=ELEMENTS[Z-1], st=stateOf(Z), v={cat:CAT[e[5]][0],blk:blockOf(Z),grp:(e[6]?TT("group {n}",{n:e[6]}):(e[5]==="ln"?TT("lanthanide",{}):TT("actinide",{}))),e:e[7],e2:stateName(st)};
+    return st==="unknown"?TT("{cat} · {blk}-block · {grp}, period {e} · state at room temperature not known",v):TT("{cat} · {blk}-block · {grp}, period {e} · {e2} at room temperature",v);
+  }
+
   /* ------------------------------------------------------------------ the table */
   function create(opt){
     var host=opt.host, D=host.ownerDocument||document;
@@ -128,7 +151,8 @@ var PTable=(function(){
     if(G && AtomGL.selfCheck(QM.YlmReal)>1e-9) G=null;
     if(!G) wrap.classList.add("pt-nogl");
     api.gl=G;
-    var handles=[], bornAt=[], nextZ=1, pop=[], rects=[], dirty=true, visible=true, calm=!!opt.calm, lensW=[], lensFrom=[], lensAt=[], sweepEnd=0;
+    var handles=[], bornAt=[], nextZ=1, pop=[], rects=[], dirty=true, visible=true, calm=!!opt.calm, lensW=[], lensFrom=[], lensAt=[], lensBusy=[], lensLeft=0, lensSet=false, shut=false, fN=0;
+    CALM=calm;
     /* a change of lens crosses the table left to right in under half a second: each square eases from the
        weight it had to its new one, starting when the sweep reaches it (at once in calm mode) */
     function lensK(z, now){ var a=lensAt[z]; if(a===undefined||calm) return lensW[z]; var u=(now-a)/260; if(u<=0) return lensFrom[z]; if(u>=1) return lensW[z];
@@ -137,12 +161,46 @@ var PTable=(function(){
     /* Lenses: the same table read three ways. "shapes" is the orbitals;
        "origin" is where each element was made; "frontier" is what it is
        helping build now. A filter picks one origin or one technology out. */
-    api.lens="shapes"; api.filter="";
+    api.lens="shapes"; api.filter=""; api.groupMode="family";
+    /* this lens brings its own button and key, so every host has it. The key goes where the host shows a
+       lens's key (opt.legend; the website's #lensLegend), a moment after the host has filled that place itself.
+       A host that fits the table to what is under it passes opt.onKey; otherwise the key's height goes into
+       --keyh, which the style sheet takes off the table. */
+    var keyEl=D.createElement("div"), km=D.createElement("div"), kk=D.createElement("div"), kw=D.createElement("p"), ks=D.createElement("p"), keyMode="", lb0=opt.slot&&opt.slot.querySelector("button[data-lens]");
+    keyEl.className="pt-key"; km.className="pt-kmode"; kk.className="pt-kkeys"; kw.className="pt-kwhy"; ks.className="pt-ksay";
+    km.setAttribute("role","group"); kk.setAttribute("role","group"); ks.setAttribute("role","status");
+    [km,kk,kw,ks].forEach(function(x){ keyEl.appendChild(x); });
+    if(lb0&&!lb0.parentNode.querySelector("[data-lens=\"groups\"]")){ var gb=D.createElement("button"); gb.type="button"; gb.setAttribute("data-lens","groups"); gb.setAttribute("aria-pressed","false"); gb.textContent=TT("Families",{}); lb0.parentNode.appendChild(gb); }
+    function gcol(k){ var c=GROUPS[api.groupMode].cat(k); return opt.catColor?opt.catColor(c):CAT[c][1]; }
+    function keyDraw(){
+      var m=api.groupMode, Gm=GROUPS[m], n=0, z;
+      if(!km.firstChild){ km.setAttribute("aria-label",TT("Color the table by")); kk.setAttribute("aria-label",TT("Light up one group"));
+        km.innerHTML=[["family",TT("Family",{})],["block",TT("Block",{})],["state",TT("State",{})]].map(function(x){ return "<button type=\"button\" data-gm=\""+x[0]+"\">"+x[1]+"</button>"; }).join(""); }
+      [].forEach.call(km.children,function(b){ b.setAttribute("aria-pressed",b.getAttribute("data-gm")===m?"true":"false"); });
+      if(keyMode!==m){ keyMode=m; kk.innerHTML=Gm.keys.map(function(k){ return "<button type=\"button\" data-gk=\""+(k)+"\" style=\"--kc:"+(gcol(k))+"\">"+(Gm.name(k))+"</button>"; }).join(""); kw.textContent=groupWhy(m); }
+      [].forEach.call(kk.children,function(b){ b.setAttribute("aria-pressed",b.getAttribute("data-gk")===api.filter?"true":"false"); });
+      if(api.filter) for(z=1;z<=118;z++) if(groupOf(m,z)===api.filter) n++;
+      ks.textContent=api.filter?TT("{name}: {n, plural, one {# element} other {# elements}}.",{name:Gm.name(api.filter),n:n}):"";
+    }
+    function keyPlace(){
+      if(api.lens!=="groups") return;
+      var hk=opt.legend||D.getElementById("lensLegend"), far=lb0&&host.scrollWidth>host.clientWidth+1, at=far?lb0.parentNode.parentNode:keyEl; if(!hk) return;
+      if(keyEl.parentNode!==hk){ hk.textContent=""; hk.appendChild(keyEl); }
+      /* a table that scrolls sideways in its host (a phone): the switch goes under the lens buttons, not far below */
+      if(km.parentNode!==at){ if(far) at.insertBefore(km,lb0.parentNode.nextSibling); else keyEl.insertBefore(km,kk); }
+      if(opt.onKey) opt.onKey();
+      else for(var i=0;i<3;i++) D.documentElement.style.setProperty("--keyh",Math.max(0,keyEl.offsetHeight-30)+"px");   /* three passes settle it */
+    }
+    function keyClick(ev){ var b=ev.target.closest&&ev.target.closest("button"); if(!b) return; var m=b.getAttribute("data-gm"), k=b.getAttribute("data-gk");
+      if(m){ api.groupMode=m; api.setLens("groups",""); } else if(k) api.setLens("groups",api.filter===k?"":k); }
+    km.addEventListener("click",keyClick); kk.addEventListener("click",keyClick);
     api.setLens=function(lens, filter){
       api.lens=lens; api.filter=filter||""; wrap.setAttribute("data-lens",lens);
-      var nowL=performance.now(), xs=rects.filter(function(r){ return r; }).map(function(r){ return r[0]; }), x0=xs.length?Math.min.apply(null,xs):0, x1=xs.length?Math.max.apply(null,xs):1, first=lensW[1]===undefined;
+      var nowL=performance.now(), xs=rects.filter(function(r){ return r; }).map(function(r){ return r[0]; }), x0=xs.length?Math.min.apply(null,xs):0, x1=xs.length?Math.max.apply(null,xs):1, first=!lensSet, Gm=lens==="groups"?GROUPS[api.groupMode]:null, gm=api.groupMode;
+      lensSet=true; lensLeft=0;
       for(var z=1;z<=118;z++){
-        var w=1;
+        var w=1, gk=Gm?groupOf(gm,z):"";
+        if(Gm) w=filter?(gk===filter?1:0.1):0.5;   /* the clouds step back so the color reads; a chosen group comes forward */
         if(lens==="origin"){ var m=ORIGIN[z-1]; w=filter?Math.max(0.12,Math.min(1,(m[filter]||0)*1.6)):0.55; }
         else if(lens==="frontier"){ var tg=FRONTIER[z-1][0]; w=filter?(tg.indexOf(filter)>=0?1:0.1):(tg.length?1:0.14); }
         /* "yours": what this reader has explored (1), built (2), and mastered (3), kept on the device by the labs */
@@ -151,9 +209,13 @@ var PTable=(function(){
         if(lens==="yours") tiles[z].setAttribute("data-lv",lv); else tiles[z].removeAttribute("data-lv");
         var wait=(calm||first||!rects[z])?0:(rects[z][0]-x0)/Math.max(1,x1-x0)*420;
         lensFrom[z]=first?w:lensK(z,nowL); lensW[z]=w; lensAt[z]=nowL+wait;
-        (function(t,dim){ if(wait<8) t.classList.toggle("pt-dim",dim); else setTimeout(function(){ if(api.lens===lens&&api.filter===(filter||"")) t.classList.toggle("pt-dim",dim); },wait+120); })(tiles[z],w<0.3);
+        lensBusy[z]=!(calm||first)&&lensFrom[z]!==w; if(lensBusy[z]) lensLeft++;
+        (function(t,dim,col,nm){ var f=function(){ t.classList.toggle("pt-dim",dim); t.classList.toggle("pt-g",!!col); if(col){ t.style.setProperty("--grp",col); t.title=nm; } else t.removeAttribute("title"); };
+          if(wait<8) f(); else setTimeout(function(){ if(api.lens===lens&&api.filter===(filter||"")&&api.groupMode===gm) f(); },wait+120); })(tiles[z],w<0.3,Gm?gcol(gk):"",Gm?Gm.name(gk):"");
       }
-      sweepEnd=(calm||first)?0:nowL+720; dirty=true;
+      if(calm||first) dirty=true;
+      if(Gm){ keyDraw(); if(window.Promise) Promise.resolve().then(keyPlace); else setTimeout(keyPlace,0); }
+      else if(keyEl.parentNode){ D.documentElement.style.removeProperty("--keyh"); if(km.parentNode!==keyEl) keyEl.insertBefore(km,kk); keyEl.parentNode.removeChild(keyEl); }
     };
     for(Z=0;Z<=118;Z++){ pop[Z]=0; }
     /* offsets, not client rects: the table is scaled and slid around by its
@@ -187,6 +249,9 @@ var PTable=(function(){
     api.frame=function(now){
       var dt=Math.min(200,now-(last||now)); last=now;
       if(!G||!visible||api.hidden) return;
+      /* behind a card that covers the page (the host makes the rest inert) nothing is drawn */
+      if((fN++&31)===0) shut=!!(wrap.closest&&wrap.closest("[inert]"));
+      if(shut) return;
       if(!rects[1]) layout();
       /* about six milliseconds of building a frame, so the wave keeps time with the display */
       var t0b=performance.now(), cap=calm?118:(opt.small?3:12), built=0, born=[];
@@ -195,19 +260,21 @@ var PTable=(function(){
       for(z=1;z<=118;z++){
         var tgt=(z===api.hover?1:(z===api.sel?0.55:0)), p=pop[z];
         if(Math.abs(tgt-p)>0.002){ pop[z]=p+(tgt-p)*Math.min(1,dt*0.014); popping.push(z);
-          tiles[z].style.transform=pop[z]>0.004?TT("scale({v})",{v:(1+0.16*pop[z]).toFixed(4)}):""; tiles[z].style.zIndex=pop[z]>0.01?3:""; }
+          tiles[z].style.transform=pop[z]>0.004?"scale("+(1+0.16*pop[z]).toFixed(4)+")":""; tiles[z].style.zIndex=pop[z]>0.01?3:""; }
         else if(p!==tgt){ pop[z]=tgt; popping.push(z); }
       }
       var th=opt.theme(), w=api.cw, h=api.ch;
       G.size(w,h,Math.min(window.devicePixelRatio||1,1.5),opt.small?320000:820000);
       var cvw=cv.width, cvh=cv.height; if(cvw!==lastW||cvh!==lastH){ lastW=cvw; lastH=cvh; dirty=true; }
-      if(api.focus||now<sweepEnd) dirty=true;
+      if(api.focus) dirty=true;
       if(dirty){
         dirty=false; G.clear();
         for(z=1;z<=118;z++) if(handles[z]) paint(z,now,t,anim,th,pop[z]>0.004);
       } else {
         var list={}, k;
         for(z=1;z<nextZ;z++) if(now-bornAt[z]<560) list[z]=1;           /* still fading in */
+        /* a change of lens: only the squares whose weight is changing now, each once more when it has arrived */
+        if(lensLeft>0) for(z=1;z<=118;z++) if(lensBusy[z]&&now>=lensAt[z]){ list[z]=1; if(now>=lensAt[z]+260){ lensBusy[z]=false; lensLeft--; } }
         born.forEach(function(b){ list[b]=1; });
         if(anim){ for(k=0;k<slice;k++){ list[1+(rr+k)%118]=1; } rr=(rr+slice)%118; }
         /* a square that grew or shrank paints over its neighbors: repaint them too */
@@ -224,9 +291,11 @@ var PTable=(function(){
       for(z=1;z<nextZ;z++) if(!tiles[z].classList.contains("lit")) tiles[z].classList.add("lit");
     };
     api.redraw=function(){ dirty=true; };
-    api.recolor=function(){ for(var z=1;z<=118;z++) tiles[z].style.setProperty("--cat",(opt.catColor?opt.catColor(ELEMENTS[z-1][5]):CAT[ELEMENTS[z-1][5]][1])); };
+    api.recolor=function(){ for(var z=1;z<=118;z++){ tiles[z].style.setProperty("--cat",(opt.catColor?opt.catColor(ELEMENTS[z-1][5]):CAT[ELEMENTS[z-1][5]][1]));
+        if(api.lens==="groups") tiles[z].style.setProperty("--grp",gcol(groupOf(api.groupMode,z))); }
+      if(api.lens==="groups"){ keyMode=""; keyDraw(); } };
     api.built=function(){ return G?nextZ-1:118; };
-    api.setCalm=function(c){ calm=c; dirty=true; };
+    api.setCalm=function(c){ calm=c; CALM=c; dirty=true; OFIGS.forEach(function(o){ o.look(); }); };
     if(!G){ for(Z=1;Z<=118;Z++) tiles[Z].classList.add("lit"); }
     return api;
   }
@@ -235,12 +304,10 @@ var PTable=(function(){
   function num(x, d){ return x===null||x===undefined||isNaN(x) ? TT("unknown",{}) : AtomI18N.N(x, d===undefined?2:d, true); }
   function tempStr(K){ if(K===null||K===undefined) return TT("unknown",{}); return num(K,1)+" K ("+num(K-273.15,1)+" °C)"; }
   function yearStr(e){ var y=e[12]; if(y===null) return e[13]; if(y<0) return e[13].charAt(0).toUpperCase()+e[13].slice(1); return y+", "+e[13]; }
-  function sup(n){ var m={"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
-    return String(n).split("").map(function(c){ return m[c]||c; }).join(""); }
   function abundanceBar(ppm, label){
     if(ppm===null||ppm===undefined) return "<div class=\"pd-ab\">"+TT("<span>{label}</span><b>not measured</b>",{label:label})+"</div>";
     var lg=Math.log10(Math.max(ppm,1e-9)), w=Math.max(2,Math.min(100,(lg+9)/(6+9)*100));
-    var txt=ppm>=1?num(ppm,ppm<10?2:0)+" ppm":(ppm*1000>=1?num(ppm*1000,2)+" ppb":TT("1 part in 10{sup}",{sup:sup(Math.round(-lg+6))}));
+    var txt=ppm>=1?num(ppm,ppm<10?2:0)+" ppm":(ppm*1000>=1?num(ppm*1000,2)+" ppb":TT("1 part in 10<sup>{n}</sup>",{n:Math.round(-lg+6)}));
     return "<div class=\"pd-ab\">"+"<span>"+(((((label)))))+"</span><i style=\"--w:"+(((((w.toFixed(1))))))+"%\"></i><b>"+(((((txt)))))+"</b>"+"</div>";
   }
   /* a shell map: where the electrons are counted, not where they are */
@@ -282,16 +349,24 @@ var PTable=(function(){
   var PD_TABS=[["overview",TT("Overview")],["electrons",TT("Electrons")],["nucleus",TT("Nucleus")],["origin",TT("Origin")],["future",TT("Future")]], pdTab="overview";
   function detailTab(t){ if(t&&PD_TABS.some(function(x){ return x[0]===t; })) pdTab=t; return pdTab; }
   function detail(Z){
-    var e=ELEMENTS[Z-1], u=USES[Z-1], v=valence(Z), A=e[16], N=A-Z, cat=CAT[e[5]][0], o=[], head=o, SEC={overview:[],electrons:[],nucleus:[],origin:[],future:[]};
-    var blk=blockOf(Z), grp=e[6]?TT("group {n}",{n:e[6]}):(e[5]==="ln"?TT("lanthanide",{}):TT("actinide",{}));
+    var e=ELEMENTS[Z-1], u=USES[Z-1], v=valence(Z), A=e[16], N=A-Z, o=[], head=o, SEC={overview:[],electrons:[],nucleus:[],origin:[],future:[]};
+    var blk=blockOf(Z);
     o.push("<header class=\"pd-head\">"+"<div class=\"pd-sym\" style=\"--cat:"+(((CAT[e[5]][1])))+"\"><span>"+(((Z)))+"</span><b>"+(((e[1])))+"</b>"+"</div>");
-    o.push("<div>"+"<h2 class=\"pd-name\" id=\"pdName\">"+(e[2])+"</h2>"+"<p class=\"pd-kind\">"+TT("{cat} · {blk}-block · {grp}, period {e} · {e2} at room temperature",{cat:cat,blk:blk,grp:grp,e:e[7],e2:({solid:TT("solid",{}),liquid:TT("liquid",{}),gas:TT("gas",{})}[e[8]]||e[8])})+"</p>"+"</div>"+"</header>");
+    o.push("<div>"+"<h2 class=\"pd-name\" id=\"pdName\">"+(e[2])+"</h2>"+"<p class=\"pd-kind\">"+kindLine(Z)+"</p>"+"</div>"+"</header>");
     o=SEC.overview;
     o.push("<div class=\"pd-meet\">"+(icon(u[0],"pd-ic"))+"<div>"+TT("<span>You meet it in</span><b>{u}</b>",{u:esc(u[1])})+"</div>"+((u[2]?"<div>"+TT("<span>Best-known compound</span><b>{u}</b>",{u:u[2]})+(u[3]&&u[3]!==u[2]?'<i>'+esc(u[3])+'</i>':'')+"</div>":
         "<div>"+TT("<span>Compounds</span><b>{u}</b>",{u:(u[3]?esc(u[3]):(e[5]==="ng"?TT("almost none"):TT("none known")))})+"</div>"))+"</div>");
     /* where it was made, and what it is building */
     var om=ORIGIN[Z-1], ks=Object.keys(om).sort(function(a,b){ return om[b]-om[a]; }); o=SEC.origin;
-    o.push("<section class=\"pd-sec pd-origin\">"+"<h3>"+(((TT("Where it was made"))))+"</h3>"+"<div class=\"pd-obar\" role=\"img\" aria-label=\""+((((ks.map(function(k){ return TT("{pct} percent {kind}",{pct:Math.round(om[k]*100),kind:AtomI18N.low(ORIGIN_KINDS[k].name)}); }).join(", ")))))+"\">"+((((ks.map(function(k){ return "<i style=\"flex-basis:"+((((om[k]*100).toFixed(0))))+"%;background:var(--o-"+(((k)))+")\"></i>"; }).join('')))))+"</div>"+"<canvas class=\"pd-ocv\" data-ok=\""+(ks[0])+"\" role=\"img\" aria-label=\""+(esc(TT("A drawing of how most of it was made: {kind}.",{kind:AtomI18N.low(ORIGIN_KINDS[ks[0]].name)})))+"\">"+"</canvas>"+"<ul class=\"pd-olist\">"+((((ks.map(function(k){ return "<li>"+"<i style=\"background:var(--o-"+((k))+")\"></i>"+((ORIGIN_KINDS[k].name))+" <b>"+((Math.round(om[k]*100)))+"%</b>"+"</li>"; }).join('')))))+"</ul>"+(((((ORIGIN_NOTE[Z]?'<p>'+ORIGIN_NOTE[Z]+'</p>':'')))))+"<p class=\"pd-fine\">"+(((TT("Approximate shares of the Solar System&rsquo;s supply, after Johnson (2019). Neutron-star mergers stand in for all rapid neutron capture; rare supernovae may make some of it."))))+"</p>"+"</section>");
+    var osay=originSay(ks[0]);
+    o.push("<section class=\"pd-sec pd-origin\">"+"<h3>"+((TT("Where it was made")))+"</h3>"+"<div class=\"pd-obar\" role=\"img\" aria-label=\""+(((ks.map(function(k){ return TT("{pct} percent {kind}",{pct:Math.round(om[k]*100),kind:AtomI18N.low(ORIGIN_KINDS[k].name)}); }).join(", "))))+"\">"+(((ks.map(function(k){ return "<i style=\"flex-basis:"+((((om[k]*100).toFixed(0))))+"%;background:var(--o-"+(((k)))+")\"></i>"; }).join(''))))+"</div>"+
+      "<ul class=\"pd-olist\">"+(((ks.map(function(k,i){ var t="<i style=\"background:var(--o-"+((k))+")\"></i>"+((ORIGIN_KINDS[k].name))+" <b>"+((Math.round(om[k]*100)))+"%</b>";
+        return "<li>"+(ks.length>1?"<button type=\"button\" data-osrc=\""+(k)+"\" aria-pressed=\""+((i===0))+"\">"+(t)+"</button>":t)+"</li>"; }).join(''))))+"</ul>"+
+      (ks.length>1?"<p class=\"pd-fine\">"+TT("Press a source to see how it makes elements.")+"</p>":"")+
+      "<div class=\"pd-ofig\" data-ok=\""+ks[0]+"\">"+"<canvas class=\"pd-ocv\" role=\"img\" aria-label=\""+esc(ORIGIN_KINDS[ks[0]].name)+"\"></canvas>"+
+      "<ol class=\"pd-osteps\">"+[0,1,2].map(function(i){ return "<li>"+"<button type=\"button\" data-ost=\""+i+"\">"+osay[i]+"</button>"+"</li>"; }).join("")+"</ol>"+
+      "<button type=\"button\" class=\"pd-oplay\" data-oplay>"+TT("Play",{})+"</button>"+"</div>"+
+      ((((ORIGIN_NOTE[Z]?'<p>'+ORIGIN_NOTE[Z]+'</p>':''))))+"<p class=\"pd-fine\">"+((TT("Approximate shares of the Solar System&rsquo;s supply, after Johnson (2019).")))+(om.n?" "+TT("Merging neutron stars stand in for all rapid neutron capture; rare supernovae may make some of it."):"")+"</p>"+"</section>");
     var fr=FRONTIER[Z-1]; o=SEC.future;
     o.push("<section class=\"pd-sec pd-future\">"+"<h3>"+TT("Building the future")+"</h3>"+((fr[0].length?'<p class="pd-tags">'+fr[0].map(function(t){ return "<span style=\"--tc:var(--t-"+((t))+")\">"+((TECH_KINDS[t].name))+"</span>"; }).join('')+'</p>':''))+"<p>"+(esc(fr[1]))+((fr[3]?" <a class=\"pd-src\" href=\""+(esc(fr[3]))+"\" target=\"_blank\" rel=\"noopener\">"+(TT("Source"))+"</a>":''))+"</p>"+"<div class=\"pd-problem\">"+TT("<span>Open problem</span>")+"<p>"+(esc(fr[2]))+"</p>"+"</div>"+"</section>");
     /* the electrons */
@@ -299,7 +374,7 @@ var PTable=(function(){
     o.push("<section class=\"pd-sec\">"+"<h3>"+TT("Its electrons")+"</h3>"+"<div class=\"pd-elec\">"+(bohr(Z))+"<div>");
     o.push('<p class="pd-config">'+configStr(Z).replace(/([spdf])(\d+)/g,"$1<sup>$2</sup>")+'</p>');
     o.push("<p class=\"pd-shells\">"+TT("{n, plural, one {# electron} other {# electrons}} in shells of {shells}",{n:Z,shells:shellsOf(Z).join(", ")})+"</p>"+(boxes(Z)));
-    if(EXCEPT_WHY[Z]) o.push("<p class=\"pd-note\">"+TT("It breaks the filling rule: {EXCEPT_WHY}.",{EXCEPT_WHY:EXCEPT_WHY[Z]})+"</p>");
+    if(EXCEPT_WHY[Z]) o.push("<p class=\"pd-note\">"+TT("It breaks the usual filling order, in which an s subshell fills before the d or f subshell that follows it: {EXCEPT_WHY}.",{EXCEPT_WHY:EXCEPT_WHY[Z]})+"</p>");
     o.push('</div></div>');
     var S=Z-v.Ze;
     o.push("<p>"+(v.full?TT("The electron that puts it in the {blk} block sits in a <b>{orbName}</b> orbital, a filled subshell, which is perfectly round. The inner electrons shield it from the nucleus, so it feels a smaller charge (Slater&rsquo;s rules, an estimate):",{blk:blk,orbName:orbName(v,true)}):
@@ -319,6 +394,7 @@ var PTable=(function(){
         TT("That is {est} MeV per nucleon from the liquid-drop formula. Building it released that energy, so the nucleus weighs {pct}% less than its loose parts: E = mc².",{est:num(T.B/A,2),pct:num(100*T.B/(A*QM.C.u),3)}))+"</p>");
     }
     o.push('</section>');
+    o.push(isoSec(Z));
     /* the light */
     var L=lineList(Z); o=SEC.electrons;
     if(L){ o.push("<section class=\"pd-sec\">"+"<h3>"+TT("Its light")+"</h3>"+"<div class=\"pd-spec\" aria-hidden=\"true\">");
@@ -330,55 +406,145 @@ var PTable=(function(){
     o.push("<section class=\"pd-sec\">"+"<h3>"+TT("As a material")+"</h3>"+"<dl class=\"pd-dl\">"+"<div>"+"<dt>"+TT("Density")+"</dt>"+"<dd>"+((e[9]===null?'unknown':TT("{num} g/cm³",{num:num(e[9],e[9]<0.01?6:3)})))+"</dd>"+"</div>"+"<div>"+"<dt>"+TT("Melts")+"</dt>"+"<dd>"+(tempStr(e[10]))+"</dd>"+"</div>"+"<div>"+"<dt>"+TT("Boils")+"</dt>"+"<dd>"+(tempStr(e[11]))+"</dd>"+"</div>"+"<div>"+"<dt>"+TT("Discovered")+"</dt>"+"<dd>"+(esc(yearStr(e)))+"</dd>"+"</div>"+"</dl>"+(abundanceBar(e[14],TT("Earth&rsquo;s crust")))+(abundanceBar(e[15],TT("The universe")))+"</section>");
     o.push("<section class=\"pd-sec pd-story\">"+"<h3>"+TT("Where it comes from")+"</h3>"+"<p>"+(esc(e[17]))+"</p>"+"<p>"+(esc(e[18]))+"</p>"+"<h3>"+TT("What it is used for")+"</h3>"+"<p>"+(esc(e[19]))+"</p>"+"<h3>"+TT("Worth knowing")+"</h3>"+"<p>"+(esc(e[20]))+"</p>"+"</section>");
     return (((head.join(""))))+"<div class=\"pd-tabs\" role=\"tablist\" aria-label=\""+(esc(TT("About {el}",{z:Z})))+"\">"+(((PD_TABS.map(function(t){ var on=t[0]===pdTab;
-        return "<button type=\"button\" role=\"tab\" id=\"pdT-"+(((((t[0])))))+"\" data-pdt=\""+(((((t[0])))))+"\" aria-controls=\"pdP-"+(((((t[0])))))+"\" aria-selected=\""+(((((on)))))+"\" tabindex=\""+((((((on?0:-1))))))+"\">"+(((((t[1])))))+"</button>"; }).join(''))))+"</div>"+(((PD_TABS.map(function(t){ return "<div class=\"pd-pane\" role=\"tabpanel\" id=\"pdP-"+(((((t[0])))))+"\" aria-labelledby=\"pdT-"+(((((t[0])))))+"\""+((((((t[0]===pdTab?'':' hidden'))))))+">"+(((((SEC[t[0]].join(""))))))+"</div>"; }).join(''))));
+        return "<button type=\"button\" role=\"tab\" id=\"pdT-"+(((((t[0])))))+"\" data-pdt=\""+(((((t[0])))))+"\" aria-controls=\"pdP-"+(((((t[0])))))+"\" aria-selected=\""+(((((on)))))+"\" tabindex=\""+((((((on?0:-1))))))+"\">"+(((((t[1])))))+"</button>"; }).join(''))))+"</div>"+(((PD_TABS.map(function(t){ return "<div class=\"pd-pane\" role=\"tabpanel\" tabindex=\"0\" id=\"pdP-"+(((((t[0])))))+"\" aria-labelledby=\"pdT-"+(((((t[0])))))+"\""+((((((t[0]===pdTab?'':' hidden'))))))+">"+(((((SEC[t[0]].join(""))))))+"</div>"; }).join(''))));
   }
-  /* the host calls this once: clicks and arrow keys on the card's tabs */
-  /* the Origin tab's drawing: how most of the element was made, as a six-second loop. Seven small scenes,
-     one for each kind of origin (b the Big Bang, c cosmic rays, n merging neutron stars, m an exploding
-     massive star, l a dying low-mass star, w an exploding white dwarf, h a laboratory). It draws only while
-     it is on screen, and one still frame in calm mode. A sketch of the event, not a simulation of it. */
-  function originAnim(cv){
-    cv.setAttribute("data-on","1"); var g=cv.getContext("2d"), k=cv.getAttribute("data-ok"), t0=performance.now(), vis=false, raf=0, TAU=6.2832;
+  /* the Origin tab's drawing: seven sketches (b the Big Bang, c a cosmic-ray collision, n merging neutron stars,
+     m an exploding massive star, l a dying low-mass star, w an exploding white dwarf, h a laboratory beam), each
+     in three captioned stages with its parts labeled. It plays once (six seconds) and holds; it can be paused,
+     replayed, or stepped, and with motion reduced it is a still. It draws only on screen, asks for no frame when
+     nothing moves, and reads color, size, and the motion setting only when they change. One listener and one
+     observer serve every card; a card that has left the page is let go when the next opens. */
+  var OFIGS=[], OWIRED=false, OSPARE=null, CALM=null;
+  function calmNow(){ return CALM!==null?CALM:(document.documentElement.classList.contains("calm")||!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)); }
+  function originSay(k){ return ({
+    b:[TT("The newborn universe is a hot, dense soup of protons and neutrons."),TT("As it expands and cools, they stick together into the first nuclei."),TT("Soon it is too cool and thin for fusion, which leaves hydrogen, helium, and a trace of lithium.")],
+    c:[TT("A cosmic ray, a fast-moving proton, flies through space."),TT("It strikes a heavier nucleus, such as carbon or oxygen, and breaks it apart."),TT("The pieces are lighter nuclei: lithium, beryllium, and boron.")],
+    n:[TT("Two neutron stars circle each other and spiral inward."),TT("They merge."),TT("The debris is so rich in neutrons that nuclei swallow many before they can decay, which builds the heaviest elements.")],
+    m:[TT("A massive star fuses light nuclei into heavier ones, layer inside layer."),TT("When its core can release no more energy, the core collapses."),TT("The collapse turns into an explosion that throws the new elements into space.")],
+    l:[TT("Late in its life, a star like the Sun swells into a red giant."),TT("Deep inside, fusion builds carbon, and heavier nuclei grow by catching neutrons slowly, one at a time."),TT("The star blows its outer layers into space, and the new elements go with them.")],
+    w:[TT("A white dwarf, the dense core of a dead star, pulls gas from a companion star."),TT("When it has gained enough mass, fusion runs away through the whole star."),TT("The white dwarf explodes, and its carbon and oxygen fuse into iron and the elements near it.")],
+    h:[TT("A machine fires a beam of nuclei at a thin target."),TT("Now and then, a nucleus from the beam fuses with one in the target."),TT("The new, heavier nucleus is unstable and soon decays.")]})[k]; }
+  function originLab(k){ return ({
+    b:[[TT("protons and neutrons")],[TT("the first nuclei")],[TT("hydrogen and helium nuclei")]],
+    c:[[TT("cosmic ray"),TT("nucleus",{})],[TT("collision",{})],[TT("lighter nuclei")]],
+    n:[[TT("two neutron stars")],[TT("the merger")],[TT("neutron-rich debris")]],
+    m:[[TT("massive star")],[TT("collapsing core")],[TT("shock wave"),TT("new elements")]],
+    l:[[TT("red giant")],[TT("new nuclei forming inside")],[TT("outer layers, blown off")]],
+    w:[[TT("white dwarf"),TT("companion star"),TT("gas",{})],[TT("white dwarf"),TT("companion star"),TT("runaway fusion")],[TT("explosion",{}),TT("companion star")]],
+    h:[[TT("beam",{}),TT("target",{})],[TT("fusion",{})],[TT("new nucleus"),TT("decay",{})]]})[k]; }
+  function originFig(fig){
+    fig.setAttribute("data-on","1");
+    var cv=fig.querySelector("canvas");
+    /* the last card's canvas is used again: no new drawing context for each card opened */
+    if(OSPARE&&!OSPARE.isConnected){ OSPARE.setAttribute("aria-label",cv.getAttribute("aria-label")); fig.replaceChild(OSPARE,cv); cv=OSPARE; } OSPARE=null;
+    var g=cv.getContext("2d"), TAU=6.2832, w=0, h=0, d=1, col="", ink="", plate="", raf=0, last=0, vis=!window.IntersectionObserver, seen=vis, stage=-1, lab=[], say=[], io=null, ro=null;
+    var S={fig:fig, k:"", t:0, on:false, auto:false};
     function rnd(i){ var x=Math.sin(i*12.9898)*43758.5453; return x-Math.floor(x); }
     function dot(x,y,r,a){ g.globalAlpha=Math.max(0,Math.min(1,a)); g.beginPath(); g.arc(x,y,Math.max(0.1,r),0,TAU); g.fill(); }
     function ring(x,y,r,a,lw){ g.globalAlpha=Math.max(0,Math.min(1,a)); g.lineWidth=lw||2; g.beginPath(); g.arc(x,y,Math.max(0.1,r),0,TAU); g.stroke(); }
     function clump(x,y,n,r,a){ for(var q=0;q<n;q++){ var an=q*2.4, rr=q?r*0.9*Math.sqrt(q/n)*1.6:0; dot(x+Math.cos(an)*rr,y+Math.sin(an)*rr,r*0.62,a); } }
-    function frame(now){
-      raf=0; if(!cv.isConnected||!vis||document.hidden) return;
-      var calm=document.documentElement.classList.contains("calm")||!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-      var b=cv.getBoundingClientRect(), d=Math.min(2,window.devicePixelRatio||1), w=b.width, h=b.height; if(w<2) return;
-      if(cv.width!==Math.round(w*d)||cv.height!==Math.round(h*d)){ cv.width=Math.round(w*d); cv.height=Math.round(h*d); }
+    /* a label on its own small plate, kept inside the picture */
+    function tag(t,x,y){ if(!t) return; g.globalAlpha=1; g.font="600 12px Archivo, sans-serif"; g.textBaseline="middle"; g.textAlign="left";
+      var tw=g.measureText(t).width, x0=Math.max(5,Math.min(w-tw-5,x-tw/2)); y=Math.max(11,Math.min(h-11,y));
+      g.fillStyle=plate; g.fillRect(x0-4,y-9,tw+8,18); g.fillStyle=ink; g.fillText(t,x0,y); g.fillStyle=col; }
+    function mark(s){ stage=s;
+      [].forEach.call(fig.querySelectorAll("[data-ost]"),function(b,i){ if(i===s) b.setAttribute("aria-current","step"); else b.removeAttribute("aria-current"); });
+      cv.setAttribute("aria-label",TT("{kind}, stage {n} of 3: {say}",{kind:ORIGIN_KINDS[S.k].name,n:s+1,say:say[s]})); }
+    function btn(){ var b=fig.querySelector("[data-oplay]"); if(!b) return; b.hidden=calmNow(); b.textContent=S.on?TT("Pause",{}):(S.t>=6000?TT("Play again"):TT("Play",{})); }
+    function draw(){
+      if(w<2) return;
       g.setTransform(d,0,0,d,0,0); g.clearRect(0,0,w,h);
-      var cs=getComputedStyle(cv), c1=cs.getPropertyValue("--o-"+k).trim()||cs.color, u=calm?0.74:((now-t0)/6000)%1, cx=w/2, cy=h/2, R=Math.min(w*0.3,h*0.44), i, an, sp, v;
-      g.fillStyle=c1; g.strokeStyle=c1; g.lineCap="round";
-      if(k==="b"){ dot(cx,cy,(1-u)*12,1-u*1.6); for(i=0;i<70;i++){ an=rnd(i)*TAU; sp=0.2+0.8*rnd(i+50); dot(cx+Math.cos(an)*u*R*2.6*sp,cy+Math.sin(an)*u*R*1.25*sp,1.3+rnd(i+9)*1.5,1-u*0.8); } }
-      else if(k==="c"){ if(u<0.3){ v=u/0.3; g.globalAlpha=1; g.lineWidth=2.5; g.beginPath(); g.moveTo(cx-(1-v)*w*0.5-34,cy); g.lineTo(cx-(1-v)*w*0.5-4,cy); g.stroke(); clump(cx,cy,9,6,1); }
-        else { v=(u-0.3)/0.7; ring(cx,cy,6+v*30,(1-v*3),2); [[-0.7,4],[0.35,3],[2.6,2]].forEach(function(f){ clump(cx+Math.cos(f[0])*v*w*0.36,cy+Math.sin(f[0])*v*h*0.42,f[1],5,1-v*0.7); }); } }
-      else if(k==="n"){ if(u<0.55){ v=u/0.55; var rr=R*1.1*(1-v)+5; an=v*v*38; dot(cx+Math.cos(an)*rr*1.5,cy+Math.sin(an)*rr*0.6,5,1); dot(cx-Math.cos(an)*rr*1.5,cy-Math.sin(an)*rr*0.6,5,1);
-          for(i=1;i<7;i++){ var a2=an-i*0.16; dot(cx+Math.cos(a2)*rr*1.5,cy+Math.sin(a2)*rr*0.6,2.4,0.5-i*0.07); dot(cx-Math.cos(a2)*rr*1.5,cy-Math.sin(a2)*rr*0.6,2.4,0.5-i*0.07); } }
-        else { v=(u-0.55)/0.45; dot(cx,cy,10*(1-v)+3,1-v*0.6); for(i=0;i<64;i++){ an=rnd(i)*TAU; sp=0.25+0.75*rnd(i+31); dot(cx+Math.cos(an)*v*R*2.8*sp,cy+Math.sin(an)*v*R*0.8*sp,1.2+rnd(i+5)*1.6,1-v*0.85); } } }
-      else if(k==="m"){ if(u<0.35) dot(cx,cy,R*0.6*(1+0.03*Math.sin(u*90)),0.85);
-        else if(u<0.45){ v=(u-0.35)/0.1; dot(cx,cy,R*0.6*(1-v)+R*0.07*v,0.9); }
-        else { v=(u-0.45)/0.55; dot(cx,cy,R*0.07,1); ring(cx,cy,R*0.1+v*R*1.9,1-v*0.9,6*(1-v)+1); for(i=0;i<28;i++){ an=i/28*TAU+rnd(i); dot(cx+Math.cos(an)*v*R*2.2*(0.6+0.4*rnd(i)),cy+Math.sin(an)*v*R*1.1*(0.6+0.4*rnd(i)),1.6,1-v); } } }
-      else if(k==="l"){ dot(cx,cy,R*0.34*(1-0.62*u),0.9); for(i=0;i<4;i++){ v=(u+i/4)%1; ring(cx,cy,R*0.36+v*R*1.5,(1-v)*0.75,2.5); } }
-      else if(k==="w"){ var wx=cx-R*0.9, sx=cx+R*1.1+(u>0.6?(u-0.6)*R*1.4:0); ring(sx,cy,R*0.5,0.7,2); dot(sx,cy,R*0.5,0.18);
-        if(u<0.6){ v=u/0.6; for(i=0;i<9;i++){ var s=((i/9)+u*3)%1; dot(sx-R*0.5+(wx-sx+R*0.5)*s,cy-Math.sin(s*3.1416)*R*0.42,2,0.25+0.6*s); } dot(wx,cy,5+v*3,0.7+0.3*v); }
-        else { v=(u-0.6)/0.4; dot(wx,cy,8+v*R*2.3,(1-v)*0.9); ring(wx,cy,8+v*R*2.5,1-v,3); } }
-      else { g.globalAlpha=0.9; g.lineWidth=3; g.beginPath(); g.moveTo(cx,cy-R*0.7); g.lineTo(cx,cy+R*0.7); g.stroke();
-        if(u<0.5){ v=u/0.5; for(i=0;i<5;i++){ var bx=cx-w*0.42+(v+i*0.12)*w*0.42; if(bx<cx-4) dot(bx,cy,3,0.9); } }
-        else { v=(u-0.5)/0.5; ring(cx,cy,4+v*26,1-v*2.5,2); clump(cx+v*w*0.3,cy,12,5,1); if(v>0.6) clump(cx+v*w*0.3+(v-0.6)*60,cy-(v-0.6)*90,2,4,1); } }
-      g.globalAlpha=1; if(!calm) raf=requestAnimationFrame(frame);
+      var s=Math.min(2,Math.floor(S.t/2000)), v=Math.min(1,S.t/2000-s), k=S.k, cx=w/2, cy=h/2, R=Math.min(w*0.3,h*0.4), L=lab[s]||[], i, an, sp, q, x, y;
+      g.fillStyle=col; g.strokeStyle=col; g.lineCap="round";
+      if(k==="b"){ q=[0.14+0.16*v,0.3+0.45*v,0.75+0.45*v][s]; if(!s) dot(cx,cy,R*0.5*(1-v*0.4),0.22);
+        for(i=0;i<64;i++){ an=rnd(i)*TAU; sp=0.25+0.75*rnd(i+50); x=cx+Math.cos(an)*q*R*2.6*sp; y=cy+Math.sin(an)*q*R*1.1*sp; if(s&&i%4===0) clump(x,y,s>1?4:2,3.2,0.95); else dot(x,y,1.6,0.9); }
+        tag(L[0],cx,h-12); }
+      else if(k==="c"){
+        if(!s){ x=cx-w*0.42*(1-v)-12; g.globalAlpha=1; g.lineWidth=2.5; g.beginPath(); g.moveTo(x-30,cy); g.lineTo(x,cy); g.stroke(); dot(x,cy,3,1); clump(cx,cy,9,6,1); tag(L[0],Math.min(x-10,cx-80),cy-22); tag(L[1],cx,cy+30); }
+        else if(s===1){ ring(cx,cy,8+v*36,1-v,2.5); clump(cx,cy,9,6+v*2,1); tag(L[0],cx,h-12); }
+        else { [[-0.7,4],[0.35,3],[2.6,2]].forEach(function(f){ clump(cx+Math.cos(f[0])*(0.2+0.8*v)*w*0.3,cy+Math.sin(f[0])*(0.2+0.8*v)*h*0.32,f[1],5,1); }); tag(L[0],cx,h-12); } }
+      else if(k==="n"){
+        if(s<2){ q=s?(1-v)*(R*0.35+6):R*(1.1-0.75*v)+6; an=s?14+v*12:v*v*14;
+          if(!s||v<0.75){ dot(cx+Math.cos(an)*q*1.5,cy+Math.sin(an)*q*0.6,5,1); dot(cx-Math.cos(an)*q*1.5,cy-Math.sin(an)*q*0.6,5,1);
+            for(i=1;i<7;i++){ sp=an-i*0.16; dot(cx+Math.cos(sp)*q*1.5,cy+Math.sin(sp)*q*0.6,2.4,0.5-i*0.07); dot(cx-Math.cos(sp)*q*1.5,cy-Math.sin(sp)*q*0.6,2.4,0.5-i*0.07); } }
+          if(s){ dot(cx,cy,4+v*8,1); ring(cx,cy,10+v*32,(1-v)*0.9,3); } }
+        else { dot(cx,cy,10-v*3,1-v*0.4); for(i=0;i<60;i++){ an=rnd(i)*TAU; sp=(0.25+0.75*rnd(i+31))*(0.15+0.85*v); x=cx+Math.cos(an)*R*2.8*sp; y=cy+Math.sin(an)*R*0.85*sp; if(i%6===0) clump(x,y,3,2.8,0.95); else dot(x,y,1.3+rnd(i+5)*1.2,0.9-v*0.3); } }
+        tag(L[0],cx,h-12); }
+      else if(k==="m"){
+        if(!s){ dot(cx,cy,R*0.62*(1+0.02*Math.sin(v*40)),0.3); ring(cx,cy,R*0.62,0.9,2); ring(cx,cy,R*0.42,0.6,1.5); ring(cx,cy,R*0.24,0.6,1.5); dot(cx,cy,R*0.1,1); tag(L[0],cx,h-12); }
+        else if(s===1){ dot(cx,cy,R*0.62,0.3*(1-v)); ring(cx,cy,R*0.62,0.9-0.4*v,2); dot(cx,cy,R*(0.24-0.17*v),1); tag(L[0],cx,h-12); }
+        else { dot(cx,cy,R*0.07,1); ring(cx,cy,R*0.15+v*R*1.5,1-v*0.6,5*(1-v)+1.5);
+          for(i=0;i<28;i++){ an=i/28*TAU+rnd(i); sp=0.6+0.4*rnd(i); dot(cx+Math.cos(an)*v*R*2.3*sp,cy+Math.sin(an)*v*R*sp,1.8,1-v*0.5); }
+          tag(L[0],cx,12); tag(L[1],cx,h-12); } }
+      else if(k==="l"){
+        if(!s){ dot(cx,cy,R*(0.22+0.4*v),0.85); }
+        else if(s===1){ dot(cx,cy,R*0.62,0.28); ring(cx,cy,R*0.62,0.9,2);
+          for(i=0;i<5;i++){ an=i*1.26+1; q=(v*1.5+i*0.2)%1; x=cx+Math.cos(an)*R*0.36; y=cy+Math.sin(an)*R*0.36; clump(x,y,3+Math.floor(v*3),2.6,1); dot(x+Math.cos(an+2)*(1-q)*16,y+Math.sin(an+2)*(1-q)*16,1.3,q); } }
+        else { dot(cx,cy,R*(0.62-0.4*v),0.85); for(i=0;i<3;i++){ q=(v*0.8+i/3)%1; ring(cx,cy,R*0.62+q*R*1.3,(1-q)*0.8,2.5); } }
+        tag(L[0],cx,s>1?12:h-12); }
+      else if(k==="w"){ x=cx-R; y=cx+R*1.2+(s>1?v*R*0.5:0); ring(y,cy,R*0.55,0.8,2); dot(y,cy,R*0.55,0.18);
+        if(s<2){ for(i=0;i<9;i++){ q=((i/9)+S.t/1500)%1; dot(y-R*0.55+(x-y+R*0.55)*q,cy-Math.sin(q*3.1416)*R*0.45,2,0.25+0.6*q); }
+          dot(x,cy,s?5+v*4:5,s?1:0.85); if(s) ring(x,cy,11+v*5,0.6*v,2); tag(L[2],cx,12); }
+        else { dot(x,cy,9+v*R*0.95,(1-v)*0.6+0.12); ring(x,cy,9+v*R*1.15,1-v*0.5,3); }
+        tag(L[0],x,h-12); tag(L[1],y,h-12); }
+      else { g.globalAlpha=0.9; g.lineWidth=3; g.beginPath(); g.moveTo(cx,cy-R*0.8); g.lineTo(cx,cy+R*0.8); g.stroke();
+        if(!s){ for(i=0;i<5;i++){ x=cx-w*0.44+(v*0.8+i*0.1)*w*0.44; if(x<cx-4) dot(x,cy,3,0.9); } tag(L[0],cx-w*0.26,cy-20); tag(L[1],cx,h-12); }
+        else if(s===1){ dot(cx-(1-v)*30,cy,3,1); ring(cx,cy,5+v*26,1-v,2); clump(cx,cy,3+Math.floor(v*9),5,1); tag(L[0],cx,h-12); }
+        else { x=cx+v*w*0.24; clump(x,cy,12,5,1); if(v>0.5){ q=(v-0.5)*2; clump(x+q*36,cy-q*40,2,4,1); ring(x,cy,12+q*12,(1-q)*0.8,2); tag(L[1],x+q*36,cy-q*40-16); } tag(L[0],x,cy+28); } }
+      g.globalAlpha=1; if(s!==stage) mark(s);
     }
-    function kick(){ if(!raf) raf=requestAnimationFrame(frame); }
-    if(window.IntersectionObserver) new IntersectionObserver(function(es){ vis=es[es.length-1].isIntersecting; if(vis) kick(); }).observe(cv); else { vis=true; kick(); }
-    document.addEventListener("visibilitychange",function(){ if(cv.isConnected) kick(); });
+    function tick(now){ raf=0;
+      if(!fig.isConnected){ S.stop(); return; }
+      if(!vis||document.hidden){ last=0; return; }
+      if(S.on){ S.t+=last?Math.min(100,now-last):0; last=now; if(S.t>=6000){ S.t=6000; S.on=false; btn(); } }
+      draw(); if(S.on) raf=requestAnimationFrame(tick); }
+    function kick(){ if(!raf) raf=requestAnimationFrame(tick); }
+    S.kick=kick;
+    /* read what a frame must not: the size, the colors, and whether motion is wanted */
+    S.look=function(){ var cs=getComputedStyle(cv), b=cv.getBoundingClientRect(); d=Math.min(2,window.devicePixelRatio||1); w=b.width; h=b.height;
+      col=cs.getPropertyValue("--o-"+S.k).trim()||cs.color; ink=cs.getPropertyValue("--ink").trim()||cs.color; plate=cs.getPropertyValue("--panel").trim()||"rgba(0,0,0,0)";
+      if(w>1&&(cv.width!==Math.round(w*d)||cv.height!==Math.round(h*d))){ cv.width=Math.round(w*d); cv.height=Math.round(h*d); }
+      if(calmNow()&&(S.on||S.auto)){ S.on=S.auto=false; S.t=6000; } btn(); kick(); };
+    S.set=function(k){ S.k=k; fig.setAttribute("data-ok",k); say=originSay(k); lab=originLab(k);
+      [].forEach.call(fig.querySelectorAll("[data-ost]"),function(b,i){ b.textContent=say[i]; });
+      S.on=false; S.auto=!calmNow(); S.t=S.auto?0:6000; last=0; mark(S.auto?0:2); S.look(); play0(); };
+    S.go=function(i){ S.on=S.auto=false; S.t=i*2000+1600; btn(); kick(); };            /* one stage, held still */
+    S.play=function(){ S.auto=false; if(S.on) S.on=false; else { if(S.t>=6000) S.t=0; S.on=!calmNow(); last=0; } btn(); kick(); };
+    /* it starts by itself once, when most of it is in view */
+    function play0(){ if(S.auto&&seen&&!calmNow()){ S.auto=false; S.on=true; last=0; btn(); kick(); } }
+    S.stop=function(){ if(raf) cancelAnimationFrame(raf); raf=0; if(io) io.disconnect(); if(ro) ro.disconnect(); io=ro=null; fig._o=null; OSPARE=cv; };
+    if(window.IntersectionObserver){ io=new IntersectionObserver(function(es){ var e=es[es.length-1]; vis=e.isIntersecting; seen=e.intersectionRatio>=0.6; last=0; if(vis){ if(w<2) S.look(); else kick(); play0(); } },{threshold:[0,0.6]}); io.observe(cv); }
+    if(window.ResizeObserver){ ro=new ResizeObserver(function(){ S.look(); }); ro.observe(cv); }
+    fig._o=S; OFIGS.push(S); S.set(fig.getAttribute("data-ok"));
+    if(!OWIRED){ OWIRED=true; var root=document.documentElement, key="";
+      document.addEventListener("visibilitychange",function(){ OFIGS.forEach(function(o){ o.kick(); }); });
+      if(window.MutationObserver) new MutationObserver(function(){ var k2=root.getAttribute("data-theme")+"|"+root.classList.contains("calm"); if(k2===key) return; key=k2; OFIGS.forEach(function(o){ o.look(); }); }).observe(root,{attributes:true,attributeFilter:["class","data-theme"]}); }
   }
+  /* the natural mix of isotopes as bars, and the average that the atomic mass is (ISO_NAT in ptdata.js, from NIST) */
+  function pctStr(p){ return AtomI18N.N(p,(p<0.01||p>99.99)?6:((p<1||p>99)?4:2),true)+"%"; }
+  function isoSec(Z){
+    var I=isotopesOf(Z), e=ELEMENTS[Z-1], avg=0, put=I.length<2, h="<section class=\"pd-sec pd-iso\">"+"<h3>"+TT("Its isotopes in nature")+"</h3>";
+    if(!I.length) return h+"<p>"+TT("{El} has no stable isotope and no fixed mix in nature, so there are no bars to draw. The number in brackets on its card, [{A}], is the mass number of its longest-lived isotope.",{z:Z,A:e[3]})+"</p>"+"</section>";
+    I.forEach(function(x){ avg+=x[1]*x[2]/100; });
+    function mid(){ put=true; return "<li class=\"pd-iavg\">"+TT("average: {m} u",{m:AtomI18N.N(avg,2)})+"</li>"; }
+    h+="<ul class=\"pd-ibars\">"+I.map(function(x){ return (!put&&x[1]>avg?mid():"")+"<li>"+"<span>"+AtomI18N.elWord(Z)+"-"+x[0]+"</span>"+"<i style=\"--w:"+x[2].toFixed(2)+"%\"></i>"+"<b>"+pctStr(x[2])+"</b>"+"</li>"; }).join("")+"</ul>";
+    h+="<p>"+(I.length>1?TT("The decimal in an atomic mass is this average: weigh each isotope by how common it is, and {el} comes to {m} u.",{z:Z,m:AtomI18N.N(avg,2)}):
+      TT("Every {el} atom found in nature is {el}-{A}, so the atomic mass of {el} is the mass of that one isotope, {m} u.",{z:Z,A:I[0][0],m:AtomI18N.N(avg,3)}))+
+      (STABLE[Z]&&STABLE[Z].length?"":" "+TT("None of it is stable: every isotope of {el} is radioactive.",{z:Z}))+"</p>";
+    return h+"<p class=\"pd-fine\">"+TT("Shares of atoms and isotope masses from NIST (Coursey et al., 2015).")+"</p>"+"</section>";
+  }
+  /* the host calls this once: clicks and arrow keys on the card's tabs, and the Origin drawing's controls */
   function wireDetail(host, onTab){
-    var seekO=function(){ [].forEach.call(host.querySelectorAll("canvas.pd-ocv:not([data-on])"),originAnim); };
+    function show(){ var b=host.querySelector("[data-pdt][aria-selected=\"true\"]"), sc=b&&b.parentNode; if(sc&&sc.scrollWidth>sc.clientWidth+1) sc.scrollLeft=b.offsetLeft-(sc.clientWidth-b.offsetWidth)/2; }
+    var seekO=function(){ OFIGS=OFIGS.filter(function(f){ if(f.fig.isConnected) return true; f.stop(); return false; });
+      var n=host.querySelectorAll(".pd-ofig:not([data-on])"); if(n.length){ [].forEach.call(n,originFig); show(); } };
     if(window.MutationObserver) new MutationObserver(seekO).observe(host,{childList:true,subtree:true}); seekO();
     function pick(t,focus){ pdTab=t; [].forEach.call(host.querySelectorAll("[data-pdt]"),function(b){ var on=b.getAttribute("data-pdt")===t; b.setAttribute("aria-selected",on?"true":"false"); b.tabIndex=on?0:-1; if(on&&focus) b.focus(); });
-      [].forEach.call(host.querySelectorAll(".pd-pane"),function(p){ p.hidden=p.id!=="pdP-"+t; }); if(onTab) onTab(t); }
-    host.addEventListener("click",function(e){ var b=e.target.closest("[data-pdt]"); if(b) pick(b.getAttribute("data-pdt")); });
+      [].forEach.call(host.querySelectorAll(".pd-pane"),function(p){ p.hidden=p.id!=="pdP-"+t; }); show(); if(onTab) onTab(t); }
+    host.addEventListener("click",function(e){ var b=e.target.closest("[data-pdt]"); if(b){ pick(b.getAttribute("data-pdt")); return; }
+      b=e.target.closest("[data-ost],[data-oplay],[data-osrc]"); var sec=b&&b.closest(".pd-origin"), fg=sec&&sec.querySelector(".pd-ofig"), f=fg&&fg._o; if(!f) return;
+      if(b.hasAttribute("data-ost")) f.go(+b.getAttribute("data-ost")); else if(b.hasAttribute("data-oplay")) f.play();
+      else { f.set(b.getAttribute("data-osrc")); [].forEach.call(sec.querySelectorAll("[data-osrc]"),function(x){ x.setAttribute("aria-pressed",x===b?"true":"false"); }); } });
     host.addEventListener("keydown",function(e){ var b=e.target.closest&&e.target.closest("[data-pdt]"); if(!b) return; var ids=PD_TABS.map(function(x){ return x[0]; }), i=ids.indexOf(pdTab), n=null;
       if(e.key==="ArrowRight") n=ids[(i+1)%ids.length]; else if(e.key==="ArrowLeft") n=ids[(i+ids.length-1)%ids.length]; else if(e.key==="Home") n=ids[0]; else if(e.key==="End") n=ids[ids.length-1];
       if(n){ e.preventDefault(); pick(n,true); } });
@@ -387,7 +553,7 @@ var PTable=(function(){
   var WLC={};
   function wlColor(w){ var k=Math.round(w*2); return WLC[k]||(WLC[k]=AtomColor.css(k/2)); }
   return {create:create, R:fastR, pos:pos, valence:valence, orbName:orbName, detail:detail, detailTab:detailTab, wireDetail:wireDetail, icon:icon, lineList:lineList,
-          semfTerms:semfTerms, wlColor:wlColor, tileFormula:tileFormula};
+          semfTerms:semfTerms, wlColor:wlColor, tileFormula:tileFormula, groupOf:groupOf, GROUPS:GROUPS};
 })();
 
 
@@ -681,7 +847,7 @@ var AtomSims=(function(){
   function Fuse(root, ctx){
     var st={r:REACT[0], kT:10, fire:-1e9, shots:0};
     root.innerHTML=
-      "<div class=\"sb-controls\">"+"<div class=\"sb-pick\" role=\"radiogroup\" aria-label=\""+((TT("Choose a reaction")))+"\">"+(((REACT.map(function(r,i){ return "<button type=\"button\" role=\"radio\" aria-checked=\""+((((((i?"false":"true"))))))+"\" data-r=\""+(((((r.id)))))+"\">"+(((((r.label)))))+"</button>"; }).join(''))))+"</div>"+"<label class=\"sb-slider\">"+((TT("<span>Temperature <b data-o=\"T\"></b></span>")))+"<input type=\"range\" min=\"0\" max=\"1000\" value=\"120\" data-i=\"T\" aria-label=\""+((TT("Plasma temperature")))+"\">"+"</label>"+"<button type=\"button\" class=\"sb-go\" data-i=\"fire\">"+((TT("Fire")))+"</button>"+"</div>"+"<div class=\"sb-stage\">"+"<canvas class=\"sb-cv\" data-c=\"anim\" aria-hidden=\"true\">"+"</canvas>"+"<canvas class=\"sb-cv\" data-c=\"gamow\" aria-hidden=\"true\">"+"</canvas>"+"</div>"+"<dl class=\"sb-read\">"+"<div>"+"<dt>"+((TT("Energy released, Q")))+"</dt>"+"<dd data-o=\"Q\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Coulomb barrier")))+"</dt>"+"<dd data-o=\"B\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Where reactions happen")))+"</dt>"+"<dd data-o=\"E0\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Chance to tunnel there")))+"</dt>"+"<dd data-o=\"P\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Per kilogram of fuel")))+"</dt>"+"<dd data-o=\"kg\">"+"</dd>"+"</div>"+"</dl>"+"<p class=\"sb-note\" data-o=\"note\">"+"</p>"+"<p class=\"sb-out\" data-o=\"out\" aria-live=\"polite\">"+"</p>";
+      "<div class=\"sb-controls\">"+"<div class=\"sb-pick\" role=\"radiogroup\" aria-label=\""+((TT("Choose a reaction")))+"\">"+(((REACT.map(function(r,i){ return "<button type=\"button\" role=\"radio\" aria-checked=\""+((((((i?"false":"true"))))))+"\" data-r=\""+(((((r.id)))))+"\">"+(((((r.label)))))+"</button>"; }).join(''))))+"</div>"+"<label class=\"sb-slider\">"+((TT("<span>Temperature <b data-o=\"T\"></b></span>")))+"<input type=\"range\" min=\"0\" max=\"1000\" value=\"120\" data-i=\"T\" aria-label=\""+((TT("Plasma temperature")))+"\">"+"</label>"+"<button type=\"button\" class=\"sb-go\" data-i=\"fire\">"+((TT("Fire")))+"</button>"+"</div>"+"<div class=\"sb-stage\">"+"<canvas class=\"sb-cv\" data-c=\"anim\" role=\"img\">"+"</canvas>"+"<canvas class=\"sb-cv\" data-c=\"gamow\" role=\"img\">"+"</canvas>"+"</div>"+"<dl class=\"sb-read\">"+"<div>"+"<dt>"+((TT("Energy released, Q")))+"</dt>"+"<dd data-o=\"Q\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Coulomb barrier")))+"</dt>"+"<dd data-o=\"B\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Where reactions happen")))+"</dt>"+"<dd data-o=\"E0\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Chance to tunnel there")))+"</dt>"+"<dd data-o=\"P\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+((TT("Per kilogram of fuel")))+"</dt>"+"<dd data-o=\"kg\">"+"</dd>"+"</div>"+"</dl>"+"<p class=\"sb-note\" data-o=\"note\">"+"</p>"+"<p class=\"sb-out\" data-o=\"out\" aria-live=\"polite\">"+"</p>";
     var $=function(s){ return root.querySelector(s); };
     function T(){ var v=+$('[data-i="T"]').value/1000; return Math.pow(10, v*2.5); }   /* 1 to 316 keV */
     function readout(){
@@ -696,8 +862,11 @@ var AtomSims=(function(){
          keeps iron on iron (1 in 10^430 or so) from underflowing to "1 in 0" */
       var lx=EG?Math.sqrt(EG/E0)/Math.LN10:0;
       ctx.set($('[data-o="P"]'), EG?(lx<15?"1 in "+sci(1/P):"1 in 10"+sup(Math.round(lx))):"certain");
-      ctx.set($('[data-o="kg"]'), Q>0?TT("{perkg} J, {perkg2} × gasoline",{perkg:sci(perkg),perkg2:sci(perkg/GASOLINE)}):TT("costs {sci} J",{sci:sci(-perkg)}));
+      /* two figures: a line may break between them (after the comma) and nowhere inside one */
+      ctx.set($('[data-o="kg"]'), (Q>0?TT("{perkg} J, {perkg2} × gasoline",{perkg:sci(perkg),perkg2:sci(perkg/GASOLINE)}):TT("costs {sci} J",{sci:sci(-perkg)})).replace(/ /g,"\u00a0").replace(",\u00a0",", "));
       ctx.set($('[data-o="note"]'), r.note);
+      ctx.lab($('[data-c="anim"]'), B?TT("A drawing of {a} and {b} colliding, beside the barrier they have to tunnel through: {B} high, against a typical collision of {E0} keV.",{a:NUC[a].s,b:NUC[b].s,B:bstr(B),E0:fmt(E0,0)}):TT("A drawing of {a} and {b} colliding, with no barrier between them.",{a:NUC[a].s,b:NUC[b].s}));
+      ctx.lab($('[data-c="gamow"]'), EG?TT("A chart of collision energy: how many collisions have each energy, the chance to tunnel at each, and their product, which peaks at {E0} keV, the Gamow peak.",{E0:fmt(E0,1)}):TT("A chart of how many collisions have each energy at {kT} keV.",{kT:fmt(kT,kT<10?1:0)}));
       return {Q:Q,B:B,EG:EG,E0:E0,P:P};
     }
     root.addEventListener("click",function(e){
@@ -736,7 +905,7 @@ var AtomSims=(function(){
         var Xb=x0+((rC-0.2)/12)*(x1-x0), L1=TT("a typical collision, {R} keV,",{R:fmt(R.E0,0)}), L2=TT("has to tunnel through it"),
             tw=Math.max(g.measureText(L1).width,g.measureText(L2).width), right=Xb+8+tw<=x1, lx=right?Xb+8:Xb-8;
         g.textAlign=right?"left":"right";
-        if(w<520){ g.textAlign="right"; halo(g,TT("the barrier, {bstr}",{bstr:bstr(B)}),x1,top-8,th); g.textAlign=right?"left":"right"; }   /* clear of the nuclei on a phone */
+        if(w<520){ g.textAlign="right"; halo(g,TT("the barrier, {bstr}",{bstr:bstr(B)}),x1,16,th); g.textAlign=right?"left":"right"; }   /* on a phone: along the top edge, clear of the nuclei and their names */
         else halo(g,TT("the barrier, {bstr}",{bstr:bstr(B)}),lx,top-8,th);
         halo(g,L1,lx,Math.min(by-20,ey-22),th);
         halo(g,L2,lx,Math.min(by-4,ey-6),th);
@@ -794,13 +963,15 @@ var AtomSims=(function(){
     function K(R){ return (1+R)*Math.exp(-R); }
     function E(R,anti){ return 27.2114*(1/R-(anti?(J(R)-K(R))/(1-S(R)):(J(R)+K(R))/(1+S(R)))); }   /* eV, relative to H + p */
     var Rmin=2.5, Emin=0; (function(){ for(var R=1;R<5;R+=0.001){ var e=E(R,false); if(e<Emin){ Emin=e; Rmin=R; } } })();
-    root.innerHTML="<div class=\"sb-controls\">"+"<div class=\"sb-pick\" role=\"radiogroup\" aria-label=\""+(((TT("How the two waves combine"))))+"\">"+"<button type=\"button\" role=\"radio\" aria-checked=\"true\" data-b=\"0\">"+(((TT("In step: bonding"))))+"</button>"+"<button type=\"button\" role=\"radio\" aria-checked=\"false\" data-b=\"1\">"+(((TT("Out of step: antibonding"))))+"</button>"+"</div>"+"<label class=\"sb-slider\">"+(((TT("<span>Distance between the protons <b data-o=\"R\"></b></span>"))))+"<input type=\"range\" min=\"50\" max=\"800\" value=\"250\" data-i=\"R\" aria-label=\""+(((TT("Distance between the protons"))))+"\">"+"</label>"+"</div>"+"<div class=\"sb-stage\">"+"<canvas class=\"sb-cv\" data-c=\"map\" aria-hidden=\"true\">"+"</canvas>"+"<canvas class=\"sb-cv\" data-c=\"curve\" aria-hidden=\"true\">"+"</canvas>"+"</div>"+"<dl class=\"sb-read\">"+"<div>"+"<dt>"+(((TT("Energy of the bond"))))+"</dt>"+"<dd data-o=\"E\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Overlap of the two waves"))))+"</dt>"+"<dd data-o=\"S\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Best distance, this model"))))+"</dt>"+"<dd>"+(((TT("{Rmin} pm, {fmt} eV",{Rmin:fmt(Rmin*52.918,0),fmt:fmt(-Emin,2)}))))+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Best distance, exact"))))+"</dt>"+"<dd>"+(((TT("{fmt} pm, {fmt2} eV",{fmt:fmt(106,0),fmt2:fmt(2.79,2)}))))+"</dd>"+"</div>"+"</dl>"+"<p class=\"sb-note\">"+TT("One electron, two protons. Add the two 1s waves in step (the same color) and they pile up between the protons, which pulls both protons in: a bond. Add them out of step and a node cuts the middle: the protons push apart. This simple model gets the bond about 25% too long and too weak; the exact solution is in the last box.")+"</p>"+"<p class=\"sb-out\" data-o=\"out\" aria-live=\"polite\">"+"</p>";
+    root.innerHTML="<div class=\"sb-controls\">"+"<div class=\"sb-pick\" role=\"radiogroup\" aria-label=\""+(((TT("How the two waves combine"))))+"\">"+"<button type=\"button\" role=\"radio\" aria-checked=\"true\" data-b=\"0\">"+(((TT("In step: bonding"))))+"</button>"+"<button type=\"button\" role=\"radio\" aria-checked=\"false\" data-b=\"1\">"+(((TT("Out of step: antibonding"))))+"</button>"+"</div>"+"<label class=\"sb-slider\">"+(((TT("<span>Distance between the protons <b data-o=\"R\"></b></span>"))))+"<input type=\"range\" min=\"50\" max=\"800\" value=\"250\" data-i=\"R\" aria-label=\""+(((TT("Distance between the protons"))))+"\">"+"</label>"+"</div>"+"<div class=\"sb-stage\">"+"<canvas class=\"sb-cv\" data-c=\"map\" role=\"img\">"+"</canvas>"+"<canvas class=\"sb-cv\" data-c=\"curve\" role=\"img\">"+"</canvas>"+"</div>"+"<dl class=\"sb-read\">"+"<div>"+"<dt>"+(((TT("Energy of the bond"))))+"</dt>"+"<dd data-o=\"E\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Overlap of the two waves"))))+"</dt>"+"<dd data-o=\"S\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Best distance, this model"))))+"</dt>"+"<dd>"+(((TT("{Rmin} pm, {fmt} eV",{Rmin:fmt(Rmin*52.918,0),fmt:fmt(-Emin,2)}))))+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Best distance, exact"))))+"</dt>"+"<dd>"+(((TT("{fmt} pm, {fmt2} eV",{fmt:fmt(106,0),fmt2:fmt(2.79,2)}))))+"</dd>"+"</div>"+"</dl>"+"<p class=\"sb-note\">"+TT("One electron, two protons. Add the two 1s waves in step (the same color) and they pile up between the protons, which pulls both protons in: a bond. Add them out of step and a node cuts the middle: the protons push apart. This simple model gets the bond about 25% too long and too weak; the exact solution is in the last box.")+"</p>"+"<p class=\"sb-out\" data-o=\"out\" aria-live=\"polite\">"+"</p>";
     var $=function(s){ return root.querySelector(s); };
     function readout(){
       var e=E(st.R,st.anti);
       ctx.set($('[data-o="R"]'), fmt(st.R*52.918,0)+" pm");
       ctx.set($('[data-o="E"]'), (e<0?TT("bound by {e} eV",{e:fmt(Math.abs(e),2)}):TT("pushed apart by {e} eV",{e:fmt(Math.abs(e),2)})));
       ctx.set($('[data-o="S"]'), fmt(S(st.R)*100,0)+"%");
+      ctx.lab($('[data-c="map"]'), st.anti?TT("A map of the electron's cloud around two protons {R} pm apart. The waves are out of step, so there is a gap in the cloud between the protons.",{R:fmt(st.R*52.918,0)}):TT("A map of the electron's cloud around two protons {R} pm apart. The waves are in step, so the cloud piles up between the protons.",{R:fmt(st.R*52.918,0)}));
+      ctx.lab($('[data-c="curve"]'), e<0?TT("A chart of energy against the distance between the protons. At {R} pm they are bound by {e} eV.",{R:fmt(st.R*52.918,0),e:fmt(Math.abs(e),2)}):TT("A chart of energy against the distance between the protons. At {R} pm they are pushed apart by {e} eV.",{R:fmt(st.R*52.918,0),e:fmt(Math.abs(e),2)}));
       if(!st.anti && Math.abs(st.R-Rmin)<0.12){ ctx.set($('[data-o="out"]'),TT("That's the bottom of the well: the distance this model likes best.")); ctx.emit("bond:min"); }
       else ctx.set($('[data-o="out"]'),"");
     }
@@ -858,7 +1029,7 @@ var AtomSims=(function(){
     function opts(list,sel){ return list.map(function(x){ return "<option value=\""+(((x.id)))+"\""+((((x.id===sel?' selected':''))))+">"+(((x.name)))+" ("+(((x.f)))+")"+"</option>"; }).join(''); }
     function build(){
       var F=CELLS[st.fam];
-      root.innerHTML="<div class=\"sb-controls\">"+"<div class=\"sb-pick\" role=\"radiogroup\" aria-label=\""+(((TT("Which ion carries the charge"))))+"\">"+((("<button type=\"button\" role=\"radio\" aria-checked=\""+(((st.fam==="li")))+"\" data-f=\"li\">"+(TT("Lithium-ion")))))+"</button>"+((("<button type=\"button\" role=\"radio\" aria-checked=\""+(((st.fam==="na")))+"\" data-f=\"na\">"+(TT("Sodium-ion")))))+"</button>"+"</div>"+"<label class=\"sb-sel\">"+(((TT("<span>Negative electrode</span>"))))+"<select data-i=\"a\">"+((((opts(F.anode,st.a)))))+"</select>"+"</label>"+"<label class=\"sb-sel\">"+(((TT("<span>Positive electrode</span>"))))+"<select data-i=\"c\">"+((((opts(F.cathode,st.c)))))+"</select>"+"</label>"+"</div>"+"<div class=\"sb-stage one\">"+"<canvas class=\"sb-cv\" data-c=\"cell\" aria-hidden=\"true\">"+"</canvas>"+"</div>"+"<dl class=\"sb-read\">"+"<div>"+"<dt>"+(((TT("Cell voltage"))))+"</dt>"+"<dd data-o=\"V\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Energy, electrode materials only"))))+"</dt>"+"<dd data-o=\"Wh\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Elements inside"))))+"</dt>"+"<dd data-o=\"els\">"+"</dd>"+"</div>"+"</dl>"+"<p class=\"sb-note\">"+TT("Voltage is how far {v} falls in energy when it moves from the negative electrode into the positive one: the bigger the drop, the higher the voltage. Capacity is how many ions each gram can hold. These are rough textbook figures for the electrode materials alone; a finished cell, with its electrolyte, separator, foils, and case, holds about half to two thirds as much.",{v:AtomI18N.elWord(st.fam==="li"?3:11),z:(st.fam==="li"?3:11)})+"</p>"+"<p class=\"sb-out\" data-o=\"out\" aria-live=\"polite\">"+"</p>";
+      root.innerHTML="<div class=\"sb-controls\">"+"<div class=\"sb-pick\" role=\"radiogroup\" aria-label=\""+(((TT("Which ion carries the charge"))))+"\">"+((("<button type=\"button\" role=\"radio\" aria-checked=\""+(((st.fam==="li")))+"\" data-f=\"li\">"+(TT("Lithium-ion")))))+"</button>"+((("<button type=\"button\" role=\"radio\" aria-checked=\""+(((st.fam==="na")))+"\" data-f=\"na\">"+(TT("Sodium-ion")))))+"</button>"+"</div>"+"<label class=\"sb-sel\">"+(((TT("<span>Negative electrode</span>"))))+"<select data-i=\"a\">"+((((opts(F.anode,st.a)))))+"</select>"+"</label>"+"<label class=\"sb-sel\">"+(((TT("<span>Positive electrode</span>"))))+"<select data-i=\"c\">"+((((opts(F.cathode,st.c)))))+"</select>"+"</label>"+"</div>"+"<div class=\"sb-stage one\">"+"<canvas class=\"sb-cv\" data-c=\"cell\" role=\"img\">"+"</canvas>"+"</div>"+"<dl class=\"sb-read\">"+"<div>"+"<dt>"+(((TT("Cell voltage"))))+"</dt>"+"<dd data-o=\"V\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Energy, electrode materials only"))))+"</dt>"+"<dd data-o=\"Wh\">"+"</dd>"+"</div>"+"<div>"+"<dt>"+(((TT("Elements inside"))))+"</dt>"+"<dd data-o=\"els\">"+"</dd>"+"</div>"+"</dl>"+"<p class=\"sb-note\">"+TT("Voltage is how far {v} falls in energy when it moves from the negative electrode into the positive one: the bigger the drop, the higher the voltage. Capacity is how many ions each gram can hold. These are rough textbook figures for the electrode materials alone; a finished cell, with its electrolyte, separator, foils, and case, holds about half to two thirds as much.",{v:AtomI18N.elWord(st.fam==="li"?3:11),z:(st.fam==="li"?3:11)})+"</p>"+"<p class=\"sb-out\" data-o=\"out\" aria-live=\"polite\">"+"</p>";
       readout(false);
     }
     function cur(){ var F=CELLS[st.fam]; return {F:F,a:F.anode.filter(function(x){ return x.id===st.a; })[0]||F.anode[0], c:F.cathode.filter(function(x){ return x.id===st.c; })[0]||F.cathode[0]}; }
@@ -866,6 +1037,7 @@ var AtomSims=(function(){
       var k=cur(), V=k.c.V-k.a.V, Wh=V*k.a.C*k.c.C/(k.a.C+k.c.C), $=function(s){ return root.querySelector(s); };
       ctx.set($('[data-o="V"]'), fmt(V,2)+" V");
       ctx.set($('[data-o="Wh"]'), fmt(Wh,0)+" Wh/kg");
+      ctx.lab($('[data-c="cell"]'), TT("A drawing of the cell: {ion} ions cross the electrolyte from {a} to {c}, electrons go round through a lamp, and each ion falls {V} V on the energy ladder beside it.",{ion:k.F.ion,a:k.a.name,c:k.c.name,V:fmt(V,2)}));
       var els=[k.F.el].concat(k.a.el,k.c.el).filter(function(z,i,arr){ return arr.indexOf(z)===i; });
       $('[data-o="els"]').innerHTML=els.map(function(z){ return "<button type=\"button\" class=\"sb-el\" data-z=\""+(((z)))+"\">"+(((ELEMENTS[z-1][1])))+"</button>"; }).join(' ');
       ctx.set($('[data-o="out"]'), k.a.id==="limetal"||k.a.id==="nametal"?TT("Metal anodes hold the most, but the metal can grow needles (dendrites) that short the cell: the problem solid electrolytes are trying to solve."):
@@ -908,7 +1080,7 @@ var AtomSims=(function(){
         g.fillStyle=th.acc; g.beginPath(); g.arc(px,py,2.6,0,6.2832); g.fill(); }
       var lamp=Math.min(1,V/4), lxm=(cx0+cx1)/2;
       g.fillStyle=th.light?"rgba(100,60,0,"+(0.25+0.6*lamp)+")":"rgba(255,210,110,"+(0.2+0.8*lamp)+")"; g.beginPath(); g.arc(lxm,wy,9+6*lamp,0,6.2832); g.fill();
-      return true;
+      return !ctx.calm();        /* with motion paused it is one still picture */
     }};
   }
 
@@ -925,10 +1097,12 @@ var AtomSims=(function(){
     var D=host.ownerDocument||document;
     host.classList.add("sb");
     host.innerHTML="<div class=\"sb-tabs\" role=\"tablist\" aria-label=\""+((TT("Workbench")))+"\">"+"<button type=\"button\" role=\"tab\" aria-selected=\"true\" data-t=\"fuse\" id=\"sbTabFuse\" aria-controls=\"sbFuse\">"+((TT("Fuse nuclei")))+"</button>"+"<button type=\"button\" role=\"tab\" aria-selected=\"false\" data-t=\"bond\" id=\"sbTabBond\" aria-controls=\"sbBond\">"+((TT("Make a bond")))+"</button>"+"<button type=\"button\" role=\"tab\" aria-selected=\"false\" data-t=\"charge\" id=\"sbTabCharge\" aria-controls=\"sbCharge\">"+((TT("Build a battery")))+"</button>"+"</div>"+"<div class=\"sb-pane\" role=\"tabpanel\" id=\"sbFuse\" aria-labelledby=\"sbTabFuse\">"+"</div>"+"<div class=\"sb-pane\" role=\"tabpanel\" id=\"sbBond\" aria-labelledby=\"sbTabBond\" hidden>"+"</div>"+"<div class=\"sb-pane\" role=\"tabpanel\" id=\"sbCharge\" aria-labelledby=\"sbTabCharge\" hidden>"+"</div>";
-    var dirty=true, cache=new WeakMap();
+    var dirty=true, moving=false, cache=new WeakMap();
     var ctx={ set:function(el,v){ if(el && cache.get(el)!==v){ cache.set(el,v); el.textContent=v; } },
+      lab:function(el,v){ if(el && el.getAttribute("aria-label")!==v) el.setAttribute("aria-label",v); },
       emit:function(e){ if(opt.onEvent) opt.onEvent(e); }, dirty:function(){ dirty=true; },
-      calm:function(){ return !!opt.calm; }, pick:opt.pick };
+      /* motion is off when the host says so or the page's own switch is (html.calm) */
+      calm:function(){ return !!(typeof opt.calm==="function"?opt.calm():opt.calm)||D.documentElement.classList.contains("calm"); }, pick:opt.pick };
     var benches={ fuse:Fuse(host.querySelector("#sbFuse"),ctx), bond:Bond(host.querySelector("#sbBond"),ctx), charge:Charge(host.querySelector("#sbCharge"),ctx) };
     var cur="fuse";
     function show(name){ cur=name;
@@ -938,8 +1112,18 @@ var AtomSims=(function(){
     host.querySelector(".sb-tabs").addEventListener("click",function(e){ var b=e.target.closest("[data-t]"); if(b) show(b.getAttribute("data-t")); });
     host.querySelector(".sb-tabs").addEventListener("keydown",function(e){ var order=["fuse","bond","charge"], i=order.indexOf(cur);
       if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ e.preventDefault(); var n=order[(i+(e.key==="ArrowRight"?1:2))%3]; show(n); host.querySelector('[data-t="'+n+'"]').focus(); } });
+    /* a set of choices is one Tab stop; the arrow keys move through it and choose */
+    function rove(){ [].forEach.call(host.querySelectorAll('[role="radiogroup"]'),function(gp){ [].forEach.call(gp.querySelectorAll('[role="radio"]'),function(b){ b.tabIndex=b.getAttribute("aria-checked")==="true"?0:-1; }); }); }
+    host.addEventListener("click",function(){ dirty=true; setTimeout(rove,0); }); rove();   /* any press may change the picture (Fire starts the collision) */
+    host.addEventListener("input",function(){ dirty=true; }); host.addEventListener("change",function(){ dirty=true; });
+    host.addEventListener("keydown",function(e){ var b=e.target.closest&&e.target.closest('[role="radio"]'), d=(e.key==="ArrowRight"||e.key==="ArrowDown")?1:((e.key==="ArrowLeft"||e.key==="ArrowUp")?-1:0); if(!b||!d) return;
+      e.preventDefault(); var gp=b.parentNode, rs=[].slice.call(gp.querySelectorAll('[role="radio"]')), i=(rs.indexOf(b)+d+rs.length)%rs.length, lbl=gp.getAttribute("aria-label");
+      rs[i].click(); rove();
+      var g2=[].filter.call(host.querySelectorAll('[role="radiogroup"]'),function(x){ return x.getAttribute("aria-label")===lbl&&x.offsetParent!==null; })[0], n=g2&&g2.querySelectorAll('[role="radio"]')[i]; if(n) n.focus(); });
+    /* drawn again when something changed it or while it moves, not on every frame */
+    if(window.ResizeObserver) new ResizeObserver(function(){ dirty=true; }).observe(host);
     return { show:show, current:function(){ return cur; },
-      frame:function(now){ var th=opt.theme(); var anim=benches[cur].frame(now, th); if(!anim) dirty=false; },
+      frame:function(now){ if(!dirty&&!moving) return; dirty=false; moving=!!benches[cur].frame(now, opt.theme()); },
       redraw:function(){ dirty=true; } };
   }
   return {mount:mount, REACT:REACT, CELLS:CELLS};
@@ -951,6 +1135,10 @@ var AtomSims=(function(){
    on. The host app reports what happens with signal("pick:26"),
    signal("depth:nucleus"), signal("fusion:dt") and so on, and performs the
    "Show me" actions it is handed. Progress is kept on this device only.
+
+   A step that moves on within four seconds of "Show me" was shown, not done.
+   A mission finished with a step shown is "finished with help" (st.helped),
+   outside the count of missions done; run again on your own, it is done.
 
    The sixteen are laid out as one route, from your first atom through the
    first stars to the clinic,
@@ -978,7 +1166,8 @@ var Missions=(function(){
       {say:TT("Pick the element that carries the largest share of caffeine's mass."), show:{pick:6}, when:"pick:6"}],
      done:TT("A mole is 6.022 × 10²³ of anything. Molar mass turns that unimaginable count into grams you can weigh: 18 grams of water is one mole of water molecules.")},
     {id:"decay", short:TT("Decay"), title:TT("Date a bone"), blurb:TT("Radioactive decay, used as a clock."), steps:[
-      {say:TT("In the labs, open Calculate, then Radioactive decay, and choose carbon-14."), show:{lab:"calc", calc:"decay", preset:"6,14"}, when:TT("calc:decay:6,14")},
+      {say:TT("In the labs, open Calculate, then Radioactive decay, and choose carbon-14."), show:{lab:"calc", calc:"decay", preset:"6,14"},
+       when:"calc:decay:6,14"},   /* i18n:skip */  /* a signal's name, not a sentence */
       {say:TT("Slide time forward until a quarter of the carbon-14 is left. That takes two half-lives, about 11,400 years."), show:{lab:"calc", calc:"decay", half:2}, when:"calc:decay:half:2"},
       {say:TT("Press Listen like a Geiger counter and hear the clicks thin out as the atoms run out."), show:{lab:"calc", calc:"decay", listen:true}, when:"calc:listen"},
       {say:TT("Open Predict and answer a question."), show:{lab:"predict"}, when:"quiz:*"}],
@@ -1098,12 +1287,15 @@ var Missions=(function(){
     return h+'</svg>';
   }
   function create(opt){
-    var host=opt.host, KEY="atom.missions", st={done:{}, prog:{}, cur:null, step:0, open:false, celebrate:null, min:false};
-    try{ var saved=JSON.parse(localStorage.getItem(KEY)||"null"); if(saved){ st.done=saved.done||{}; st.prog=saved.prog||{}; st.cur=saved.cur||null; st.step=saved.step||0; } }catch(e){}
-    if(st.cur&&!byId(st.cur)){ st.cur=null; st.step=0; }
-    function save(){ try{ localStorage.setItem(KEY,JSON.stringify({done:st.done,prog:st.prog,cur:st.cur,step:st.step})); }catch(e){} }
+    var host=opt.host, KEY="atom.missions", st={done:{}, prog:{}, helped:{}, cur:null, step:0, shown:0, showing:0, open:false, celebrate:null, min:false};
+    function obj(x){ return x&&typeof x==="object"&&!Array.isArray(x)?x:{}; }
+    try{ var saved=JSON.parse(localStorage.getItem(KEY)||"null"); if(saved&&typeof saved==="object"){ st.done=obj(saved.done); st.prog=obj(saved.prog); st.helped=obj(saved.helped); st.cur=typeof saved.cur==="string"?saved.cur:null; st.step=saved.step; st.shown=+saved.shown||0; } }catch(e){}
+    if(st.cur&&!byId(st.cur)) st.cur=null;
+    /* a saved step must be one of the mission's own: a later release may have shortened the mission */
+    if(!st.cur||!(st.step>=0&&st.step<byId(st.cur).steps.length&&st.step===Math.floor(st.step))){ st.step=0; if(!st.cur) st.shown=0; }
+    function save(){ try{ localStorage.setItem(KEY,JSON.stringify({done:st.done,prog:st.prog,helped:st.helped,cur:st.cur,step:st.step,shown:st.shown})); }catch(e){} }
     function byId(id){ return LIST.filter(function(m){ return m.id===id; })[0]; }
-    function next(){ return LIST.filter(function(x){ return !st.done[x.id]; })[0]; }
+    function next(){ return LIST.filter(function(x){ return !st.done[x.id]&&!st.helped[x.id]; })[0]||LIST.filter(function(x){ return !st.done[x.id]; })[0]; }
     host.classList.add("ms");
     /* where the page has its own Missions buttons (the website's bar and the
        table's foot), nothing floats over the page until a mission is under way */
@@ -1127,18 +1319,19 @@ var Missions=(function(){
         syncToggles(nd); if(opt.onChange) opt.onChange(st); return;
       }
       var fa=document.activeElement, back=null;
-      if(fa&&host.contains(fa)) back=fa.getAttribute("data-a")?TT("[data-a=\"{fa}\"]",{fa:fa.getAttribute("data-a")}):(fa.getAttribute("data-start")?"button[data-start=\""+((fa.getAttribute("data-start")))+"\"]":null);
+      if(fa&&host.contains(fa)) back=fa.getAttribute("data-a")?["[data-a=\"",fa.getAttribute("data-a"),"\"]"].join(""):(fa.getAttribute("data-start")?"button[data-start=\""+((fa.getAttribute("data-start")))+"\"]":null);
       if(st.min){ /* folded away: only the pill shows */ }
       else if(st.celebrate){
         var m=byId(st.celebrate), nx=next();
-        h="<div class=\"ms-panel ms-done\" role=\"region\" aria-label=\""+((TT("Mission complete")))+"\">"+"<h3 tabindex=\"-1\">"+((TT("Mission complete: {m}",{m:esc(m.title)})))+"</h3>"+"<p>"+(((esc(m.done))))+"</p>"+(((mapSVG(st, m.id))))+"<div class=\"ms-row\">"+((((nx?TT("<button type=\"button\" class=\"ms-go\" data-start=\"{id}\">Next: {nx}",{id:nx.id,nx:esc(nx.title)})+"</button>":''))))+"<button type=\"button\" data-a=\"list\">"+((TT("All missions")))+"</button>"+"<button type=\"button\" data-a=\"close\">"+((TT("Close")))+"</button>"+"</div>"+"</div>";
+        var hp=st.done[m.id]?0:(st.helped[m.id]||0);
+        h="<div class=\"ms-panel ms-done\" role=\"region\" aria-label=\""+((hp?TT("Mission finished with help"):TT("Mission complete")))+"\">"+"<h3 tabindex=\"-1\">"+((hp?TT("Mission finished with help: {m}",{m:esc(m.title)}):TT("Mission complete: {m}",{m:esc(m.title)})))+"</h3>"+"<p>"+(((esc(m.done))))+"</p>"+(hp?"<p>"+TT("{n, plural, one {Show me did # step for you.} other {Show me did # steps for you.}} Run the mission again on your own and it counts as done.",{n:hp})+"</p>":"")+(((mapSVG(st, m.id))))+"<div class=\"ms-row\">"+((((nx?TT("<button type=\"button\" class=\"ms-go\" data-start=\"{id}\">Next: {nx}",{id:nx.id,nx:esc(nx.title)})+"</button>":''))))+"<button type=\"button\" data-a=\"list\">"+((TT("All missions")))+"</button>"+"<button type=\"button\" data-a=\"close\">"+((TT("Close")))+"</button>"+"</div>"+"</div>";
       } else if(st.cur){
         var M=byId(st.cur), S=M.steps[st.step];
         h="<div class=\"ms-panel\" data-m=\""+(((((M.id)))))+"\" role=\"region\" aria-label=\""+((esc(TT("Mission: {title}",{title:M.title}))))+"\">"+"<div class=\"ms-top\">"+"<h3>"+(((((esc(M.title))))))+"</h3>"+((((TT("<span>Step {st} of {M}</span>",{st:(st.step+1),M:M.steps.length})))))+"</div>"+"<div class=\"ms-bar\" aria-hidden=\"true\">"+(((((M.steps.map(function(x,i){ return "<i class=\""+((((i<st.step?"d":(i===st.step?"c":"")))))+"\"></i>"; }).join(''))))))+"</div>"+"<p class=\"ms-say\" aria-live=\"polite\">"+(((((esc(S.say))))))+"</p>"+"<div class=\"ms-row\">"+(((("<button type=\"button\" class=\"ms-go\" data-a=\"show\""+((S.show?'':' hidden'))+">"+TT("Show me")))))+"</button>"+"<button type=\"button\" data-a=\"list\">"+((((TT("All missions")))))+"</button>"+"<button type=\"button\" data-a=\"quit\">"+((((TT("Leave mission")))))+"</button>"+"</div>"+"</div>";
       } else if(st.open){
         var nx2=next();
         h="<div class=\"ms-panel ms-list\" role=\"region\" aria-label=\""+((TT("Missions")))+"\">"+"<div class=\"ms-top\">"+"<h3>"+((TT("Missions")))+"</h3>"+((TT("<span>{nd} of {length} done</span>",{nd:nd,length:LIST.length})))+"</div>"+(((mapSVG(st, nx2&&nx2.id))))+"<ul>"+(((LIST.map(function(m){ var p=st.prog[m.id]||0;
-            return "<li>"+"<button type=\"button\" data-start=\""+(((m.id)))+"\"><b>"+(((esc(m.title))))+"</b><span>"+(((esc(m.blurb))))+"</span>"+((((st.done[m.id]?TT("<i>Done</i>"):(p?TT("<i>{p} of {m} steps</i>",{p:p,m:m.steps.length}):'')))))+"</button>"+"</li>"; }).join(''))))+"</ul>"+"<div class=\"ms-row\">"+"<button type=\"button\" data-a=\"close\">"+((TT("Close")))+"</button>"+"</div>"+"</div>";
+            return "<li>"+"<button type=\"button\" data-start=\""+(((m.id)))+"\"><b>"+(((esc(m.title))))+"</b><span>"+(((esc(m.blurb))))+"</span>"+((((st.done[m.id]?TT("<i>Done</i>"):(st.helped[m.id]?TT("<i>Finished with help</i>"):(p?TT("<i>{p} of {m} steps</i>",{p:p,m:m.steps.length}):''))))))+"</button>"+"</li>"; }).join(''))))+"</ul>"+"<div class=\"ms-row\">"+"<button type=\"button\" data-a=\"close\">"+((TT("Close")))+"</button>"+"</div>"+"</div>";
       }
       if(!TOG.length||st.cur||st.celebrate) h+="<button type=\"button\" class=\"ms-pill\" data-a=\"toggle\" aria-expanded=\""+(((((st.open||st.cur||st.celebrate)&&!st.min?"true":"false"))))+"\">"+(((pillHTML(nd))))+"</button>";
       host.innerHTML=h; syncToggles(nd);
@@ -1147,7 +1340,7 @@ var Missions=(function(){
       if(tgt) try{ tgt.focus({preventScroll:true}); }catch(e){}
       if(opt.onChange) opt.onChange(st);
     }
-    function start(id){ st.cur=id; st.step=0; st.celebrate=null; st.open=false; st.min=false; save(); render(); if(opt.onStart) opt.onStart(id); }
+    function start(id){ st.cur=id; st.step=0; st.shown=0; st.showing=0; st.celebrate=null; st.open=false; st.min=false; save(); render(); if(opt.onStart) opt.onStart(id); }
     host.addEventListener("click",function(e){
       var b=e.target.closest("button,[data-start]"); if(!b||!host.contains(b)) return;
       var s=b.getAttribute("data-start"), a=b.getAttribute("data-a");
@@ -1155,8 +1348,8 @@ var Missions=(function(){
       if(a==="toggle"){ if(st.cur){ st.min=!st.min; } else if(st.celebrate){ st.celebrate=null; } else st.open=!st.open; render(); return; }
       if(a==="list"){ st.open=true; st.cur=null; st.celebrate=null; save(); render(); return; }
       if(a==="close"){ st.open=false; st.celebrate=null; render(); if(lastTog&&!st.cur) try{ lastTog.focus(); }catch(e2){} return; }
-      if(a==="quit"){ st.cur=null; st.step=0; save(); render(); return; }
-      if(a==="show"){ var S=byId(st.cur).steps[st.step]; if(S.show&&opt.go) opt.go(S.show); }
+      if(a==="quit"){ st.cur=null; st.step=0; st.shown=0; st.showing=0; save(); render(); return; }
+      if(a==="show"){ var S=byId(st.cur).steps[st.step]; if(S&&S.show&&opt.go){ st.showing=Date.now(); opt.go(S.show); } }
     });
     TOG.forEach(function(b){ b.addEventListener("click",function(){ lastTog=b;
       if(st.cur) st.min=!st.min; else if(st.celebrate) st.celebrate=null; else st.open=!st.open;
@@ -1168,8 +1361,12 @@ var Missions=(function(){
       signal:function(ev){
         if(!st.cur) return;
         var M=byId(st.cur), S=M.steps[st.step]; if(!S||!match(S.when,ev)) return;
+        if(st.showing&&Date.now()-st.showing<4000) st.shown++;   /* it moved on because it was shown */
+        st.showing=0;
         st.step++; st.prog[M.id]=Math.max(st.prog[M.id]||0, st.step);
-        if(st.step>=M.steps.length){ st.done[M.id]=true; st.celebrate=M.id; st.cur=null; st.step=0; st.min=false; }
+        if(st.step>=M.steps.length){
+          if(st.shown){ if(!st.done[M.id]) st.helped[M.id]=st.shown; } else { st.done[M.id]=true; delete st.helped[M.id]; }
+          st.celebrate=M.id; st.cur=null; st.step=0; st.shown=0; st.min=false; }
         save(); render();
       },
       start:start,

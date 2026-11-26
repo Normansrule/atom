@@ -1,0 +1,15 @@
+# Dependabot: once a month, a pull request for any newer version of the GitHub Actions the workflows use (they
+# are pinned to exact commits, so they only move when one of these is merged) and of the desktop shell's two
+# build tools, Electron and electron-builder. Verify runs on each one before it can be merged.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 4
+  - package-ecosystem: npm
+    directory: /desktop
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3

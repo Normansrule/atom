@@ -4,20 +4,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title data-i>Atom: a one-page handout for students, teachers, and families</title>
-<meta name="description" data-i-attr="content" content="One printable page about Atom, the free periodic table that computes every element: how to start, how it is assigned, how progress is collected, and what it keeps private. In English and Spanish.">
+<meta name="description" data-i-attr="content" content="One printable page about Atom, the free periodic table that computes every element: how to start, how it is assigned, how progress is collected, and what it keeps private. In eleven languages.">
 <link rel="canonical" href="https://normansrule.github.io/atom/handout.html">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-g37sXJHiSQfTwgVYRhIeYrKkxyvKxtzneVtLvTS4uDs='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <link rel="icon" href="assets/favicon-64.png" type="image/png">
 <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
+<!-- The theme a reader chose on the table holds here too. This is the same inline script as index.html, byte for
+     byte, so the one hash in the policy above covers it: change one and you must change both. -->
+<script>
+  /* theme before first paint, so a light-table visitor never sees the chamber flash */
+  (function(){ var t=null; try{ t=localStorage.getItem("atom.site.theme"); }catch(e){}
+    if(!t) t=(window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark";
+    document.documentElement.setAttribute("data-theme", t);
+    if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("calm");
+  })();
+</script>
 <script src="assets/atom-i18n.js" data-pack="site"></script>
 <style>
   @font-face{font-family:"Archivo";src:url(assets/fonts/archivo-var.woff2) format("woff2");font-weight:100 900;font-stretch:62% 125%;font-display:swap}
-  :root{color-scheme:light dark;--bg:#f3f1ec;--bg2:#ffffff;--line:#d9d4c9;--ink:#101312;--ink2:#2f3633;--ink3:#5c655f;--acc:#643c00;--onacc:#ffffff;--link:#0b4f8a}
-  @media (prefers-color-scheme:dark){:root{--bg:#0b0c0d;--bg2:#141618;--line:#2b3034;--ink:#f2f3f1;--ink2:#c9ced2;--ink3:#8d959b;--acc:#ffb020;--onacc:#141005;--link:#8fd3ff}}
+  :root{color-scheme:light;--bg:#f3f1ec;--bg2:#ffffff;--line:#d9d4c9;--ink:#101312;--ink2:#2f3633;--ink3:#5c655f;--acc:#643c00;--onacc:#ffffff;--link:#0b4f8a}
+  /* the theme chosen on the table (data-theme, set by the script above); without it, the system's */
+  :root[data-theme="dark"]{color-scheme:dark;--bg:#0b0c0d;--bg2:#141618;--line:#2b3034;--ink:#f2f3f1;--ink2:#c9ced2;--ink3:#8d959b;--acc:#ffb020;--onacc:#141005;--link:#8fd3ff}
+  @media (prefers-color-scheme:dark){:root:not([data-theme]){color-scheme:dark;--bg:#0b0c0d;--bg2:#141618;--line:#2b3034;--ink:#f2f3f1;--ink2:#c9ced2;--ink3:#8d959b;--acc:#ffb020;--onacc:#141005;--link:#8fd3ff}}
+  .skip{position:absolute;left:24px;top:-80px;z-index:100;background:var(--acc);color:var(--onacc);padding:12px 16px;font-weight:650;text-decoration:none}
+  .skip:focus{top:12px}
   html{background:var(--bg)}
   body{margin:0;color:var(--ink);font:15px/1.45 "Archivo",system-ui,-apple-system,sans-serif}
-  header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:14px 24px;border-bottom:1px solid var(--line)}
-  header nav{display:flex;flex-wrap:wrap;gap:4px 16px;min-width:0}
+  header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;box-sizing:border-box;min-height:64px;padding:12px clamp(20px,5vw,80px)}   /* the table's own bar: the same height, the wordmark at the same place, no rule under it */
+  header nav{display:flex;flex-wrap:wrap;gap:0 16px;min-width:0}
+  header nav a{display:inline-flex;align-items:center;min-height:40px}
+  @media (pointer:coarse){ header nav a,.lang-sum{min-height:44px} }
   .wordmark{font-weight:300;font-stretch:125%;font-size:22px;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
   header nav a{color:var(--ink2);text-decoration:none}
   header #langHost{margin-inline-start:auto}
@@ -64,11 +81,61 @@
     .sheet{max-width:none;margin:0;padding:0;border:0} body{font-size:12.5px}
     .cols p,.cols li{font-size:11.6px} .links{font-size:11px} a{text-decoration:none}
   }
+  /* display options: the Aa menu beside the language. More contrast and wider text spacing are attributes on <html>. */
+  .disp-menu{position:relative;display:inline-block;margin-inline-start:6px}
+  .disp-list{padding:4px;min-width:min(19em,80vw);white-space:normal}
+  .disp-li{display:none;border-bottom:1px solid var(--line)}
+  @media (max-width:640px){.disp-menu{display:none}.disp-li{display:block}.lang-menu .lang-sum::after{content:"Aa";margin-inline-start:7px;padding-inline-start:7px;border-inline-start:1px solid var(--line);letter-spacing:0}}
+  .disp-list button{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:center;width:100%;min-height:44px;padding:8px;border:0;background:none;color:var(--ink);font:500 15px/1.25 "Archivo",sans-serif;letter-spacing:0;text-align:start;cursor:pointer}
+  .disp-list button::before{content:"";grid-row:1/3;width:36px;height:20px;border:2px solid var(--ink2);border-radius:12px;background:radial-gradient(circle at 10px 50%,var(--ink2) 6px,transparent 6.5px)}
+  .disp-list button[aria-checked="true"]::before{border-color:var(--acc);background:radial-gradient(circle at 26px 50%,var(--onacc,#141005) 6px,transparent 6.5px) var(--acc)}
+  .disp-list button b{font-weight:600}
+  .disp-list button small{grid-column:2;color:var(--ink2);font:400 13px/1.35 "Archivo",sans-serif}
+  .disp-list button:hover{background:rgba(127,127,127,.2)}
+  .disp-list button:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+  :root[data-contrast="more"]{--ink:#fff;--ink2:#f1f3f2;--ink3:#dfe3e1;--line:#98a1a8;--line2:#c8cfd4;--veil:var(--bg)}
+  :root[data-theme="light"][data-contrast="more"]{--ink:#000;--ink2:#0e1110;--ink3:#1f2422;--line:#59625d;--line2:#2c3330;--veil:var(--bg)}
+  :root[data-contrast="more"] p a,:root[data-contrast="more"] li a,:root[data-contrast="more"] dd a,:root[data-contrast="more"] td a{text-decoration:underline;text-underline-offset:.15em}
+  :root[data-contrast="more"] :focus-visible{outline-width:3px}
+  :root[data-contrast="more"] #world{opacity:.4}
+  :root[data-spacing="wide"] p,:root[data-spacing="wide"] li,:root[data-spacing="wide"] dd,:root[data-spacing="wide"] td,:root[data-spacing="wide"] blockquote,:root[data-spacing="wide"] figcaption{letter-spacing:.05em;word-spacing:.14em;line-height:1.75}
+  @media (prefers-reduced-transparency:reduce){:root{--veil:var(--bg)}}
+  @media (forced-colors:active){
+    .lang-sum,.disp-list button::before,.pt-el,.lb-btn,.toggle{border:1px solid ButtonText}
+    .disp-list button[aria-checked="true"]::before{background:Highlight;border-color:Highlight}
+    [aria-pressed="true"],[aria-selected="true"],[aria-current]{outline:3px solid Highlight!important;outline-offset:-3px!important}
+    canvas{forced-color-adjust:none}
+  }
+/* reading direction and scripts: START (one source, rtl.css in the work folder; install_rtl.py copies it into each page's styles) */
+/* Right to left. The page mirrors by itself. A table of elements, a chart, and anything read along an axis keep their left-to-right order. */
+[dir="rtl"] .ptstage{direction:ltr}          /* on a phone the table scrolls sideways, and starts at hydrogen */
+[dir="rtl"] .ptstage > *,[dir="rtl"] .pt-slot,[dir="rtl"] #frontSlot{direction:rtl}
+[dir="rtl"] .pt-grid,[dir="rtl"] .lb-smgrid,[dir="rtl"] .lb-oboxes,[dir="rtl"] .pd-cells,[dir="rtl"] .lb-nht,[dir="rtl"] .pd-ibars,[dir="rtl"] .lb-heat,[dir="rtl"] .lb-mini,[dir="rtl"] .pt{direction:ltr}
+[dir="rtl"] .loader,[dir="rtl"] .pull-hint{left:var(--sx,34%)}
+[dir="rtl"] .pd-ab i::after{left:auto;right:0}
+/* what a reader types takes its direction from its first letter: a symbol or a configuration from the left, a name from the right */
+[dir="rtl"] input[type="search"],[dir="rtl"] input[type="text"],[dir="rtl"] textarea{unicode-bidi:plaintext;text-align:start}
+[dir="rtl"] input[type="number"]{direction:ltr;text-align:end}
+/* Scripts that join their letters or stack marks above and below the line: no tracking, more room between lines, no slanted type the script does not have. */
+html:is(.script-arabic,.script-nastaliq,.script-devanagari,.script-bengali) *{letter-spacing:0 !important}
+html:is(.script-arabic,.script-nastaliq,.script-devanagari,.script-bengali){--fs-micro:14px}
+html:is(.script-arabic,.script-nastaliq,.script-devanagari,.script-bengali) :is(h2,h3){line-height:1.35}          /* a heading set tight for Latin cuts the marks of a second line */
+html:is(.script-arabic,.script-nastaliq,.script-devanagari,.script-bengali,.script-cjk) :is(i,em,cite,dfn){font-style:normal}
+html:is(.script-arabic,.script-nastaliq,.script-devanagari,.script-bengali,.script-cjk) em{font-weight:600}
+/* Urdu is read in Nastaliq, a sloping hand that needs twice the room. Running text uses it where the device has such
+   a font; tiles, tabs, buttons, tables, and drawings stay in the plainer hand, which fits them. Both are named here
+   because the page's own font has no Arabic letters and a phone left to choose would use the tall hand everywhere. */
+html.script-nastaliq *:not(code,kbd,pre,samp,.lb-code,.lb-chcode){font-family:"Archivo","Geeza Pro","Noto Naskh Arabic","Noto Sans Arabic","Segoe UI",Tahoma,system-ui,sans-serif !important}
+html.script-nastaliq :is(p,dd,blockquote,figcaption,li):not(.numeral,.equation,.foot-mark,.front-title,.statement,.ptr-name,.pd-name,.el-name):not(:is(.bar,.gauge,.pt-grid,.pt-intro,#frontSlot,nav,button,[role="tablist"],table,.lang-list,.lb-tabs,.lb-rail,.lb-subtabs) *),
+html.script-nastaliq :is(p,dd,blockquote,figcaption,li):not(.numeral,.equation,.foot-mark,.front-title,.statement,.ptr-name,.pd-name,.el-name):not(:is(.bar,.gauge,.pt-grid,.pt-intro,#frontSlot,nav,button,[role="tablist"],table,.lang-list,.lb-tabs,.lb-rail,.lb-subtabs) *) :is(span,b,i,em,strong,a,small,sub,sup,cite,q,mark,abbr,dfn,u):not(:is(button,.btn,[role="tab"],label,summary,select,.num,code,kbd) *,.btn,.num){font-family:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq","Urdu Typesetting","Alvi Nastaleeq","Archivo","Geeza Pro","Noto Naskh Arabic",sans-serif !important}
+html.script-nastaliq :is(p,dd,blockquote,figcaption,li):not(.numeral,.equation,.foot-mark,.front-title,.statement,.ptr-name,.pd-name,.el-name):not(:is(.bar,.gauge,.pt-grid,.pt-intro,#frontSlot,nav,button,[role="tablist"],table,.lang-list,.lb-tabs,.lb-rail,.lb-subtabs) *){line-height:2.1}
+/* reading direction and scripts: END */
 </style>
 </head>
 <body>
+<a data-i class="skip" href="#main">Skip to the content</a>
 <header>
-  <a data-i class="wordmark" href="./">Atom</a>
+  <a data-i data-i-ctx="product name" class="wordmark" href="./">Atom</a>
   <nav data-i-attr="aria-label" aria-label="Atom"><a data-i href="./">The table</a><a data-i href="./#labs">Labs</a><a data-i href="teachers.html">Teachers</a><a data-i href="app/">The app</a></nav>
   <span id="langHost"></span>
   <p data-i class="tools">One page. Print it as it is, or switch the language in the top bar first.</p>
@@ -102,7 +169,7 @@
       <p data-i><b>It is free</b> and open source (MIT License), made by a professor at California State University, Dominguez Hills. It costs nothing and sells nothing.</p>
       <p data-i><b>It is private.</b> Atom has no accounts and makes no network requests after it loads. Nothing a student does leaves the device. There is no chat, no sharing, and no advertising.</p>
       <p data-i><b>It works on what you have:</b> a phone, a tablet, a Chromebook, or a desktop, in any modern browser, and it keeps working without Wi-Fi after the first visit. Desktop apps for Mac, Windows, and Linux are on the site.</p>
-      <p data-i><b>In Spanish, too.</b> The language menu is in the top bar of every page. Term help shows the English word beside the Spanish one, so a student can learn the science in both languages at once.</p>
+      <p data-i><b>In eleven languages.</b> The language menu is in the top bar of every page. Term help shows the English word beside the word in the page’s language, so a student can learn the science in both languages at once.</p>
     </section>
   </div>
   <div class="links">

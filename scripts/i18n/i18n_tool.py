@@ -144,7 +144,7 @@ def pack_path(repo, code): return os.path.join(repo, "i18n", code + ".json")
 def pack_codes(repo): return sorted(os.path.basename(p)[:-5] for p in glob.glob(os.path.join(repo, "i18n", "*.json")) if not p.endswith(".catalog.json"))
 def load_pack(repo, code): return json.load(open(pack_path(repo, code), encoding="utf-8"))
 def save_pack(repo, code, p):
-    order = ["meta", "el", "art", "forms", "t", "s", "g"]
+    order = ["meta", "el", "art", "forms", "terms", "t", "s", "g"]
     q = {k: p[k] for k in order if k in p}
     for k in ("t", "s"):
         if k in q: q[k] = dict(sorted(q[k].items()))
@@ -165,7 +165,7 @@ def icu_blocks(s):
             elif s[k] == "}": depth -= 1
             k += 1
         inner = s[i+1:k-1]
-        m = re.match(r"\s*([A-Za-z_]\w*)\s*(?:,\s*(plural|select)\s*,(.*))?$", inner, re.S)
+        m = re.match(r"\s*([A-Za-z_]\w*)(?::[A-Za-z_]\w*)?\s*(?:,\s*(plural|select)\s*,(.*))?$", inner, re.S)
         if not m: i += 1; continue
         if not m.group(2): out.append((m.group(1), None, {}))
         else:
@@ -185,11 +185,21 @@ def icu_blocks(s):
     return out
 
 def placeholder_names(s): return {b[0] for b in icu_blocks(s)}
-def placeholders(s):
+def _swap(n): return (n[0].lower() if n[0].isupper() else n[0].upper()) + n[1:]
+def placeholders(s, like=None):
+    """the values a template uses. An element named any way counts once. With `like` (the English key's
+    own names), {iso} and {Iso} are the same value: the capital only asks for a capital letter."""
     names = placeholder_names(s)
+    if like is not None: names = {n if n in like or _swap(n) not in like else _swap(n) for n in names}
     fam = {n for n in names if n in EL_FAMILY or n.startswith("el_")}
     if fam: names = (names - fam) | {"<element>"}
     return sorted(names)
+FORM_USE = re.compile(r"\{\s*[A-Za-z_]\w*:([A-Za-z_]\w*)\s*[,}]")
+def forms_used(s): return set(FORM_USE.findall(s))
+CTX = re.compile(r" ?\[\[[^\]]*\]\]$")
+def plain_key(k):
+    """a key without its context tag: "Volume [[sound]]" is shown, and translated, as "Volume"."""
+    return CTX.sub("", k)
 
 TAG = re.compile(r"<(/?)([A-Za-z][A-Za-z0-9]*)((?:\s[^<>]*)?)>")
 FREE = re.compile(r'\s(?:title|alt|aria-label|data-el)="[^"]*"')   # the attributes a translator may change (data-el: which form of the element's name a slot takes)
@@ -247,7 +257,7 @@ CITATION = re.compile(r"\((?:1[89]|20)\d\d[a-z]?\)|\(n\.d\.\)|https?://|\bdoi\b"
 CODEISH = re.compile(r"^(?:[.#\[]|[a-z-]+\(|[A-Za-z]+/[a-z]|atom-progress-|A\d\.|calc:|\{\w+\}:)")
 def prose_words(k):
     """the readable words of a key: tags, entities and placeholders removed"""
-    k = re.sub(r"<[^>]+>|&[a-z0-9#]+;|\{[^{}]*\}", " ", k)
+    k = re.sub(r"<[^>]+>|&[A-Za-z0-9#]+;|\{[^{}]*\}", " ", k)   # entities in either case: &Sigma; is a symbol, not a word
     return re.findall(r"[A-Za-z]{3,}", k)
 def is_passthrough(k):
     """a catalog key a pack may carry verbatim: a reference, a selector or code, or
@@ -260,26 +270,34 @@ def check(repo, code, quiet=False):
     p = load_pack(repo, code)
     t = p.get("t", {}); s = p.get("s", {}); el = p.get("el") or []; g = p.get("g", {}); meta = p.get("meta") or {}
     problems = []
+    # the forms of names this language declares (meta.forms); "the" may also come from the articles
+    declared = set(meta.get("forms") or []) | ({"the"} if p.get("art") or "the" in (p.get("forms") or {}) else set())
     if code != "en" and not t: problems.append(("no-translations", code))
     missing = [] if code == "en" else [k for k in cat if k not in t]   # English is the key itself; its pack carries only s and g
     stale = [k for k in t if k not in cat] + [k for k in s if k not in cat]
     for k, v in t.items():
         if k not in cat: continue
         if not isinstance(v, str) or not v.strip(): problems.append(("empty", k)); continue
-        a, b = placeholders(k), placeholders(v)
+        a, b = placeholders(k), placeholders(v, placeholder_names(k))
         if a != b: problems.append(("placeholders", k, a, b))
+        if "[[" in v: problems.append(("context-tag-in-translation", k))
+        undeclared = forms_used(v) - declared
+        if undeclared: problems.append(("form-not-declared", k, sorted(undeclared)))
         if tags(k) != tags(v): problems.append(("tags", k, [x for x in tags(k) if x not in tags(v)], [x for x in tags(v) if x not in tags(k)]))
         elif unbalanced(v) and not unbalanced(k): problems.append(("tag-not-closed", k))
         if v.count("{") != v.count("}"): problems.append(("braces", k))
         problems += icu_problems(code, k, v)
         # identical to English and reads as a sentence (two or more lowercase words that are not
         # name particles): a name like "Lecoq de Boisbaudran" is not a translation problem
-        if code != "en" and v == k and not is_passthrough(k) and len([w for w in prose_words(k) if w[0].islower() and w not in PARTICLES]) >= 2:
+        # meta.same lists the sentences that read the same in this language on purpose ("Neutron: up, down, down = 0"
+        # where the quarks keep their English names)
+        if code != "en" and v == plain_key(k) and k not in (meta.get("same") or []) and not is_passthrough(plain_key(k)) and len([w for w in prose_words(k) if w[0].islower() and w not in PARTICLES]) >= 2:
             problems.append(("untranslated", k))
     for k, v in s.items():
         if k not in cat: continue
         if not isinstance(v, str) or not v.strip(): problems.append(("simple-empty", k)); continue
-        if placeholders(k) != placeholders(v): problems.append(("simple-placeholders", k, placeholders(k), placeholders(v)))
+        if placeholders(k) != placeholders(v, placeholder_names(k)): problems.append(("simple-placeholders", k, placeholders(k), placeholders(v)))
+        if forms_used(v) - declared: problems.append(("form-not-declared", k, sorted(forms_used(v) - declared)))
         if tags(k) != tags(v): problems.append(("simple-tags", k))
         elif unbalanced(v) and not unbalanced(k): problems.append(("simple-tag-not-closed", k))
         problems += icu_problems(code, k, v)
@@ -295,7 +313,7 @@ def check(repo, code, quiet=False):
         short = [y for y in f if len(y) <= 3]
         if short: problems.append(("glossary-short-form-not-exact", k, short))
     if meta.get("dir", "ltr") not in ("ltr", "rtl"): problems.append(("meta-dir", meta.get("dir")))
-    for fld in ("locale", "voice"):
+    for fld in ("locale", "voice", "tag"):
         if fld in meta and not TAGRX.match(str(meta[fld])): problems.append(("meta-" + fld, meta[fld]))
     if code != "en":
         if not meta.get("name"): problems.append(("meta-name", code))
@@ -304,7 +322,20 @@ def check(repo, code, quiet=False):
         elif len(set(el)) != 118: problems.append(("elements", "a name is used twice"))
         if p.get("art") is not None and len(p["art"]) != 118: problems.append(("articles", "%d, need 118" % len(p["art"])))
         for fk, fv in (p.get("forms") or {}).items():
-            if not isinstance(fv, list) or len(fv) != 118: problems.append(("forms", fk))
+            if not isinstance(fv, list) or len(fv) != 118 or any(not isinstance(x, str) or not x.strip() for x in fv): problems.append(("forms", fk))
+        for fk in meta.get("forms") or []:
+            if fk not in (p.get("forms") or {}): problems.append(("form-declared-but-missing", fk))
+        for fk in (p.get("forms") or {}):
+            if fk != "the" and fk not in (meta.get("forms") or []): problems.append(("form-not-in-meta", fk))
+        iso = meta.get("iso")
+        for pat in ([iso] if isinstance(iso, str) else list((iso or {}).values())):
+            if not isinstance(pat, str) or "{el}" not in pat or "{A}" not in pat: problems.append(("meta-iso", str(pat)))
+        if isinstance(iso, dict) and "" not in iso: problems.append(("meta-iso", "no plain pattern (the \"\" key)"))
+        # terms: forms for names that are not elements ("alpha decay" in the genitive), by English key
+        for tk, tv in (p.get("terms") or {}).items():
+            if tk not in t: problems.append(("term-without-translation", tk)); continue
+            if not isinstance(tv, dict) or any(not isinstance(x, str) or not x.strip() for x in tv.values()): problems.append(("term-entry", tk)); continue
+            if set(tv) - declared: problems.append(("term-form-not-declared", tk, sorted(set(tv) - declared)))
     words_done = sum(len(re.findall(r"[A-Za-z][A-Za-z'’\-]+", k)) for k in cat if k in t)
     words_all = sum(len(re.findall(r"[A-Za-z][A-Za-z'’\-]+", k)) for k in cat)
     print(f"{code}: {len([k for k in t if k in cat]):,} of {len(cat):,} keys translated ({words_done:,} of {words_all:,} words), {len(s):,} simple variants, {len(g):,} glossary terms")
@@ -344,6 +375,7 @@ def build(repo, out_app=None, out_site=None):
         base = {"meta": meta}
         for fld in ("el", "art", "forms"):
             if p.get(fld): base[fld] = p[fld]
+        if p.get("terms"): base["terms"] = {p["t"][k]: v for k, v in sorted(p["terms"].items()) if k in p.get("t", {})}
         ALL = ("site", "labs", "app")
         whole = dict(base); whole["t"] = hashed(p.get("t"), ALL, True); whole["s"] = hashed(p.get("s"), ALL, False); whole["g"] = g
         if code == "en": whole.pop("t")

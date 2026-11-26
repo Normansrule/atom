@@ -6,7 +6,7 @@ Thank you for helping. The most valuable contribution to Atom is a **correction*
 
 - **A science error:** open an issue with the *Science correction* form. Name the element or section, quote the text, and link a source.
 - **A bug:** open an issue with the *Bug report* form. Say which browser or macOS version you use and what you expected to happen.
-- **A translation that reads wrong:** every sentence is one line in `i18n/es.json` (or the file for that language), the English on the left and the translation on the right; a corrected line is a one-line pull request. Keep the `{placeholders}` and the tags, give every `{n, plural, …}` the forms your language has, and run the check below. The files under `app/i18n/` and `docs/assets/i18n/` are generated from it; do not edit those.
+- **A translation that reads wrong:** the *Translation correction* form takes it in a minute, and you do not need to know the code. To fix it yourself: every sentence is one line in `i18n/es.json` (or the file for that language), the English on the left and the translation on the right; a corrected line is a one-line pull request. Keep the `{placeholders}` and the tags, give every `{n, plural, …}` the forms your language has, and run the check below. A placeholder may ask for a form of a name the pack declares (`{el:gen}`, `{Iso:the}`); `meta.forms` in the pack lists them. Nine languages are marked Beta because no fluent reader has reviewed them: a reviewer for one of them is the most useful help Atom can get. The files under `app/i18n/` and `docs/assets/i18n/` are generated from it; do not edit those.
 - **A classroom pilot:** after you have used Atom with a class, the *Classroom report* form asks six questions about the software and none about students.
 
 ## How the project is put together
@@ -25,12 +25,14 @@ cd docs && python3 -m http.server 8000          # then open http://localhost:800
 npm install --no-save playwright axe-core html-validate
 npx playwright install chromium
 npx html-validate docs/index.html docs/404.html docs/teachers.html docs/handout.html app/atom.html
-node scripts/smoke.mjs                           # every page loads, in English and Spanish, the self-test passes, no accessibility errors
+node scripts/smoke.mjs                           # every page loads, in English, Spanish, and four newer languages, the self-test passes, no accessibility errors
+node scripts/i18n/test_engine.js docs/assets/atom-i18n.js   # the language engine alone: forms, plurals, numbers, right-to-left
 python3 scripts/i18n/i18n_tool.py extract .      # the catalog must come out unchanged
 python3 scripts/i18n/i18n_tool.py check .        # every pack: missing 0, stale 0, problems 0
 python3 scripts/i18n/i18n_tool.py build .        # the served language files, from i18n/*.json
 python3 scripts/stamp_sw.py                      # the service worker's build stamp, from the files it names
 python3 scripts/check_css.py                     # braces balance, and every color-mix() has a plain fallback; a browser will not tell you
+python3 scripts/check_csp.py                     # every page's policy: no request out, no inline script but its own
 python3 scripts/check_budget.py                  # the site's weight against scripts/budgets.json
 ```
 

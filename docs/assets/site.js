@@ -22,6 +22,9 @@
 (function(){
 "use strict";
 var D=document, root=D.documentElement, W=0, H=0, DPR=1;
+/* motion: the reader's choice (Pause motion, in the bar) outranks the system's, both ways */
+var MOTION=null; try{ MOTION=localStorage.getItem("atom.site.motion"); }catch(e){}
+if(MOTION==="off") root.classList.add("calm"); else if(MOTION==="on") root.classList.remove("calm");
 var CALM=root.classList.contains("calm");
 var mqSmall=window.matchMedia("(max-width: 900px)");
 var a0=QM.C.a0, R=PTable.R;
@@ -46,10 +49,28 @@ function setTheme(t){
   if(GA) GA.reset(); if(GB) GB.reset();
   theme=t; T=TH[t]; root.setAttribute("data-theme",t);
   try{ localStorage.setItem("atom.site.theme",t); }catch(e){}
-  var b=D.getElementById("themeBtn");
-  b.textContent=t==="light"?TT("Dark chamber"):TT("Light table"); b.setAttribute("aria-pressed",t==="light"?"true":"false");
+  /* one name, pressed while the light table is on */
+  D.getElementById("themeBtn").setAttribute("aria-pressed",t==="light"?"true":"false");
   lastTint=""; drawSpectrum(); drawLadder(); drawRadial(true); drawBinding(true);
   if(PT){ PT.recolor(); PT.redraw(); readout(PT.hover||SEL); }
+  if(LABS) LABS.redraw();
+}
+/* Pause motion: the stills a reduced-motion setting gives, switched from the page. The pinned scenes
+   change height with it, so the scene being read is put back where it was. */
+var labsOpt=null;
+function jump(y){ try{ window.scrollTo({top:y,behavior:"instant"}); }catch(e){ window.scrollTo(0,y); } }
+function setCalm(on){
+  var mid=viewH()*0.5, keep=null, t0=0, b=D.getElementById("motionBtn");
+  sections.forEach(function(s){ var r=s.getBoundingClientRect(); if(r.top<=mid&&r.bottom>mid){ keep=s; t0=r.top; } });
+  CALM=on; root.classList.toggle("calm",on);
+  try{ localStorage.setItem("atom.site.motion",on?"off":"on"); }catch(e){}
+  if(b) b.setAttribute("aria-pressed",on?"true":"false");
+  if(PT) PT.setCalm(on);
+  if(labsOpt) labsOpt.calm=on;
+  if(on){ bindReveal=1; cam.yaw=cam.ty; cam.pitch=cam.tp; }
+  SECT=null; fitPins(); cloudKey=""; worldIdle=""; lastInput=performance.now();
+  if(keep){ var t1=keep.getBoundingClientRect().top, want=(keep.classList.contains("pin")&&t0<0)?0:t0; if(Math.abs(t1-want)>1) jump(window.scrollY+t1-want); }
+  drawSpectrum(); drawLadder(); drawRadial(true); drawBinding(true);
   if(LABS) LABS.redraw();
 }
 var lastTint="";
@@ -71,6 +92,7 @@ function resize(){
      does not change size then (it is 100lvh tall), so neither does anything here */
   var nW=window.innerWidth, nH=viewH(), nD=Math.min(window.devicePixelRatio||1, mqSmall.matches?1.5:2), key=nW+"x"+nH+"@"+nD;
   SECT=null; fitPins(); if(key===sized) return; sized=key;
+  if(LABS) LABS.redraw();      /* a lab canvas at rest keeps its old bitmap, stretched, unless it is drawn again at the new size */
   W=nW; H=nH; DPR=nD;
   cO.width=Math.round(W*DPR); cO.height=Math.round(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
   placeSlot(); fitFront();
@@ -78,7 +100,7 @@ function resize(){
 }
 /* where the scene is centered: right of the words on a wide screen, in the
    top half on a narrow one */
-function center(){ return mqSmall.matches ? [W*0.5, H*0.26] : [W*0.66, H*0.5]; }
+function center(){ return mqSmall.matches ? [W*0.5, H*0.26] : [W*(document.documentElement.dir==="rtl"?0.34:0.66), H*0.5]; }
 function radius(){ return mqSmall.matches ? Math.min(W*0.5, H*0.24) : Math.min(W*0.30, H*0.42); }
 function lerp(a,b,t){ return a+(b-a)*t; }
 function smooth(a,b,x){ var t=Math.min(1,Math.max(0,(x-a)/(b-a))); return t*t*(3-2*t); }
@@ -94,8 +116,7 @@ var ORB_L="spdf";
 function atomPhrase(z){ return /^[aeiou]/i.test(AtomI18N.elEnglish(z))?TT("an {el} atom",{z:z}):TT("a {el} atom",{z:z}); }
 function poss(z){ return TT("{El}’s",{z:z}); }
 function fmt(x,d){ return AtomI18N.Nmm(x, d===undefined?0:Math.min(d,2), d===undefined?2:d); }   /* in the reader's notation */
-function supNum(s){ var m={"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
-  return String(s).split("").map(function(c){ return m[c]||c; }).join(""); }
+var numEl=D.getElementById("depthNumeral"), numE=null;
 /* an orbital to draw: n, l, m, its screened charge, and whether its subshell
    is full (then it is drawn round, which a full subshell is) */
 function orbOf(n,l,m,Z,full){ return {n:n,l:l,m:m,Z:Z,full:!!full}; }
@@ -116,6 +137,9 @@ function setElement(z, quiet){
   if(LABS) LABS.setElement(z);
   [].slice.call(D.querySelectorAll('[data-el="poss"]')).forEach(function(s){ s.textContent=poss(z); });
   [].slice.call(D.querySelectorAll('[data-el="atom"]')).forEach(function(s){ s.textContent=atomPhrase(z); });
+  /* any other data-el names a form the language's pack declares (data-el="gen", or "Gen" for a capital first letter) */
+  [].slice.call(D.querySelectorAll("[data-el]")).forEach(function(s){ var k=s.getAttribute("data-el"); if(/^(name|lname|the|poss|atom|protons)$/.test(k)||!k) return;
+    var f=k.charAt(0).toLowerCase()+k.slice(1), t=AtomI18N.formed(AtomI18N.el(z), f); s.textContent=k===f?t:AtomI18N.cap(t); });
   [].slice.call(D.querySelectorAll('[data-el="protons"]')).forEach(function(s){ s.textContent=z===1?TT("hydrogen’s one proton"):TT("{el}’s {n, plural, one {# proton} other {# protons}}",{z:z,n:z}); });
   D.getElementById("fallIn").textContent=TT("Fall into {name}",{name:AtomI18N.elWord(z),z:z});
   cloudTexts(); buildPicker(); lightSetup(); emptyTexts(); nucleusTexts();
@@ -126,8 +150,16 @@ function setElement(z, quiet){
   ELTINT={dark:mixHex("#05060c",WLIGHT.rgb,0.07), light:mixHex("#eef0ee",WLIGHT.rgb,0.10)}; lastTint="";
   if(WORLD){ WORLD.setLight(WLIGHT.lines, WLIGHT.rgb); if(!quiet) WORLD.birth(ORIGIN[z-1], performance.now()); }
 
-  /* the whole-atom cloud costs tens of milliseconds: build it after this frame */
-  setTimeout(function(){ if(front) handle(front.g,"s"+SEL); if(back) handle(back.g,"s"+SEL); }, 60);
+  warmShells(z);
+}
+/* The whole-atom cloud (the cloud's last step, the emptiness) costs up to a few hundred milliseconds
+   and is not on screen at the table: built when the browser is idle, one context at a time, and never
+   for an element already left; a reader who gets there first has it built on the spot. */
+var warmId=0;
+function whenIdle(fn, ms){ if(window.requestIdleCallback) requestIdleCallback(fn,{timeout:ms}); else setTimeout(fn,Math.min(ms,900)); }
+function warmShells(z){
+  var id=++warmId, i=0;
+  setTimeout(function next(){ whenIdle(function(){ var g=[front,back][i++]; if(id!==warmId||z!==SEL||!g) return; handle(g.g,"s"+z); next(); }, 4000); }, 900);   /* after the card has slid in */
 }
 function cloudTexts(){
   var v=ELV, name=EL[2], z=SEL, s0, s1, s3;
@@ -188,7 +220,7 @@ function showCloud(o){
   if(!back){ front.h=handle(front.g,o); return; }
   back.h=handle(back.g,o);
   var t=front; front=back; back=t;
-  front.c.style.opacity="1"; back.c.style.opacity="0"; swapAt=performance.now();
+  front.c.style.opacity="1"; back.c.style.opacity="0"; back.wiped=false; swapAt=performance.now();
 }
 var swapAt=0;
 
@@ -298,10 +330,11 @@ function makeField(canvas){
 
 /* ------------------------------------------------------------------ the proton and the pull */
 var Q=AtomQCD.C;
-var PULL={on:false,idx:0,q:[0,0],v:[0,0],drag:false,hold:0,broken:null,pairs:0,S:null,restL:0,flav:["u","u","d"],hand:null,lastT:0};
+var PULL={on:false,idx:0,q:[0,0],v:[0,0],drag:false,hold:0,cmd:0,broken:null,pairs:0,S:null,restL:0,flav:["u","u","d"],hand:null,lastT:0};
+/* the first quark points down and right, so a pull from the button breaks in view, clear of the bar and the words */
 function restQuarks(t){
   var o=[], j, rm=CALM?0:1;
-  for(j=0;j<3;j++){ var a=Math.PI/2+j*2.0944+rm*0.25*Math.sin(t*0.31), r=0.40+rm*0.035*Math.sin(t*2.7+j*2.1);
+  for(j=0;j<3;j++){ var a=-Math.PI/3+j*2.0944+rm*0.25*Math.sin(t*0.31), r=0.40+rm*0.035*Math.sin(t*2.7+j*2.1);
     o.push([r*Math.cos(a), r*Math.sin(a)]); }
   return o;
 }
@@ -311,10 +344,15 @@ function quarks(t){
 }
 function stepPull(now){
   if(!PULL.on) return;
-  if(PULL.broken){ if((now-PULL.broken.t0)/1000>(CALM?2:3.2)){ PULL.on=false; PULL.broken=null; Sound.humStop(); } return; }
+  if(PULL.broken) return;   /* what the break made stays until the reader puts the proton back (pullReset) */
   var qs=quarks(now/1000); PULL.S=qs.S;
   if(qs.S.legs[PULL.idx]>Q.rBreak){ snap(now,qs); return; }
-  if(PULL.hold>0){ PULL.hold--; return; }
+  if(PULL.hold>0){ PULL.hold--;
+    /* a pull from the button is a length asked for: the quark is held exactly that far out along its
+       leg while the other two breathe, so every press adds the same 0.1 fm */
+    if(PULL.cmd){ var Jc=qs.S.J, ux=PULL.q[0]-Jc[0], uy=PULL.q[1]-Jc[1], un=Math.hypot(ux,uy)||1; PULL.q=[Jc[0]+ux/un*PULL.cmd, Jc[1]+uy/un*PULL.cmd]; }
+    if(!PULL.hold) PULL.cmd=0;
+    return; }
   if(PULL.drag&&PULL.hand&&!CALM){
     /* the quark has mass: the hand holds it with a stiff spring while the
        string pulls it back toward the junction with the constant force a
@@ -341,21 +379,36 @@ function snap(now,qs){
   var S=qs.S, i=PULL.idx, J=S.J, q=qs.q[i], dx=q[0]-J[0], dy=q[1]-J[1], d=Math.hypot(dx,dy)||1;
   var pair=(PULL.pairs++%2===0)?"d":"u", res=AtomQCD.snap(PULL.flav,i,pair);
   PULL.broken={t0:now,dir:[dx/d,dy/d],at:[q[0],q[1]],res:res,pair:pair,restAt:restQuarks(now/1000)[i]};
-  PULL.drag=false; PULL.hold=0;
+  PULL.drag=false; PULL.hold=0; PULL.cmd=0;
+  var pn=D.getElementById("pNote"), pb=D.getElementById("pullBack"), po=D.getElementById("pullOut");
+  if(PNOTE0===null) PNOTE0=pn.innerHTML;
+  if(pb) pb.textContent=TT("Back to a proton");
+  if(po) po.setAttribute("aria-disabled","true");
   D.getElementById("pReact").textContent=res.text;
-  D.getElementById("pNote").textContent=TT("It snapped at {d} fm. The string held {Q} GeV, enough to make a {pair} quark and its antiquark out of the vacuum. The antiquark left with the quark you pulled ({meson}, {mesonQuarks}), and the new quark took its place ({after}, {baryonQuarks}). Charge in, charge out, the same.",{d:d.toFixed(2),Q:(Q.sigma*d).toFixed(2),pair:pair,meson:res.meson,mesonQuarks:res.mesonQuarks,after:res.after,baryonQuarks:res.baryonQuarks});
+  pn.textContent=TT("It snapped at {d} fm. The string held {Q} GeV, enough to make a {pair} quark and its antiquark out of the vacuum. The antiquark left with the quark you pulled ({meson}, {mesonQuarks}), and the new quark took its place ({after}, {baryonQuarks}). Charge in, charge out, the same.",{d:d.toFixed(2),Q:(Q.sigma*d).toFixed(2),pair:pair,meson:res.meson,mesonQuarks:res.mesonQuarks,after:res.after,baryonQuarks:res.baryonQuarks});
   Sound.snap(); Sound.humStop(); if(MS) MS.signal("snap");
   var hp=hit("pull"); if(hp) hp.classList.remove("dragging");
   flash=now;
 }
-var flash=-1e9;
+var flash=-1e9, PNOTE0=null;
+/* the proton again, at rest, with its first words */
+function pullReset(){
+  PULL.on=false; PULL.broken=null; PULL.drag=false; PULL.hold=0; PULL.cmd=0; Sound.humStop();
+  var pn=D.getElementById("pNote"), pb=D.getElementById("pullBack"), po=D.getElementById("pullOut");
+  if(PNOTE0!==null) pn.innerHTML=PNOTE0;
+  D.getElementById("pReact").textContent="";
+  if(pb) pb.textContent=TT("Let go");
+  if(po) po.removeAttribute("aria-disabled");
+}
+/* one definition everywhere: energy = string tension x the stretched leg, the number the sentences use */
+function pullLeg(S){ return (PULL.on&&!PULL.broken&&PULL.cmd)?PULL.cmd:S.legs[PULL.idx]; }
 function pullReadout(){
   var S=PULL.S||quarks(performance.now()/1000).S;
-  var leg=S.legs[PULL.idx], E=PULL.on?Math.max(0,Q.sigma*(S.L-(PULL.restL||S.L))):0, left=Math.max(0,Q.rBreak-leg);
+  var leg=pullLeg(S), E=Q.sigma*leg, left=Math.max(0,Q.rBreak-leg);
   set("pLeg",leg.toFixed(2)+" fm"); set("pE",E.toFixed(2)+" GeV"); set("pF",TT("{n} metric tons",{n:AtomI18N.Nmm(Q.tonnes,1,1)}));
   set("pLeft",PULL.broken?TT("broken",{}):left.toFixed(2)+" fm");
   D.getElementById("pLeft").classList.toggle("hot",!PULL.broken&&left<0.2);
-  if(PULL.on&&!PULL.broken) Sound.humSet(E);
+  if(PULL.on&&!PULL.broken) Sound.humSet(Math.max(0,E-Q.sigma*0.4));
 }
 var lastSet={};
 function set(id,v){ if(lastSet[id]===v) return; lastSet[id]=v; var e=D.getElementById(id); if(e) e.textContent=v; }
@@ -406,14 +459,20 @@ function lightSetup(){
     fine=TT("Computed for Hα: 656.470 nm. Measured by the US National Institute of Standards and Technology (NIST): 656.463 nm. The seven picometers in between are physics the formula leaves out: relativity, the electron&rsquo;s spin, and quantum electrodynamics (QED). In 2026 hydrogen tested the Standard Model to better than a part per trillion.");
   }
   D.getElementById("lightIntro").innerHTML=intro; D.getElementById("lightEq").innerHTML=eq; D.getElementById("lightFine").innerHTML=fine;
+  /* the heading names the light the scene shows: the element's own, or hydrogen's */
+  var hOwn=D.getElementById("t-light"), hRef=D.getElementById("t-lightRef");
+  if(hOwn&&hRef){ hOwn.hidden=LMODE==="ref"; hRef.hidden=LMODE!=="ref"; D.getElementById("light").setAttribute("aria-labelledby",LMODE==="ref"?"t-lightRef":"t-light"); }
   var wl=AtomWorld.elementLight(SEL);
   D.getElementById("ringNote").textContent= wl.lines.length ?
     TT("The page is lit by {el}’s own light, and the rings around the atom are its lines, spread out by wavelength the way a diffraction grating spreads them: violet nearest, red farthest.",{z:SEL}) :
     TT("Atom has no measured lines for {name}, so the page is lit instead by the colors of the places that made it.",{name:AtomI18N.elWord(SEL),z:SEL});
-  set("lineReadout", LMODE==="lines"?TT("Scroll, or press the button. Each line appears where {el}’s electrons put it.",{z:SEL}):TT("Scroll, or press the button. Each fall from a higher level adds a line where the formula says it must be."));
+  sayLine(LMODE==="lines"?TT("Scroll, or press the button. Each line appears where {el}’s electrons put it.",{z:SEL}):TT("Scroll, or press the button. Each fall from a higher level adds a line where the formula says it must be."), active!=="light");
   D.getElementById("lightEq").setAttribute("aria-label", LMODE==="lines"?TT("E equals h c over lambda"):TT("one over lambda equals R H times the quantity one over n one squared minus one over n two squared"));
   drawSpectrum(); drawLadder();
 }
+/* the line readout speaks results (a line landed, the lines cleared) and is written silently otherwise */
+var lineEl=D.getElementById("lineReadout");
+function sayLine(txt, quiet){ if(lineEl) lineEl.setAttribute("aria-live",quiet?"off":"polite"); set("lineReadout",txt); }
 function wl2rgb(w){
   if(w<380||w>780) return null;
   return PTable.wlColor(w);
@@ -455,7 +514,7 @@ function emit(nu){
   ATOMSTATE=[nu,2,0]; drawLadder();
   EM={nu:nu, t0:performance.now(), phase:CALM?2:0, lam:lam(nu,2)};
   if(CALM){ landLine(EM); EM=null; ATOMSTATE=[2,1,0]; drawLadder(); return; }
-  set("lineReadout",TT("Excited to n = {nu}. Now it is in two states at once, and sloshing…",{nu:nu}));
+  sayLine(TT("Excited to n = {nu}. Now it is in two states at once, and sloshing…",{nu:nu}), true);
 }
 function emitMeasured(i){
   var p=ELINES[i], now=performance.now();
@@ -469,11 +528,11 @@ function nextMeasured(){
 function landLine(e){
   if(e.measured){
     LIT[e.idx]=(LIT[e.idx]||0)+1; drawSpectrum();
-    set("lineReadout",TT("{lam} nm: E = hc/λ = {ev} eV. {lit} of {el}’s {n, plural, one {# visible line} other {# visible lines}} here.",{lam:fmt(e.lam,2),ev:fmt(1239.84198/e.lam,3),lit:Object.keys(LIT).length,z:SEL,n:ELINES.length}));
+    sayLine(TT("{lam} nm: E = hc/λ = {ev} eV. {lit} of {el}’s {n, plural, one {# visible line} other {# visible lines}} here.",{lam:fmt(e.lam,2),ev:fmt(1239.84198/e.lam,3),lit:Object.keys(LIT).length,z:SEL,n:ELINES.length}), active!=="light");
   } else {
     var key=e.lam.toFixed(2); LINES[key]=(LINES[key]||0)+1; drawSpectrum();
     var names={3:"Hα",4:"Hβ",5:"Hγ",6:"Hδ"};
-    set("lineReadout",TT("{names}: n = {nu} → 2 emits {e} nm, {v} eV. Every hydrogen atom in the universe gives exactly this line.",{names:(names[e.nu]||""),nu:e.nu,e:e.lam.toFixed(2),v:(13.6057*(1/4-1/(e.nu*e.nu))).toFixed(3)}));
+    sayLine(TT("{names}: n = {nu} → 2 emits {e} nm, {v} eV. Every hydrogen atom in the universe gives exactly this line.",{names:(names[e.nu]||""),nu:e.nu,e:e.lam.toFixed(2),v:(13.6057*(1/4-1/(e.nu*e.nu))).toFixed(3)}), active!=="light");
   }
   Sound.tone(e.lam);
 }
@@ -488,10 +547,15 @@ function stepEmit(now){
 }
 
 /* ------------------------------------------------------------------ the emptiness and the nucleus, in numbers */
+/* The scale model: a marble 1.5 cm across for the nucleus, a football field 100 m long. The sentence
+   uses these numbers, and the drawing (deep.js, the empty atom to scale) asks for them: AtomSite.scale(). */
+var MARBLE=0.015, FIELD_M=100, SCALE=null;
 function emptyTexts(){
   var name=EL[2], nuc=nucleusOf(SEL), r=ARAD[SEL-1], txt;
+  SCALE=null;
   if(r){
-    var ratio=r*1e-12/(nuc.R*1e-15), across=0.015*ratio, fields=Math.max(1,Math.round(across/100));
+    var ratio=r*1e-12/(nuc.R*1e-15), across=MARBLE*ratio, fields=Math.max(1,Math.round(across/FIELD_M));
+    SCALE={z:SEL, marble:MARBLE, field:FIELD_M, across:Math.round(across/10)*10, fields:fields};
     txt=TT("Keep falling, into {name}. Its atom is about {fmt} picometers across. Its nucleus is {fmt2} femtometers, {fmt3} times smaller. Make the nucleus a marble and the atom would be {fmt4} meters wide, about {fields} football {fields, plural, one {field} other {fields}} end to end.",{name:AtomI18N.elWord(SEL),z:SEL,fmt:fmt(2*r,0),fmt2:fmt(2*nuc.R,1),fmt3:fmt(Math.round(ratio/100)*100,0),fmt4:fmt(Math.round(across/10)*10,0),fields:fields});
     var frac=Math.pow(nuc.R*1e-15/(r*1e-12),3);
     set("emptyStat",((1-frac)*100).toFixed(12)+" %");
@@ -500,7 +564,10 @@ function emptyTexts(){
     set("emptyStat",TT("Almost all"));
   }
   D.getElementById("emptyText").textContent=txt;
+  if(window.AtomDeep&&AtomDeep.poke) AtomDeep.poke();
 }
+/* u: how far the fall has gone, 0 at the atom's edge to 1 at the nucleus; null away from the scene or with motion paused */
+window.AtomSite={scale:function(){ if(!SCALE) return null; SCALE.u=(active==="empty"&&!CALM)?smooth(0.05,0.92,prog):null; return SCALE; }};
 function nucleusTexts(){
   var e=EL, nuc=nucleusOf(SEL), name=e[2], txt, eq, h2;
   var meas=BA_MEAS[SEL+"-"+nuc.A];
@@ -636,7 +703,11 @@ function measure(){
 if(window.ResizeObserver){ var sectRO=new ResizeObserver(function(){ SECT=null; }); sectRO.observe(D.querySelector("main")||D.body);
   var pinRO=new ResizeObserver(function(){ fitPins(); }); pinPlates.forEach(function(x){ pinRO.observe(x[1]); }); }
 var gaugeLinks=null, gaugeMap={table:"top",cloud:"cloud",light:"light",empty:"empty",nucleus:"nucleus",proton:"proton",pull:"pull",fields:"fields",mass:"mass",weak:"weak",edge:"edge"};
-function markGauge(){ var k=gaugeMap[active]||"edge"; if(!gaugeLinks||(gaugeLinks[0]&&!gaugeLinks[0].isConnected)) gaugeLinks=[].slice.call(D.querySelectorAll(".gauge a")); gaugeLinks.forEach(function(a){ a.classList.toggle("on",a.getAttribute("data-depth")===k); }); }
+var gaugeK="";
+function markGauge(){ var k=gaugeMap[active]||"edge";
+  if(!gaugeLinks||(gaugeLinks[0]&&!gaugeLinks[0].isConnected)){ gaugeLinks=[].slice.call(D.querySelectorAll(".gauge a")); gaugeK=""; }
+  if(k===gaugeK) return; gaugeK=k;
+  gaugeLinks.forEach(function(a){ var on=a.getAttribute("data-depth")===k; a.classList.toggle("on",on); if(on) a.setAttribute("aria-current","location"); else a.removeAttribute("aria-current"); }); }
 
 /* ------------------------------------------------------------------ pointer: turn the atom, pull the quark */
 var cam={yaw:-0.6,pitch:0.42,ty:-0.6,tp:0.42,vy:0,vp:0,drag:null,dy0:0,dp0:0};
@@ -685,7 +756,7 @@ if(hp){
   hp.addEventListener("pointerdown",function(e){
     if(e.button>0||PULL.broken) return; var j=nearestQuark(e.clientX,e.clientY,e.pointerType); if(j<0) return;
     if(!PULL.on){ PULL.restL=quarks(performance.now()/1000).S.L; }
-    PULL.on=true; PULL.drag=true; PULL.idx=j; PULL.hold=0; PULL.v=[0,0]; PULL.hand=P2F(e.clientX,e.clientY); PULL.lastT=performance.now();
+    PULL.on=true; PULL.drag=true; PULL.idx=j; PULL.hold=0; PULL.cmd=0; PULL.v=[0,0]; PULL.hand=P2F(e.clientX,e.clientY); PULL.lastT=performance.now();
     if(CALM) PULL.q=PULL.hand.slice(); else PULL.q=restQuarks(performance.now()/1000)[j].slice();
     hp.setPointerCapture(e.pointerId); hp.classList.add("dragging"); holdPage(true); D.getElementById("pullHint").style.opacity="0";
   });
@@ -706,21 +777,25 @@ if(hp){
 D.getElementById("pullOut").addEventListener("click",function(){
   if(PULL.broken) return;
   var t=performance.now()/1000;
-  if(!PULL.on){ PULL.restL=quarks(t).S.L; PULL.on=true; PULL.idx=0; PULL.q=restQuarks(t)[0].slice(); PULL.v=[0,0]; }
+  if(!PULL.on){ PULL.restL=quarks(t).S.L; PULL.on=true; PULL.idx=0; PULL.q=restQuarks(t)[0].slice(); PULL.v=[0,0]; PULL.cmd=0; }
+  /* each press asks for 0.1 fm more than the last (from the nearest tenth, 0.4 fm at rest): stepPull holds the quark there */
   var S=quarks(t).S, J=S.J, dx=PULL.q[0]-J[0], dy=PULL.q[1]-J[1], n=Math.hypot(dx,dy)||1;
-  PULL.q=[PULL.q[0]+dx/n*0.1, PULL.q[1]+dy/n*0.1]; PULL.hold=240;
+  PULL.cmd=Math.round(((PULL.cmd||Math.round(S.legs[PULL.idx]*10)/10)+0.1)*10)/10;
+  PULL.q=[J[0]+dx/n*PULL.cmd, J[1]+dy/n*PULL.cmd]; PULL.hold=240;
+  var ps=D.getElementById("pSay");   /* one sentence for a screen reader per press; the break itself is announced by the reaction line */
+  if(ps) ps.textContent=PULL.cmd>Q.rBreak?"":TT("Stretched leg {leg} fm. The string holds {e} GeV. {left} fm left before it breaks.",{leg:PULL.cmd.toFixed(2),e:(Q.sigma*PULL.cmd).toFixed(2),left:Math.max(0,Q.rBreak-PULL.cmd).toFixed(2)});
   if(active!=="pull") D.getElementById("pull").scrollIntoView({behavior:CALM?"auto":"smooth"});
 });
-D.getElementById("pullBack").addEventListener("click",function(){ PULL.hold=0; PULL.drag=false; });
+D.getElementById("pullBack").addEventListener("click",function(){ if(PULL.broken){ pullReset(); return; } PULL.hold=0; PULL.cmd=0; PULL.drag=false; });
 D.getElementById("exciteBtn").addEventListener("click",function(){
   if(EM) return;
   if(LMODE==="lines"){ var i=nextMeasured(); if(i>=0) emitMeasured(i); }
   else emit(3+Math.floor(Math.random()*4));
 });
-D.getElementById("clearLines").addEventListener("click",function(){ LINES={}; LIT={}; drawSpectrum(); set("lineReadout",TT("Cleared. Excite the atom again.")); });
+D.getElementById("clearLines").addEventListener("click",function(){ LINES={}; LIT={}; drawSpectrum(); sayLine(TT("Cleared. Excite the atom again."), false); });
 D.getElementById("themeBtn").addEventListener("click",function(){ setTheme(theme==="light"?"dark":"light"); });
 D.getElementById("soundBtn").addEventListener("click",function(){
-  var on=Sound.toggle(); this.textContent=on?TT("Sound on"):TT("Sound off"); this.setAttribute("aria-pressed",on?"true":"false");
+  this.setAttribute("aria-pressed",Sound.toggle()?"true":"false");   /* one name, "Sound", and a state */
 });
 
 /* ------------------------------------------------------------------ the table, its readout and its card */
@@ -743,12 +818,13 @@ function readout(z){
 function originLine(z){
   var m=ORIGIN[z-1], ks=Object.keys(m).sort(function(a,b){ return m[b]-m[a]; });
   if(ks[0]==="h") return z<=92?TT("Nothing from the stars survives: every atom here was made recently, by decay or in reactors."):TT("Nothing from the stars survives: every atom here was made by people, a few at a time.");
-  return TT("Made in {ks}.",{ks:ks.map(function(k){ return ORIGIN_KINDS[k].short+" ("+Math.round(m[k]*100)+"%)"; }).join(", ")});
+  /* each source by the name the key and the card give it */
+  return TT("Made in {ks}.",{ks:AtomI18N.list(ks.map(function(k){ return (k==="b"?TT("the Big Bang"):AtomI18N.low(ORIGIN_KINDS[k].name))+" ("+Math.round(m[k]*100)+"%)"; }))});
 }
 /* ------------------------------------------------------------------ lenses: the same table, read three ways */
 var LENS_HELP={
   shapes:TT("Each square shows the electron that puts its element in the table: spheres (s), dumbbells (p), cloverleaves (d), and flowers (f). The table's shape is the orbitals' shape."),
-  origin:TT("Where each element was made. Most of the hydrogen and helium are from the Big Bang; everything heavier was forged in stars, their explosions, and their collisions. Pick a source to see its share."),
+  origin:TT("Where each element was made. Most of the hydrogen and helium are from the Big Bang; nearly everything heavier was forged in stars, their explosions, and their collisions. Pick a source to see its share."),
   frontier:TT("What each element is helping build right now. Pick a field to light up its elements; every card ends with an open problem someone could take on."),
   yours:TT("What you have made your own. A ring marks an element you have explored, a half-filled dot one you have built, and a solid dot one you have mastered in the labs.")
 };
@@ -776,9 +852,16 @@ function withLabs(fn){
   if(fn) LABS_Q.push(fn);
   if(LABS_STATE!==0) return;
   LABS_STATE=1;
-  var broke=function(){ LABS_STATE=3; var st=D.getElementById("labsStatus"); if(st) st.textContent=TT("The labs could not be loaded. Check your connection and reload the page."); };
+  var broke=function(bad){ LABS_STATE=3; var st=D.getElementById("labsStatus"), host=D.getElementById("labsHost");
+    if(bad!==true){ if(st) st.textContent=TT("The labs could not be loaded. Check your connection and reload the page."); return; }
+    /* the file arrived and could not start: almost always damaged saved progress, and this is the way back */
+    if(!host) return; host.innerHTML=""; st=D.createElement("p"); st.className="labs-status"; st.id="labsStatus"; host.appendChild(st);
+    var sp=D.createElement("span"), bt=D.createElement("button"); sp.textContent=TT("The labs could not start. The progress saved in this browser may be damaged.");
+    bt.type="button"; bt.className="btn btn-small"; bt.textContent=TT("Clear saved progress and reload");
+    bt.addEventListener("click",function(){ try{ localStorage.removeItem("atom.progress"); localStorage.removeItem("atom.challenge"); }catch(e){} location.reload(); });
+    st.appendChild(sp); st.appendChild(bt); };
   var s=D.createElement("script"); s.src="assets/atom-labs.js"; s.async=true;
-  s.onload=function(){ try{ labsBoot(); LABS_STATE=2; }catch(e){ if(window.console) console.error(e); broke(); return; } var q=LABS_Q; LABS_Q=[]; q.forEach(function(g){ g(); }); };
+  s.onload=function(){ try{ labsBoot(); LABS_STATE=2; }catch(e){ if(window.console) console.error(e); LABS=null; broke(true); return; } var q=LABS_Q; LABS_Q=[]; q.forEach(function(g){ try{ g(); }catch(e2){ if(window.console) console.error(e2); } }); };
   s.onerror=broke;
   AtomI18N.need("labs").then(function(){ (D.head||D.documentElement).appendChild(s); });
 }
@@ -789,14 +872,31 @@ function openSheet(z){
     AtomLabs.progress.mark("seen",z);
     var hd=sheetBody.querySelector(".pd-head"); if(hd&&!sheetBody.querySelector(".pd-acts")) hd.insertAdjacentHTML("afterend",AtomLabs.cardActions(z)); });
   if(MS) MS.signal("card:"+z);
-  sheet.hidden=false; ptsec.classList.add("sheet-open"); root.classList.add("card-open"); fitTable();
+  sheet.hidden=false; ptsec.classList.add("sheet-open"); root.classList.add("card-open"); fitSlot(); fitTable();
   requestAnimationFrame(function(){ sheet.classList.add("open"); });
   sheetBody.scrollTop=0;
+  if(sheetModal(true)) setTimeout(function(){ if(!sheet.hidden&&!sheet.contains(D.activeElement)) D.getElementById("fallIn").focus(); }, 30);
 }
+/* On a narrow screen the card covers the page, so it is a dialog: the page behind is out of reach
+   until it closes, and Tab goes round inside it. On a wide screen it is a panel beside the table. */
+function sheetModal(on){
+  var m=!!on&&mqSmall.matches;
+  sheet.setAttribute("role",m?"dialog":"complementary"); if(m) sheet.setAttribute("aria-modal","true"); else sheet.removeAttribute("aria-modal");
+  [].forEach.call(D.querySelectorAll("header.bar, nav.gauge, main > :not(#sheet), footer.foot, #missions"),function(e){ if(m) e.setAttribute("inert",""); else e.removeAttribute("inert"); });
+  return m;
+}
+sheet.addEventListener("keydown",function(e){
+  if(e.key!=="Tab"||sheet.getAttribute("aria-modal")!=="true") return;
+  var f=[].filter.call(sheet.querySelectorAll('a[href],button,input,select,textarea,summary,[tabindex]'),function(x){ return x.tabIndex>=0&&!x.disabled&&x.offsetParent!==null; });
+  if(!f.length) return; var a=D.activeElement, first=f[0], lastF=f[f.length-1];
+  if(e.shiftKey&&(a===first||!sheet.contains(a))){ e.preventDefault(); lastF.focus(); }
+  else if(!e.shiftKey&&(a===lastF||!sheet.contains(a))){ e.preventDefault(); first.focus(); }
+});
 function closeSheet(focusTile){
   if(sheet.hidden) return;
   sheetBody.removeAttribute("data-z");
-  sheet.classList.remove("open"); ptsec.classList.remove("sheet-open"); root.classList.remove("card-open"); fitTable();
+  sheet.classList.remove("open"); ptsec.classList.remove("sheet-open"); root.classList.remove("card-open"); fitSlot(); fitTable();
+  sheetModal(false);
   setTimeout(function(){ if(!sheet.classList.contains("open")) sheet.hidden=true; }, CALM?0:320);
   if(focusTile&&PT) PT.focusSelected();
 }
@@ -838,16 +938,17 @@ function placeSlot(){
    readout. It is held to the three rows it spans, so it never spreads the
    table's rows apart, and it gets the fullest arrangement whose words fit:
    fit1 drops the loading note, fit2 sets the sentence smaller and wider,
-   fit3 drops the sentence, fit4 puts the title beside the element's name
-   with the lenses under both, fit5 makes all three smaller */
+   fit3 trades the sentence for one short line, fit4 puts the title beside
+   the element's name with the lenses under both, fit5 makes all three
+   smaller, and fit6 (a very short window) drops the short line too */
 function fitSlot(){
   if(!PT) return;
   var k, cl=slot.classList;
-  for(k=1;k<=5;k++) cl.remove("fit"+k);
+  for(k=1;k<=6;k++) cl.remove("fit"+k);
   if(mqSmall.matches){ slot.style.maxHeight=""; return; }
   var t=PT.el.querySelector(".pt-el"), room=3*t.offsetHeight+8;
   slot.style.maxHeight=room+"px";
-  for(k=0;k<=5;k++){
+  for(k=0;k<=6;k++){
     if(k) cl.add("fit"+k);
     if(slotNeed(k>=4)<=room && (k>=4||read.offsetWidth>=220)) break;
   }
@@ -855,7 +956,7 @@ function fitSlot(){
 /* how tall the slot's words are, from offsets so a scaled or zoomed table
    measures the same; a lens line can add two lines to the readout later */
 function slotNeed(compact){
-  var y0=slot.offsetTop, b=0, kids=slot.querySelectorAll(".pt-intro > *, .ptread, .pt-status");
+  var y0=slot.offsetTop, b=0, kids=slot.querySelectorAll(".pt-intro > *, .ptread, .pt-status, .pt-hint");
   for(var i=0;i<kids.length;i++){ var e=kids[i]; if(!e.offsetHeight) continue;
     b=Math.max(b, e.offsetTop+e.offsetHeight-y0+(e===read&&!compact&&!read.querySelector(".ptr-lens")?40:0)); }
   return b+8;
@@ -962,18 +1063,20 @@ function pullScene(t,now,cx,cy,k){
   PULL.S=S;
   if(B){
     var tau=(now-B.t0)/1000, e=CALM?1:1-Math.pow(1-Math.min(1,tau/0.55),3);
-    var born=[B.at[0]-B.dir[0]*0.34,B.at[1]-B.dir[1]*0.34], nq=[born[0]+(B.restAt[0]-born[0])*e, born[1]+(B.restAt[1]-born[1])*e];
+    var born=[B.at[0]-B.dir[0]*0.34,B.at[1]-B.dir[1]*0.34], home=q[PULL.idx], nq=[born[0]+(home[0]-born[0])*e, born[1]+(home[1]-born[1])*e];   /* it settles where a resting quark sits now, and breathes with the other two from then on */
     var q2=q.slice(); q2[PULL.idx]=nq; var S2=AtomQCD.state(q2.map(function(a){ return [a[0],a[1],0]; }));
     for(i=0;i<3;i++){ segs.push([S2.J[0],S2.J[1],q2[i][0],q2[i][1],i]); discs.push({x:cx+q2[i][0]*k,y:cy-q2[i][1]*k,c:i,f:i===PULL.idx?B.pair:PULL.flav[i]}); }
     var drift=CALM?0.3:0.3*(1-Math.exp(-tau*2))+0.05*tau, mq=[B.at[0]+B.dir[0]*drift,B.at[1]+B.dir[1]*drift], ma=[mq[0]-B.dir[0]*0.34,mq[1]-B.dir[1]*0.34];
     segs.push([ma[0],ma[1],mq[0],mq[1],PULL.idx]);
     discs.push({x:cx+mq[0]*k,y:cy-mq[1]*k,c:PULL.idx,f:PULL.flav[PULL.idx]});
     discs.push({x:cx+ma[0]*k,y:cy-ma[1]*k,c:PULL.idx,f:B.pair,anti:true});
-    return {segs:segs,discs:discs,labels:[[B.res.meson+"  "+B.res.mesonQuarks, cx+mq[0]*k+18, cy-mq[1]*k-18],[B.res.after+"  "+B.res.baryonQuarks, cx-0.95*k, cy+1.05*k]],S:S};
+    var mx=cx+mq[0]*k, my=cy-mq[1]*k, lb=[[B.res.after+"  "+B.res.baryonQuarks, cx-0.2*k, cy+1.12*k]];
+    if(mx>0&&mx<W&&my>64&&my<H) lb.push([B.res.meson+"  "+B.res.mesonQuarks, mx+18, my-18]);   /* the meson keeps going; its label leaves with it */
+    return {segs:segs,discs:discs,labels:lb,S:S};
   }
   for(i=0;i<3;i++){ segs.push([S.J[0],S.J[1],q[i][0],q[i][1],i]); discs.push({x:cx+q[i][0]*k,y:cy-q[i][1]*k,c:i,f:PULL.flav[i]}); }
   var labels=[];
-  if(PULL.on){ var lq=q[PULL.idx]; labels.push([((S.legs[PULL.idx].toFixed(2)))+" fm · "+(((Q.sigma*(S.L-PULL.restL)).toFixed(2)))+" GeV", cx+lq[0]*k+18, cy-lq[1]*k-18]); }
+  if(PULL.on){ var lq=q[PULL.idx], ll=pullLeg(S); labels.push([ll.toFixed(2)+" fm · "+(Q.sigma*ll).toFixed(2)+" GeV", cx+lq[0]*k+18, cy-lq[1]*k-18]); }
   return {segs:segs,discs:discs,labels:labels,S:S};
 }
 function drawSparkle(o, fov, c, alpha){
@@ -1044,7 +1147,7 @@ function drawWorld(now, dt){
   var idleKey=(active==="bench"||active==="end")&&!busy ? [W,H,theme,SEL].join("|") : "";
   if(idleKey){ if(worldIdle===idleKey) return; worldIdle=idleKey; } else worldIdle="";
   WORLD.govern(dt);
-  if(!busy&&!CALM&&(frames&1)) return;
+  if(!busy&&!CALM&&((frames&1)||REST||(SLOW&&frames%4))) return;
   if(CALM&&!busy&&worldDrawn&&frames%30) return;
   worldDrawn=true;
   var c=center(), ev=c, r=radius(), quiet=null;
@@ -1064,7 +1167,20 @@ var RD={tile:null,slot:null,ox:0,oy:0}, PUT=new Map();
 function put(el,prop,v){ var m=PUT.get(el); if(!m){ m={}; PUT.set(el,m); } if(m[prop]===v) return; m[prop]=v; el.style[prop]=v; }
 var ptFootEl=null, orbKey="", stepEls=null, pickEls=null;
 var ORDER_H=[orbOf(1,0,0,1),orbOf(3,1,0,1),orbOf(3,2,-2,1),"shine"];
+/* One loop draws the whole page, so one error must not end it: the next frame is asked for first; the
+   sky, the labs, and the table each fail alone (three bad frames in a row and that one is left out);
+   every error is reported once. */
+var FAIL={}, SAID={};
+function oops(k,e){ FAIL[k]=(FAIL[k]||0)+1; if(!SAID[k]){ SAID[k]=1; if(window.console) console.error("Atom: an error while drawing ("+k+")", e); } }
+/* A first screen nobody touches comes to rest: after 20 s without input the table and the sky draw
+   at a quarter of the rate, after 90 s not at all; any input wakes them. */
+var lastInput=performance.now(), SLOW=false, REST=false, lastNb=-1, ptPark=0, fieldWiped=false, fbKey="";
+["pointermove","pointerdown","keydown","wheel","touchstart","scroll","resize","focusin"].forEach(function(k){ window.addEventListener(k,function(){ lastInput=performance.now(); },{passive:true,capture:true}); });
 function frame(now){
+  requestAnimationFrame(frame);
+  try{ frameBody(now); }catch(e){ oops("frame",e); }
+}
+function frameBody(now){
   var dt=now-last; last=now; frames++;
   var was=active; measure();
   var sy0=window.scrollY; scrolled=sy0!==lastY; lastY=sy0;
@@ -1072,13 +1188,17 @@ function frame(now){
   if(active==="table"&&PT){ var tl=PT.tiles[SEL]; if(tl){ RD.tile=tl.getBoundingClientRect(); RD.ox=tl.offsetLeft+tl.offsetWidth/2; RD.oy=tl.offsetTop+tl.offsetHeight/2; RD.tw=tl.offsetWidth; RD.th=tl.offsetHeight; }
     if(!mqSmall.matches&&slot.parentNode===PT.grid) RD.slot=slot.getBoundingClientRect(); }
   if(frames%6===0) markGauge(); tint(active);
-  if(was!==active||frames===1){ root.classList.toggle("at-table",active==="table"); root.classList.toggle("at-bench",active==="bench"); root.classList.toggle("at-end",active==="end"); if(MS&&was!==active) MS.signal("depth:"+active); }
-  drawWorld(now, dt);
-  if(LABS && labsVisible) LABS.frame(now);
+  if(was!==active||frames===1){ root.classList.toggle("at-table",active==="table"); root.classList.toggle("at-bench",active==="bench"); root.classList.toggle("at-end",active==="end"); if(MS&&was!==active) MS.signal("depth:"+active);
+    if(lineEl) lineEl.setAttribute("aria-live",active==="light"?"polite":"off"); }
+  var idleMs=(!CALM&&active==="table"&&statusDone&&!zoomRect)?now-lastInput:0; SLOW=idleMs>20000; REST=idleMs>90000;
+  if(!(FAIL.sky>2)){ try{ drawWorld(now, dt); FAIL.sky=0; }catch(e1){ oops("sky",e1); } }
+  if(LABS && labsVisible && !(FAIL.labs>2)){ try{ LABS.frame(now); FAIL.labs=0; }catch(e2){ oops("labs",e2); } }
   stepPull(now); stepEmit(now);
   var t=now/1000;
-  if(PT){ PT.hidden=(active!=="table"); PT.frame(now);
-    if(!statusDone){ var nb=PT.built(); set("ptStatus", !PT.gl?TT("WebGL 2 is off in this browser, so each square shows its family color instead of its cloud"):(nb<118?TT("Computing ψ for element {nb} of 118",{nb:nb}):TT("All 118 clouds computed live on your graphics card")));
+  if(PT){ PT.hidden=(active!=="table");
+    if(!(FAIL.table>2)&&!(REST||(SLOW&&frames%4))){ try{ PT.frame(now); FAIL.table=0; }catch(e3){ oops("table",e3); } }
+    if(!statusDone){ var nb=PT.built();
+      if(nb!==lastNb){ lastNb=nb; set("ptStatus", !PT.gl?TT("WebGL 2 is off in this browser, so each square shows its family color instead of its cloud"):(nb<118?TT("Computing ψ for element {nb} of 118",{nb:nb}):TT("All 118 clouds computed live on your graphics card"))); }
       if(nb>=118){ statusDone=true; setTimeout(function(){ var ps=D.getElementById("ptStatus"); if(ps) ps.classList.add("done"); }, 4000); } } }
 
   /* the camera: a damped spring toward its target, so a flick keeps going */
@@ -1104,15 +1224,21 @@ function frame(now){
         put(PT.el,"transformOrigin",RD.ox+"px "+RD.oy+"px"); put(PT.el,"transform","scale("+s.toFixed(4)+")");
         put(PT.el,"opacity",(1-smooth(0.26,0.6,prog)).toFixed(3));
         if(!PT.el.classList.contains("zooming")) PT.el.classList.add("zooming"); PT.focus={z:SEL,k:smooth(0.08,0.42,prog)};
+        if(ptPark===2) put(PT.el,"pointerEvents",""); ptPark=1;
         var tr=RD.tile, tc=[tr.left+tr.width/2, tr.top+tr.height/2], k2=smooth(0.55,1,prog);
         c=[lerp(tc[0],c[0],k2), lerp(tc[1],c[1],k2)];
         orb=valOrb(); cloudA=smooth(0.14,0.46,prog); tight=0.74; sparkle=prog>0.7;
         cam.ty=cam.yaw=SEL*0.37+t*0.16; cam.tp=cam.pitch=0.42; cam.vy=cam.vp=0;
         zoomRect=Math.min(RD.tw,RD.th)*s*1.06;
-      } else if(PT && PT.el.style.transform){ put(PT.el,"transform",""); put(PT.el,"opacity",""); PT.el.classList.remove("zooming"); PT.focus=null; PT.redraw(); zoomRect=null; }
+      } else if(PT && ptPark){ put(PT.el,"transform",""); put(PT.el,"opacity",""); put(PT.el,"pointerEvents",""); PT.el.classList.remove("zooming"); PT.focus=null; PT.redraw(); zoomRect=null; ptPark=0; }
       if(!ptFootEl) ptFootEl=D.getElementById("ptFoot");
-      put(ptFootEl,"opacity",(1-smooth(0.02,0.2,prog)).toFixed(2));
-      put(slot,"opacity",(1-smooth(0.02,0.25,prog)).toFixed(2));
+      /* where there is no zoom (a phone, motion paused) nothing fades: a control that can take focus stays visible */
+      var fz=(CALM||mqSmall.matches)?0:prog;
+      /* and once the fade has all but finished, the strip is gone for good measure: a button at two percent
+         cannot be seen, so it must not take focus or be read out either */
+      var fo=1-smooth(0.02,0.2,fz), so=1-smooth(0.02,0.25,fz);
+      put(ptFootEl,"opacity",fo.toFixed(2)); put(ptFootEl,"visibility",fo<0.06?"hidden":"");
+      put(slot,"opacity",so.toFixed(2));   /* the title stays in the page's outline: it is the page's one h1 */
       break;
     case "cloud":
       var cs=Math.min(3,Math.floor(prog*4));
@@ -1145,7 +1271,7 @@ function frame(now){
       cloudA=1-smooth(-10.45,-11.2,Math.log10(fov));
       nucA=smooth(-11.4,-12.0,Math.log10(fov));
       var e=Math.round(Math.log10(2*fov));
-      set("depthNumeral","10"+supNum(e)+" m");
+      if(e!==numE){ numE=e; if(numEl) numEl.innerHTML="10<sup>"+String(e).replace("-","−")+"</sup> m"; }   /* a real minus and digits, raised */
       break;
     case "nucleus": fov=Math.max(5.5e-15,2.6*nucleusOf(SEL).R*1e-15); nucA=1; if(bindReveal<1&&!CALM){ bindReveal=Math.min(1,bindReveal+dt/1800); drawBinding(); } break;
     case "proton": fov=1.5e-15; protA=1; tube=0.7; fieldA=1; vac=0.45; break;
@@ -1159,6 +1285,9 @@ function frame(now){
     else if(LMODE!=="lines" && !Object.keys(LINES).length){ [3,4,5,6].forEach(function(n){ LINES[lam(n,2).toFixed(2)]=2; }); drawSpectrum(); }
   }
   if(orb) showCloud(orb);
+  /* past the table, the table goes back to its own size (scaled 15 times it made the page thousands of
+     pixels wide) and waits unseen, out of the pointer's way */
+  if(active!=="table"&&ptPark===1&&PT){ put(PT.el,"transform",""); put(PT.el,"opacity","0"); put(PT.el,"pointerEvents","none"); PT.el.classList.remove("zooming"); PT.focus=null; zoomRect=null; ptPark=2; }
 
   /* the cloud */
   if(front && front.h){
@@ -1186,21 +1315,28 @@ function frame(now){
     cloudKey=ck;
     /* the slow automatic turn and the phase are drawn at half rate; a scroll, a
        drag, the zoom, or a new orbital draws at once */
-    if(cloudA>0.01){ if(!still||!front.drawn||(CALM?turned:!(frames&1))){ front.g.draw(camGL); front.drawn=true; cam.dy0=cam.yaw; cam.dp0=cam.pitch; } front.g.govern(dt); }
-    else { front.drawn=false; if(frames%4===0) front.g.clear(); }
-    if(back && back.c.style.opacity==="0" && frames%30===0) back.g.clear();
+    if(cloudA>0.01){ if(!still||!front.drawn||(CALM?turned:!(frames&1))){ front.g.draw(camGL); front.drawn=true; front.wiped=false; cam.dy0=cam.yaw; cam.dp0=cam.pitch; } front.g.govern(dt); }
+    /* nothing to show: wiped once, then left alone (a clear is a new frame for a full-screen layer) */
+    else { front.drawn=false; if(!front.wiped){ front.g.clear(); front.wiped=true; } }
+    if(back && !back.wiped && now-swapAt>650){ back.g.clear(); back.wiped=true; }
   }
-  /* a canvas with nothing on it is still a full-screen layer to composite:
-     hide the field when it is unused and the back cloud once its fade ends */
+  /* a canvas with nothing on it is still a layer to composite: hidden while unused */
   if(FIELD) put(cF,"visibility",fieldA>0.01?"visible":"hidden");
-  if(front){ put(front.c,"visibility","visible"); if(back) put(back.c,"visibility",now-swapAt>650?"hidden":"visible"); }
+  if(front){ put(front.c,"visibility",cloudA>0.01?"visible":"hidden"); if(back) put(back.c,"visibility",now-swapAt>650?"hidden":"visible"); }
   /* the overlay: cleared and composited only while something is on it
      (sparkle, a nucleus, quarks, a flash, a photon) */
   var noGL=!front&&orb&&cloudA>0.02;
   var ovNeed=(sparkle&&cloudA>0.05)||noGL||nucA>0.01||protA>0.01||pullA>0.01||(PULL.broken&&now-flash<500)||(EM&&EM.phase>=1&&active==="light");
-  if(ovNeed||ovUsed){ ctx.clearRect(0,0,W,H); }
-  ovUsed=ovNeed; put(cO,"visibility",ovNeed?"visible":"hidden");
-  if(noGL){ var fext=fallbackExt(orb); drawFallbackCloud(orb, (fixFov?fov:fext*a0*tight)*1.45, c, cloudA*(active==="table"?smooth(0.7,0.95,prog):1)); }
+  /* without WebGL the cloud is thousands of dots here: while nothing has moved enough to see, the last picture stands */
+  var fbK="", fbF=0, fbA=0;
+  if(noGL){ fbF=(fixFov?fov:fallbackExt(orb)*a0*tight)*1.45; fbA=cloudA*(active==="table"?smooth(0.7,0.95,prog):1);
+    if(!(nucA>0.01||protA>0.01||pullA>0.01||(EM&&EM.phase>=1&&active==="light"))) fbK=[keyOf(orb),Math.round(cam.yaw/0.012),Math.round(cam.pitch/0.012),fbF.toPrecision(4),c[0]|0,c[1]|0,fbA.toFixed(2),theme,W,H].join("|"); }
+  if(fbK===""||fbK!==fbKey){
+    if(ovNeed||ovUsed){ ctx.clearRect(0,0,W,H); }
+    ovUsed=ovNeed; put(cO,"visibility",ovNeed?"visible":"hidden");
+    if(noGL) drawFallbackCloud(orb, fbF, c, fbA);
+  }
+  fbKey=fbK;
   if(sparkle && cloudA>0.05 && front && front.h) drawSparkle(orb, (active==="table"&&zoomRect)?Math.max(front.h.ext*a0*tight, front.h.ext*0.70*a0*(Math.min(W,H)/2)/(zoomRect/2)):front.h.ext*a0*tight, c, cloudA*(active==="table"?smooth(0.7,0.95,prog):1));
   if(nucA>0.01){
     var kfm=(Math.min(W,H)/2)/fov*1e-15;
@@ -1213,8 +1349,8 @@ function frame(now){
     ps=pullScene(t,now,c[0],c[1],kq); segs=ps.segs;
   }
   if(FIELD){
-    if(fieldA>0.01) FIELD.draw({alpha:fieldA,segs:segs,cx:c[0],cy:c[1],k:kq,t:CALM?3:t,w:0.085,tube:tube,vac:vac});
-    else if(frames%4===0) FIELD.clear();
+    if(fieldA>0.01){ FIELD.draw({alpha:fieldA,segs:segs,cx:c[0],cy:c[1],k:kq,t:CALM?3:t,w:0.085,tube:tube,vac:vac}); fieldWiped=false; }
+    else if(!fieldWiped){ FIELD.clear(); fieldWiped=true; }
   } else if(ps){
     ctx.lineCap="round"; ctx.lineWidth=0.12*kq;
     segs.forEach(function(s){ ctx.strokeStyle=hexA(T.q[s[4]||0],0.85); ctx.beginPath(); ctx.moveTo(c[0]+s[0]*kq,c[1]-s[1]*kq); ctx.lineTo(c[0]+s[2]*kq,c[1]-s[3]*kq); ctx.stroke(); });
@@ -1236,7 +1372,6 @@ function frame(now){
     } else { plateLabel(TT("two states at once: the cloud sloshes"), c[0]+radius()*0.55, c[1]+radius()*0.8, T.ink2); }
   }
   if(active==="pull"||active==="proton"){ if(frames%3===0) pullReadout(); }
-  requestAnimationFrame(frame);
 }
 
 /* "Show me": what a mission step asks for, done for you */
@@ -1296,6 +1431,12 @@ function boot(){
     theme:function(){ return {light:theme==="light",pos:T.gl.pos,neg:T.gl.neg,posInk:T.gl.posInk,negInk:T.gl.negInk}; },
     onHover:function(z){ readout(z); if(z!==SEL) Sound.tick(z); },
     onPick:function(z, kb){ if(z!==SEL) setElement(z); if(MS) MS.signal("pick:"+z); readout(z); openSheet(z); if(kb) setTimeout(function(){ D.getElementById("fallIn").focus(); }, 30); }});
+  /* ?el= opens that element's card, unless the address goes elsewhere or the reader is further down */
+  if(q&&!location.hash) setTimeout(function(){ if(window.scrollY<8&&sheet.hidden) openSheet(z0); }, 350);
+  /* focus landing on the first screen while it is zoomed away (Shift+Tab from the labs) would be invisible:
+     the table is only legible at the top of the page, so the page goes there */
+  ptsec.addEventListener("focusin",function(){ if(!CALM&&!mqSmall.matches&&window.scrollY>4&&(active!=="table"||prog>0.02)) window.scrollTo({top:0}); });
+  if(mqSmall.addEventListener) mqSmall.addEventListener("change",function(){ if(!sheet.hidden) sheetModal(true); });
   var st=D.createElement("p"); st.className="pt-status"; st.id="ptStatus"; st.setAttribute("aria-hidden","true"); slot.appendChild(st);
   setElement(z0,true); readout(z0);
   resize();
@@ -1313,7 +1454,7 @@ function boot(){
     else root.classList.add("noworld");
     if(GA){ front={g:GA,c:cA}; if(GB){ back={g:GB,c:cB}; cB.style.opacity="0"; } }
     else D.querySelector(".scene").classList.add("nogl");
-    if(front) showCloud(valOrb());
+    if(front){ showCloud(valOrb()); warmShells(SEL); }
     initQuality();
     requestAnimationFrame(frame);
   });
@@ -1332,12 +1473,13 @@ function boot(){
       if(card){ window.scrollTo({top:0,behavior:CALM?"auto":"smooth"}); setTimeout(function(){ openSheet(z); }, CALM?0:600); } };
   var fi=D.getElementById("ptFind"), tb=D.getElementById("todayBtn");
   labsBoot=function(){
-    if(lh) LABS=AtomLabs.mount(lh,{calm:CALM, theme:simTheme, simTheme:simTheme, catColor:catColor,
+    labsOpt={calm:CALM, theme:simTheme, simTheme:simTheme, catColor:catColor,
       element:function(){ return SEL; },
       onEvent:function(e){ if(MS) MS.signal(e); },
       select:function(z){ toTable(z,false); },
       card:function(z){ toTable(z,true); },
-      fall:function(z){ toTable(z,false); var c=D.getElementById("cloud"); window.scrollTo({top:c.getBoundingClientRect().top+window.scrollY, behavior:CALM?"auto":"smooth"}); }});
+      fall:function(z){ toTable(z,false); var c=D.getElementById("cloud"); window.scrollTo({top:c.getBoundingClientRect().top+window.scrollY, behavior:CALM?"auto":"smooth"}); }};
+    if(lh) LABS=AtomLabs.mount(lh,labsOpt);
     var st=D.getElementById("labsStatus"); if(st) st.remove();
     /* find an element, today's element, and the "Yours" lens kept current */
     if(fi) AtomLabs.search(fi,function(z){ toTable(z,false); openSheet(z); });
@@ -1359,35 +1501,68 @@ function boot(){
   /* a link into the labs, or the "Yours" lens, needs them at once; otherwise
      they arrive in the background once the first screen has settled */
   if(/^#(build|challenge|lab|math)=/.test(location.hash)) withLabs();
+  else if(anchorEl()) withLabs(anchorFix);
   else if(window.requestIdleCallback) requestIdleCallback(function(){ withLabs(); },{timeout:12000}); else setTimeout(function(){ withLabs(); },6000);
   /* the language menu */
   AtomI18N.mountMenu(D.getElementById("langHost"), "langPick");
   /* the top bar holds what fits. Its breakpoints were measured in English; a language with longer
      words gets, at the same width, the compact forms a narrower window would: first without the
      Get button, then with the search field folded to its icon, then without the section links
-     (they are all one scroll away), and last with the two switches on two lines each. The language
-     menu must never be the thing that falls off the edge. */
+     (they are all one scroll away), then with the two switches on two lines each, and last without
+     the wordmark (the title is on the page). The language menu must never be the thing that falls
+     off the edge. */
   var barEl=D.querySelector(".bar");
   function fitBar(){ if(!barEl) return; barEl.removeAttribute("data-fit");
-    for(var k=1;k<=4&&barEl.scrollWidth>barEl.clientWidth+1;k++) barEl.setAttribute("data-fit",k); }
+    for(var k=1;k<=5&&barEl.scrollWidth>barEl.clientWidth+1;k++) barEl.setAttribute("data-fit",k); }
   fitBar(); window.addEventListener("resize",fitBar);
   if(D.fonts&&D.fonts.ready) D.fonts.ready.then(fitBar);
   /* missions */
   var md=D.getElementById("missions");
-  if(md) MS=Missions.create({host:md, go:missionGo, onStart:function(){ if(LABS) LABS.resync(); },
-    toggles:[D.getElementById("msBarBtn"),D.getElementById("msFootBtn")].filter(Boolean)});
-  /* a shared atom or challenge (#build=6-8-6, #challenge=A1...) opens in the labs */
-  function shared(){ if(!/^#(build|challenge|lab|math)=/.test(location.hash)) return; withLabs(function(){ var sp=AtomLabs.fromHash(location.hash); if(sp&&LABS){ goLabs(); LABS.open(sp); } }); }
+  /* a saved mission that no longer fits must not take the links below down with it */
+  try{ if(md) MS=Missions.create({host:md, go:missionGo, onStart:function(){ if(LABS) LABS.resync(); },
+    toggles:[D.getElementById("msBarBtn"),D.getElementById("msFootBtn")].filter(Boolean)}); }catch(e){ MS=null; if(window.console) console.error(e); }
+  /* a shared atom, challenge, or lab link opens in the labs; one the labs cannot read opens nothing */
+  function shared(){ if(!/^#(build|challenge|lab|math)=/.test(location.hash)) return;
+    withLabs(function(){ var sp=null; try{ sp=LABS&&AtomLabs.fromHash(location.hash); }catch(e){} if(!sp) return;
+      goLabs(); try{ LABS.open(sp); }catch(e2){ if(window.console) console.error(e2); } }); }
   window.addEventListener("hashchange",shared); setTimeout(shared,300);
+  /* the language asked for could not be loaded: said where it can be seen, not only in the closed menu */
+  if(AtomI18N.failed){ var lf=AtomI18N.failed, ln=D.createElement("div"), lt=D.createElement("span"), lb=D.createElement("button");
+    ln.className="update-note lang-fail"; ln.setAttribute("role","status");
+    lt.textContent=TT("{language} could not be loaded here, so this page is in English.",{language:(AtomI18N.LANGS[lf]||{}).name||lf});
+    lb.type="button"; lb.className="btn btn-small"; lb.textContent=TT("Close",{}); lb.addEventListener("click",function(){ ln.remove(); });
+    ln.appendChild(lt); ln.appendChild(lb); D.body.appendChild(ln); }
+  wireChrome();
+}
+/* A scene address on a first visit: the labs mount on the way down and make the page taller above the
+   target, so the scroll stops short. Once they are in and the scroll has settled, the target is put
+   where the address said, unless the reader has taken over. */
+var userMoved=false;
+["wheel","touchstart","keydown","mousedown"].forEach(function(k){ window.addEventListener(k,function(){ userMoved=true; },{passive:true,capture:true,once:true}); });
+function anchorEl(){ var id=location.hash.slice(1); return /^[A-Za-z][\w-]*$/.test(id)?D.getElementById(id):null; }
+function anchorFix(){ var n=0;
+  (function chk(){ var y=window.scrollY; setTimeout(function(){ var el=anchorEl(); if(userMoved||!el||n++>60) return;
+    if(window.scrollY!==y){ chk(); return; }   /* still gliding */
+    var top=el.getBoundingClientRect().top, pad=parseFloat(getComputedStyle(root).scrollPaddingTop)||72;
+    if(Math.abs(top-pad)>6&&window.scrollY+window.innerHeight<root.scrollHeight-2){ window.scrollTo({top:window.scrollY+top-pad}); chk(); } }, 180); })();
+}
+/* the Pause motion switch and the buttons that turn the cloud */
+function wireChrome(){
+  var mb=D.getElementById("motionBtn");
+  if(mb){ mb.setAttribute("aria-pressed",CALM?"true":"false"); mb.addEventListener("click",function(){ setCalm(!CALM); }); }
+  /* a fifth of a radian a press, the molecule's arrow-key step */
+  [].forEach.call(D.querySelectorAll("[data-turn]"),function(b){ b.addEventListener("click",function(){ var k=b.getAttribute("data-turn");
+    if(k==="left") cam.ty-=0.2; else if(k==="right") cam.ty+=0.2; else cam.tp=Math.max(-1.4,Math.min(1.4,cam.tp+(k==="up"?0.2:-0.2)));
+    if(active!=="cloud"&&active!=="light"&&active!=="empty"){ var c=D.getElementById("cloud"); window.scrollTo({top:c.offsetTop+H*0.1, behavior:CALM?"auto":"smooth"}); } }); });
 }
 AtomI18N.ready.then(boot);   /* the language pack, if one is chosen, arrives first */
 /* the scenes below the quarks draw themselves from their own file, fetched when the reader is about a
    screen and a half away (or at once, when the address points at one of them) */
-(function(){ var first=D.getElementById("fields"), last=D.getElementById("deepLadder"), done=false; if(!first) return;
+(function(){ var first=D.getElementById("fields"), last=D.getElementById("deepLadder"), fig=D.getElementById("scaleFig"), done=false; if(!first) return;
   function go(){ if(done) return; done=true; var s=D.createElement("script"); s.src="assets/deep.js"; D.head.appendChild(s); }
-  if(/^#(fields|mass|weak|edge)$/.test(location.hash)||!window.IntersectionObserver){ go(); return; }
+  if(/^#(empty|nucleus|proton|pull|fields|mass|weak|edge)$/.test(location.hash)||!window.IntersectionObserver){ go(); return; }
   var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ go(); io.disconnect(); } }); },{rootMargin:"1400px 0px"});
-  io.observe(first); if(last) io.observe(last);
+  io.observe(first); if(last) io.observe(last); if(fig) io.observe(fig.parentNode);   /* "the empty atom, to scale" is drawn from the same file */
 })();
 /* the site keeps itself for offline use (a classroom cart, a plane); the
    worker is registered after the first screen is up so it never competes

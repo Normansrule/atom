@@ -21,6 +21,7 @@
 var AtomGL = (function(){
   "use strict";
   var NTAB = 1024;
+  var SHELLS_LAST=null;   /* the last whole-atom table, shared between contexts (makeCloud, "shells") */
 
   /* Real spherical harmonics in Cartesian form, l <= 3. Normalized so that
      the integral of Y^2 over the sphere is 1, and signed to match the app's
@@ -290,15 +291,22 @@ var AtomGL = (function(){
           if(!groups[key]) groups[key]={n:spec[i].n,l:spec[i].l,Z:spec[i].Z,w:0}; groups[key].w+=spec[i].w; }
         var gs=Object.keys(groups).map(function(k2){ return groups[k2]; });
         var rho=function(r){ var a=0; for(var g=0;g<gs.length;g++){ var v=R(gs[g].n,gs[g].l,r,gs[g].Z); a+=gs[g].w*v*v; } return a/(4*Math.PI); };
-        var col=new Float32Array(NTAB), Imax=0, M=360, tab=new Float32Array(NTAB);
-        for(i=0;i<NTAB;i++){
-          var uu=i/(NTAB-1), b=ext*uu*uu, S=Math.sqrt(Math.max(0,ext*ext-b*b)), acc=0;
-          for(k=0;k<M;k++){ var q0=k/M, q1=(k+1)/M, sm=S*((q0+q1)/2)*((q0+q1)/2), ds=S*(q1*q1-q0*q0);
-            acc+=rho(Math.sqrt(b*b+sm*sm))*ds; }
-          col[i]=2*acc; if(col[i]>Imax) Imax=col[i];
+        /* a page with two contexts (the cloud in front and the one fading behind it) asks each for the same atom,
+           one after the other: the second takes the table the first integrated (nothing writes to a table) */
+        var mk=gs.map(function(g2){ return g2.n+","+g2.l+","+g2.Z.toFixed(5)+","+g2.w; }).join(";")+"|"+ext+"|"+((opt&&opt.range)||400), tab;
+        if(SHELLS_LAST&&SHELLS_LAST.key===mk&&SHELLS_LAST.R===R) tab=SHELLS_LAST.tab;
+        else {
+          var col=new Float32Array(NTAB), Imax=0, M=360; tab=new Float32Array(NTAB);
+          for(i=0;i<NTAB;i++){
+            var uu=i/(NTAB-1), b=ext*uu*uu, S=Math.sqrt(Math.max(0,ext*ext-b*b)), acc=0;
+            for(k=0;k<M;k++){ var q0=k/M, q1=(k+1)/M, sm=S*((q0+q1)/2)*((q0+q1)/2), ds=S*(q1*q1-q0*q0);
+              acc+=rho(Math.sqrt(b*b+sm*sm))*ds; }
+            col[i]=2*acc; if(col[i]>Imax) Imax=col[i];
+          }
+          var I0=Imax/((opt&&opt.range)||400), den=Math.log(1+Imax/I0);   /* range: how many decades the glow spans */
+          for(i=0;i<NTAB;i++) tab[i]=Math.pow(Math.min(1,Math.log(1+col[i]/I0)/den),0.85);
+          SHELLS_LAST={key:mk,R:R,tab:tab};
         }
-        var I0=Imax/((opt&&opt.range)||400), den=Math.log(1+Imax/I0);   /* range: how many decades the glow spans */
-        for(i=0;i<NTAB;i++) tab[i]=Math.pow(Math.min(1,Math.log(1+col[i]/I0)/den),0.85);
         c.tab=tab; c.norm=1; c.gamma=1; c.n=c.l=c.m=0;
       }
       if(api.ok){ c.tex=makeTex(); upload(c.tex,c.tab); if(c.tab2){ c.tex2=makeTex(); upload(c.tex2,c.tab2); } }

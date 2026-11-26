@@ -7,7 +7,7 @@ dist/
 .vscode/
 .idea/
 # local check tools (npm install --no-save ...)
-node_modules/
+node_modules
 /package-lock.json
 # desktop build: made by desktop/prepare.mjs and electron-builder
 desktop/dist/

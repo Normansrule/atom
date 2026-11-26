@@ -5,8 +5,8 @@
    scripts/stamp_sw.py and checked by scripts/smoke.mjs), so a corrected
    file always reaches a returning reader. The language files are not in the
    list: the page says which language it is in and only those are kept. */
-var VERSION = "2.1.0";
-var BUILD = "509a755f";
+var VERSION = "2.3.0";
+var BUILD = "26826542";
 var CACHE = "atom-site-" + VERSION + "-" + BUILD;
 var CORE = [
   "./", "index.html", "404.html", "teachers.html", "handout.html", "manifest.webmanifest",
@@ -14,14 +14,17 @@ var CORE = [
   "assets/atom-i18n.js",
   "assets/atom-data.js", "assets/atom-engines.js", "assets/atom-ptable.js", "assets/atom-labs.js", "assets/site.js", "assets/deep.js",
   "assets/fonts/archivo-var.woff2",
-  "assets/favicon-64.png", "assets/apple-touch-icon.png", "assets/icon-192.png", "assets/icon-512.png",
-  "media/app-dark.jpg", "media/app-light.png"
+  "assets/favicon-64.png", "assets/apple-touch-icon.png", "assets/icon-192.png", "assets/icon-512.png"
 ];
+/* The two screenshots of the app (485 KB, shown only beside the downloads at the foot of the page) are not in
+   the list: like every picture, they are kept the first time they are seen. */
 var PACK = /\/assets\/i18n\/[a-z]{2,3}(\.[a-z]+)?\.js$/;
 
-/* fetched past the browser's own cache: a file kept from the last release for a few
-   minutes must not be filed under this one's name */
-function fresh(u) { return new Request(u, { cache: "reload" }); }
+/* Checked with the server before it is kept ("no-cache" means ask first, not "do not keep"): a file the
+   browser has held from the last release for a few minutes must not be filed under this one's name. A file
+   that has not changed costs one short answer, where "reload" fetched again, seconds later, the 427 KB a
+   first visit had just loaded. */
+function fresh(u) { return new Request(u, { cache: "no-cache" }); }
 
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(CORE.map(fresh)); }).then(function () {
